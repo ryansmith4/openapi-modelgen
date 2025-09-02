@@ -93,9 +93,10 @@ tasks.register('validateVersion') {
     doLast {
         def currentVersion = project.version.toString()
         
-        // Validate semantic versioning format
-        if (!currentVersion.matches(/^\d+\.\d+\.\d+(-\w+)?$/)) {
-            throw new RuntimeException("Invalid version format: ${currentVersion}. Must follow semantic versioning (e.g., 1.2.3 or 1.2.3-SNAPSHOT)")
+        // Validate semantic versioning format (official SemVer 2.0.0 regex)
+        def semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+        if (!currentVersion.matches(semverPattern)) {
+            throw new RuntimeException("Invalid version format: ${currentVersion}. Must follow semantic versioning (e.g., 1.2.3, 1.2.3-alpha.1, 1.2.3+build.1)")
         }
         
         // Check for development versions in release builds
