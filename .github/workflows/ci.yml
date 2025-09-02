@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [17, 21]
+        gradle-version: [8.5]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Run tests
+        run: ./gradlew plugin:test --no-daemon --stacktrace
+
+      - name: Validate plugin
+        run: ./gradlew plugin:validatePlugin --no-daemon
+
+      - name: Test integration with test-app
+        run: ./gradlew test-app:generateOpenApiDtosAll --no-daemon
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}
+          path: |
+            plugin/build/reports/tests/
+            plugin/build/test-results/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}
+          path: plugin/build/libs/
