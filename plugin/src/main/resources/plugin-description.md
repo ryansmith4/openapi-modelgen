@@ -1,6 +1,11 @@
 A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI specifications with enhanced features:
 
-Features:
+## Requirements
+• Java 17+
+• Gradle 8.0+
+• OpenAPI Generator 7.14.0+ (automatically managed)
+
+## Features
 • Multi-spec support with individual task generation
 • Lombok annotation integration (@Data, @Builder, @SuperBuilder, etc.)
 • Custom Mustache template support with precedence resolution
@@ -10,65 +15,65 @@ Features:
 • Parallel template processing for large template sets
 • Content-based template change detection using SHA-256 hashing
 
-Usage Examples:
+## Usage Examples
 
-Basic Configuration:
+### Basic Configuration
 ```groovy
 plugins {
-    id 'com.guidedbyte.openapi-modelgen'
+    id 'com.guidedbyte.openapi-modelgen' version '1.0.0'
 }
 
 openapiModelgen {
     defaults {
-        outputDir = "build/generated-sources/openapi"
-        modelNameSuffix = "Dto"
-        generateModelTests = false
-        validateSpec = true
+        outputDir "build/generated-sources/openapi"
+        modelNameSuffix "Dto"
+        generateModelTests false
+        validateSpec true
     }
     
     specs {
         pets {
-            inputSpec = "src/main/resources/openapi-spec/pets.yaml"
-            modelPackage = "com.example.model.pets"
+            inputSpec "src/main/resources/openapi-spec/pets.yaml"
+            modelPackage "com.example.model.pets"
         }
         orders {
-            inputSpec = "src/main/resources/openapi-spec/orders.yaml"  
-            modelPackage = "com.example.model.orders"
+            inputSpec "src/main/resources/openapi-spec/orders.yaml"  
+            modelPackage "com.example.model.orders"
         }
     }
 }
 ```
 
-Advanced Configuration:
+### Advanced Configuration
 ```groovy
 openapiModelgen {
     defaults {
-        outputDir = "build/generated-sources/openapi"
-        templateDir = "src/main/resources/openapi-templates"
-        configOptions = [
+        outputDir "build/generated-sources/openapi"
+        templateDir "src/main/resources/openapi-templates"
+        configOptions([
             dateLibrary: "java8",
             serializationLibrary: "jackson",
             useBeanValidation: "true",
             hideGenerationTimestamp: "true"
-        ]
-        templateVariables = [
+        ])
+        templateVariables([
             copyright: "Copyright © {{currentYear}} {{companyName}}",
             currentYear: "2025", 
             companyName: "My Company Inc."
-        ]
-        globalProperties = [
+        ])
+        globalProperties([
             skipFormModel: "false",
             generateAliasAsModel: "true"
-        ]
+        ])
     }
     
     specs {
         pets {
-            inputSpec = "specs/pets-v1.yaml"
-            modelPackage = "com.example.pets.v1.model"
-            configOptions = [
+            inputSpec "specs/pets-v1.yaml"
+            modelPackage "com.example.pets.v1.model"
+            configOptions([
                 additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.SuperBuilder"
-            ]
+            ])
         }
     }
 }
@@ -95,4 +100,4 @@ The plugin automatically detects and works with any OpenAPI Generator version pr
 Template Customization:
 Place custom .mustache templates in your template directory to override plugin defaults. Template resolution follows precedence: user templates > plugin templates > OpenAPI generator defaults.
 
-For detailed documentation visit: https://github.com/your-org/openapi-modelgen
+For detailed documentation visit: https://github.com/ryansmith4/openapi-modelgen
