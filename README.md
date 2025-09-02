@@ -359,7 +359,7 @@ openapi-modelgen/
 ## Technical Details
 
 ### Requirements
-- **Java 21+**
+- **Java 17+**
 - **Gradle 8.0+** 
 - **OpenAPI Generator 7.14.0+** (automatically managed)
 

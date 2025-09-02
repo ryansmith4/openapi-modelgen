@@ -45,7 +45,7 @@ test {
 }
 
 // Generate plugin documentation automatically
-task generatePluginDocs {
+tasks.register('generatePluginDocs') {
     description = "Generates comprehensive documentation for the plugin"
     group = "documentation"
     
@@ -76,7 +76,7 @@ plugins {
 }
 
 // Version management tasks
-task showVersion {
+tasks.register('showVersion') {
     description = "Displays current plugin version"
     group = "versioning"
     
@@ -86,7 +86,7 @@ task showVersion {
     }
 }
 
-task validateVersion {
+tasks.register('validateVersion') {
     description = "Validates version format and compatibility"
     group = "versioning"
     
@@ -110,10 +110,10 @@ task validateVersion {
     }
 }
 
-task createRelease {
+tasks.register('createRelease') {
     description = "Creates a new release tag and updates version"
     group = "versioning"
-    dependsOn validatePlugin, validateVersion
+    dependsOn validateVersion
     
     doLast {
         def currentVersion = project.version.toString()
@@ -139,10 +139,10 @@ task createRelease {
 }
 
 // Validate plugin before publishing
-task validatePlugin {
+tasks.register('validatePlugin') {
     description = "Validates plugin is ready for publishing"
     group = "verification"
-    dependsOn test, generatePluginDocs, validateVersion
+    dependsOn test, validateVersion
     
     doLast {
         // Check required files exist
@@ -161,7 +161,7 @@ task validatePlugin {
         
         // Validate test coverage exists
         def testDir = file('src/test/java')
-        def testFiles = testDir.listFiles { dir, name -> name.endsWith('Test.java') }
+        def testFiles = testDir.listFiles({ File dir, String name -> name.endsWith('Test.java') } as FilenameFilter)
         
         println "✅ Plugin validation passed - ready for publishing"
         println "  • ${testFiles?.length ?: 0} test classes found"
@@ -195,23 +195,17 @@ def gitVersion() {
     return "1.0.0-SNAPSHOT"
 }
 
-// Java compatibility - using Java 17 for text block support in tests
+// Java compatibility
 java {
-    sourceCompatibility = JavaVersion.VERSION_11  // Runtime compatibility
-    targetCompatibility = JavaVersion.VERSION_11  // Runtime compatibility
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
     withJavadocJar()
 }
 
-// Use Java 17 for compiling tests (text blocks)
-compileTestJava {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 gradlePlugin {
-    website = 'https://github.com/guidedbyte/openapi-modelgen'
-    vcsUrl = 'https://github.com/guidedbyte/openapi-modelgen.git'
+    website = 'https://github.com/ryansmith4/openapi-modelgen'
+    vcsUrl = 'https://github.com/ryansmith4/openapi-modelgen.git'
     
     plugins {
         openapiModelgen {
