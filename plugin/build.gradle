@@ -148,8 +148,8 @@ tasks.register('validatePlugin') {
     doLast {
         // Check required files exist
         def requiredFiles = [
-            'README.md',
-            'CLAUDE.md', 
+            '../README.md',
+            '../CLAUDE.md', 
             'src/main/resources/plugin-description.md',
             'src/main/resources/templates/spring/pojo.mustache'
         ]
