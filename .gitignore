@@ -1,0 +1,68 @@
+# Gradle build outputs
+build/
+.gradle/
+gradle-app.setting
+
+# Generated sources (test-app)
+test-app/build/
+test-app/src/generated/
+test-app/build/generated-sources/
+
+# Plugin generated documentation
+plugin/docs/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
+
+# Gradle wrapper (optional - uncomment if you want to ignore wrapper)
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties
+# gradlew
+# gradlew.bat
+
+# Local configuration files
+local.properties
+gradle.properties.local
+
+# Test outputs
+test-results/
+reports/
+
+# Backup files
+*.bak
+*.backup
+
+# Plugin Portal credentials (should be in ~/.gradle/gradle.properties)
+gradle.publish.key
+gradle.publish.secret

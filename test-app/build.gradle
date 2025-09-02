@@ -1,0 +1,95 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.1'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'com.guidedbyte.openapi-modelgen'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // OpenAPI/Swagger annotations
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
+    
+    // JSR-305 annotations (for @Nullable, @Nonnull in generated code)
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+
+    compileOnly("org.projectlombok:lombok:1.18.38")
+    annotationProcessor("org.projectlombok:lombok:1.18.38")
+
+    // Jackson for JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testCompileOnly("org.projectlombok:lombok:1.18.38")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
+}
+
+// Configure our custom plugin
+openapiModelgen {
+    defaults {
+        outputDir "$buildDir/generated-sources/openapi"
+        modelNameSuffix "Dto"
+        generateModelTests false
+        generateApiTests false
+        generateApiDocumentation false
+        generateModelDocumentation false
+
+        templateVariables([
+                companyName: "GuidedByte Technologies Inc.",
+                shortCopyright: "© {{currentYear}} {{companyName}}",
+                fullCopyright: "Copyright {{shortCopyright}}",
+                header: "{{fullCopyright}}"
+        ])
+
+        configOptions([
+            dateLibrary: "java8",
+            useBeanValidation: "true",
+            performBeanValidation: "true", 
+            useSpringBoot3: "true",
+            useJakartaEe: "true",
+            serializableModel: "true",
+            hideGenerationTimestamp: "true",
+            enumUnknownDefaultCase: "true",
+            generateBuilders: "false",
+            legacyDiscriminatorBehavior: "false",
+            disallowAdditionalPropertiesIfNotPresent: "false",
+            useEnumCaseInsensitive: "true",
+            openApiNullable: "false",
+            generateConstructorWithAllArgs: "false",
+            generatedConstructorWithRequiredArgs: "false",
+            generateDefaultConstructor: "false",
+            additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
+        ])
+    }
+    
+    specs {
+        pets {
+            inputSpec "$projectDir/src/main/resources/openapi/pets.yaml"
+            modelPackage "com.guidedbyte.testapp.model.pets"
+        }
+        
+        orders {
+            inputSpec "$projectDir/src/main/resources/openapi/orders.yaml"  
+            modelPackage "com.guidedbyte.testapp.model.orders"
+            // Override suffix for orders to demonstrate per-spec config
+            modelNameSuffix "Entity"
+        }
+    }
+}
+
+// Add generated sources to compilation
+sourceSets {
+    main {
+        java {
+            srcDirs += file("$buildDir/generated-sources/openapi/src/main/java")
+        }
+    }
+}
+
+// Ensure DTOs are generated before compilation
+afterEvaluate {
+    compileJava.dependsOn generateOpenApiDtosAll
+}

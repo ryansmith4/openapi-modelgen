@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Order Management API
+  description: API for managing customer orders
+  version: 1.0.0
+  contact:
+    name: Order Support
+    email: orders@petstore.com
+
+components:
+  schemas:
+    Order:
+      type: object
+      required:
+        - id
+        - customerId
+        - items
+        - status
+        - orderDate
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+          description: Unique order identifier
+        customerId:
+          type: integer
+          format: int64
+          example: 123
+          description: Customer who placed the order
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          minItems: 1
+          x-field-extra-annotation: "@lombok.Builder.Default"
+          description: Items in the order
+        status:
+          type: string
+          enum: [placed, approved, delivered, cancelled]
+          example: placed
+          description: Current order status
+        orderDate:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: When the order was placed
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        totalAmount:
+          type: number
+          format: decimal
+          minimum: 0
+          example: 299.99
+          description: Total order amount
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, CAD]
+          example: USD
+          description: Currency code
+        discountCode:
+          type: string
+          maxLength: 20
+          example: "SAVE10"
+          description: Applied discount code
+        notes:
+          type: string
+          maxLength: 500
+          example: "Please deliver to the back door"
+          description: Special delivery instructions
+
+    OrderItem:
+      type: object
+      required:
+        - petId
+        - quantity
+        - unitPrice
+      properties:
+        petId:
+          type: integer
+          format: int64
+          example: 123
+          description: Reference to pet being ordered
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 2
+          description: Number of pets ordered
+        unitPrice:
+          type: number
+          format: decimal
+          minimum: 0
+          example: 149.99
+          description: Price per pet
+        customizations:
+          type: array
+          items:
+            type: string
+          example: ["red collar", "name tag: Max"]
+          x-field-extra-annotation: "@lombok.Builder.Default"
+          description: Special customization requests
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - postalCode
+        - country
+      properties:
+        street:
+          type: string
+          minLength: 5
+          maxLength: 100
+          example: "123 Main St"
+          description: Street address
+        apartment:
+          type: string
+          maxLength: 20
+          example: "Apt 4B"
+          description: Apartment or unit number
+        city:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Springfield"
+          description: City name
+        state:
+          type: string
+          minLength: 2
+          maxLength: 3
+          example: "IL"
+          description: State or province code
+        postalCode:
+          type: string
+          pattern: "^[0-9]{5}(-[0-9]{4})?$"
+          example: "62704"
+          description: Postal/ZIP code
+        country:
+          type: string
+          enum: [US, CA, GB, DE, FR, AU]
+          example: US
+          description: Country code
+
+    PaymentInfo:
+      type: object
+      required:
+        - method
+        - amount
+      properties:
+        method:
+          type: string
+          enum: [credit_card, debit_card, paypal, bank_transfer]
+          example: credit_card
+          description: Payment method used
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          example: 299.99
+          description: Payment amount
+        transactionId:
+          type: string
+          maxLength: 50
+          example: "txn_123456789"
+          description: Payment processor transaction ID
+        processedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:35:00Z"
+          description: When payment was processed

@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Pet Store API
+  description: A simple API for managing pets
+  version: 1.0.0
+  contact:
+    name: Pet Store Support
+    email: support@petstore.com
+
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 123
+          description: Unique identifier for the pet
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Fluffy"
+          description: The name of the pet
+        category:
+          $ref: '#/components/schemas/Category'
+        status:
+          type: string
+          enum: [available, pending, sold]
+          example: available
+          description: Pet status in the store
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          x-field-extra-annotation: "@lombok.Builder.Default"
+          description: Tags associated with the pet
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/photo1.jpg"]
+          x-field-extra-annotation: "@lombok.Builder.Default"
+          description: URLs of pet photos
+        birthDate:
+          type: string
+          format: date
+          example: "2020-01-15"
+          description: Pet's birth date
+        weight:
+          type: number
+          format: double
+          minimum: 0.1
+          maximum: 500.0
+          example: 12.5
+          description: Pet's weight in kg
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          description: Category identifier
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Dogs"
+          description: Category name
+
+    Tag:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+          description: Tag identifier
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+          example: "friendly"
+          description: Tag name
+        color:
+          type: string
+          pattern: "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+          example: "#FF5733"
+          description: Tag color in hex format
+
+    PetSummary:
+      type: object
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 123
+        name:
+          type: string
+          example: "Fluffy"
+        status:
+          type: string
+          enum: [available, pending, sold]
+          example: available

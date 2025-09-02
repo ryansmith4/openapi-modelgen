@@ -1,0 +1,54 @@
+// Temporary test file to validate our configuration validation
+plugins {
+    id 'java'
+    id 'com.guidedbyte.openapi-modelgen'
+}
+
+// Test configuration with validation errors
+generateOpenApiDtos {
+    defaults {
+        outputDir ""  // Empty output directory - should fail
+        templateDir "non-existent-dir"  // Non-existent directory - should fail
+        configOptions([
+            useBeanValidation: "maybe",  // Invalid boolean value - should fail
+            dateLibrary: "invalid-lib"   // Invalid date library - should fail
+        ])
+    }
+    
+    specs {
+        // Missing spec name test
+        "" {
+            inputSpec "non-existent.yaml"
+            modelPackage "com.example"
+        }
+        
+        // Invalid spec name test
+        "123invalid" {
+            inputSpec "non-existent.yaml" 
+            modelPackage "com.example"
+        }
+        
+        // Missing required fields test
+        validName {
+            // Missing inputSpec - should fail
+            // Missing modelPackage - should fail
+        }
+        
+        // Invalid package name test
+        invalidPackageTest {
+            inputSpec "test-app/src/main/resources/openapi/pets.yaml"
+            modelPackage "com.123invalid.class.package"  // Invalid package name - should fail
+        }
+        
+        // Case insensitive duplicate test
+        pets {
+            inputSpec "test-app/src/main/resources/openapi/pets.yaml"
+            modelPackage "com.example.pets"
+        }
+        
+        PETS {  // Same as 'pets' (case insensitive) - should fail
+            inputSpec "test-app/src/main/resources/openapi/pets.yaml"
+            modelPackage "com.example.pets2"
+        }
+    }
+}

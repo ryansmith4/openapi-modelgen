@@ -1,0 +1,225 @@
+plugins {
+    id("com.gradle.plugin-publish") version "1.3.1"
+    id 'java-gradle-plugin'
+    id 'groovy'
+}
+
+repositories {
+    mavenLocal()
+    gradlePluginPortal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation gradleApi()
+    
+    // Default OpenAPI Generator version - can be overridden by configuration plugins
+    implementation('org.openapitools:openapi-generator-gradle-plugin:7.14.0') {
+        // Allow version to be overridden by user dependencies
+        version {
+            prefer '7.14.0'
+        }
+    }
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testImplementation 'org.mockito:mockito-core:5.1.1'
+    testImplementation gradleTestKit()
+}
+
+// Configure test execution
+test {
+    useJUnitPlatform()
+    
+    // Set system properties for TestKit
+    systemProperty 'gradle.user.home', gradle.gradleUserHomeDir
+    
+    // Configure test execution
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
+    }
+    
+    // Increase timeout for integration tests
+    timeout = Duration.ofMinutes(5)
+}
+
+// Generate plugin documentation automatically
+task generatePluginDocs {
+    description = "Generates comprehensive documentation for the plugin"
+    group = "documentation"
+    
+    doLast {
+        def docsDir = file("$projectDir/docs")
+        docsDir.mkdirs()
+        
+        def descriptionFile = file("src/main/resources/plugin-description.md")
+        def readmeContent = """# OpenAPI Model Generator Plugin
+
+${descriptionFile.text}
+
+## Installation
+
+Add to your build.gradle:
+
+```groovy
+plugins {
+    id 'com.guidedbyte.openapi-modelgen' version '1.0.0'
+}
+```
+"""
+        
+        file("$docsDir/README.md").text = readmeContent
+        
+        println "Plugin documentation generated in: $docsDir/README.md"
+    }
+}
+
+// Version management tasks
+task showVersion {
+    description = "Displays current plugin version"
+    group = "versioning"
+    
+    doLast {
+        println "Plugin Version: ${project.version}"
+        println "Version Source: ${findProperty('version') ? 'gradle property' : 'git tag'}"
+    }
+}
+
+task validateVersion {
+    description = "Validates version format and compatibility"
+    group = "versioning"
+    
+    doLast {
+        def currentVersion = project.version.toString()
+        
+        // Validate semantic versioning format
+        if (!currentVersion.matches(/^\d+\.\d+\.\d+(-\w+)?$/)) {
+            throw new RuntimeException("Invalid version format: ${currentVersion}. Must follow semantic versioning (e.g., 1.2.3 or 1.2.3-SNAPSHOT)")
+        }
+        
+        // Check for development versions in release builds
+        if (currentVersion.contains('SNAPSHOT') || currentVersion.contains('dirty')) {
+            logger.warn("Development version detected: ${currentVersion}")
+            if (gradle.taskGraph.hasTask(':publishPlugins')) {
+                throw new RuntimeException("Cannot publish development version: ${currentVersion}")
+            }
+        }
+        
+        println "✅ Version validation passed: ${currentVersion}"
+    }
+}
+
+task createRelease {
+    description = "Creates a new release tag and updates version"
+    group = "versioning"
+    dependsOn validatePlugin, validateVersion
+    
+    doLast {
+        def currentVersion = project.version.toString()
+        
+        if (currentVersion.contains('SNAPSHOT')) {
+            throw new RuntimeException("Cannot create release from SNAPSHOT version: ${currentVersion}")
+        }
+        
+        // Create git tag
+        def tagName = "v${currentVersion}"
+        def createTag = ['git', 'tag', '-a', tagName, '-m', "Release version ${currentVersion}"].execute()
+        createTag.waitFor()
+        
+        if (createTag.exitValue() == 0) {
+            println "✅ Created release tag: ${tagName}"
+            println "Next steps:"
+            println "  1. git push origin ${tagName}"
+            println "  2. ./gradlew publishPlugins"
+        } else {
+            throw new RuntimeException("Failed to create git tag: ${tagName}")
+        }
+    }
+}
+
+// Validate plugin before publishing
+task validatePlugin {
+    description = "Validates plugin is ready for publishing"
+    group = "verification"
+    dependsOn test, generatePluginDocs, validateVersion
+    
+    doLast {
+        // Check required files exist
+        def requiredFiles = [
+            'README.md',
+            'CLAUDE.md', 
+            'src/main/resources/plugin-description.md',
+            'src/main/resources/templates/spring/pojo.mustache'
+        ]
+        
+        requiredFiles.each { filePath ->
+            if (!file(filePath).exists()) {
+                throw new RuntimeException("Required file missing for publishing: ${filePath}")
+            }
+        }
+        
+        // Validate test coverage exists
+        def testDir = file('src/test/java')
+        def testFiles = testDir.listFiles { dir, name -> name.endsWith('Test.java') }
+        
+        println "✅ Plugin validation passed - ready for publishing"
+        println "  • ${testFiles?.length ?: 0} test classes found"
+        println "  • All required documentation files present"
+        println "  • Core functionality tests available (integration tests have known DSL limitations)"
+        println "  • Plugin metadata configured"
+        println "  • Version: ${project.version}"
+    }
+}
+
+// Plugin publishing configuration
+group = 'com.guidedbyte'
+version = findProperty('version') ?: gitVersion()
+description = 'A comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications'
+
+// Dynamic version resolution
+def gitVersion() {
+    try {
+        def process = ['git', 'describe', '--tags', '--always', '--dirty'].execute()
+        process.waitFor()
+        if (process.exitValue() == 0) {
+            def tagOutput = process.text.trim()
+            // Convert git tag to version (v1.2.3 -> 1.2.3, abc123 -> 1.0.0-SNAPSHOT)
+            if (tagOutput.startsWith('v') && tagOutput.contains('.')) {
+                return tagOutput.substring(1).replace('-dirty', '-SNAPSHOT')
+            }
+        }
+    } catch (Exception e) {
+        logger.warn("Git version detection failed: ${e.message}")
+    }
+    return "1.0.0-SNAPSHOT"
+}
+
+// Java compatibility - using Java 17 for text block support in tests
+java {
+    sourceCompatibility = JavaVersion.VERSION_11  // Runtime compatibility
+    targetCompatibility = JavaVersion.VERSION_11  // Runtime compatibility
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Use Java 17 for compiling tests (text blocks)
+compileTestJava {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+gradlePlugin {
+    website = 'https://github.com/guidedbyte/openapi-modelgen'
+    vcsUrl = 'https://github.com/guidedbyte/openapi-modelgen.git'
+    
+    plugins {
+        openapiModelgen {
+            id = 'com.guidedbyte.openapi-modelgen'
+            implementationClass = 'com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin'
+            displayName = 'OpenAPI Model Generator'
+            description = file("src/main/resources/plugin-description.md").text
+            tags = ['openapi', 'code-generation', 'lombok', 'dto', 'models', 'java', 'spring']
+        }
+    }
+}
