@@ -174,8 +174,43 @@ tasks.register('validatePlugin') {
 
 // Plugin publishing configuration
 group = 'com.guidedbyte'
-version = findProperty('version') ?: gitVersion()
+version = project.hasProperty('version') ? project.version : (findProperty('version') ?: gitVersion())
 description = 'A comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications'
+
+// Configure publishing
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'openapi-modelgen-plugin'
+            pom {
+                name = 'OpenAPI Model Generator Plugin'
+                description = 'A comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications'
+                url = 'https://github.com/ryansmith4/openapi-modelgen'
+                
+                licenses {
+                    license {
+                        name = 'Apache License 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id = 'ryansmith4'
+                        name = 'Ryan Smith'
+                        email = 'ryan.smith@guidedbyte.com'
+                    }
+                }
+                
+                scm {
+                    connection = 'scm:git:git://github.com/ryansmith4/openapi-modelgen.git'
+                    developerConnection = 'scm:git:ssh://github.com/ryansmith4/openapi-modelgen.git'
+                    url = 'https://github.com/ryansmith4/openapi-modelgen'
+                }
+            }
+        }
+    }
+}
 
 // Dynamic version resolution
 def gitVersion() {
@@ -217,3 +252,4 @@ gradlePlugin {
         }
     }
 }
+
