@@ -125,7 +125,7 @@ openapiModelgen {
 
 ```gradle
 plugins {
-    id 'com.guidedbyte.openapi-modelgen'
+    id 'com.guidedbyte.openapi-modelgen' version '@version@'
 }
 ```
 
@@ -211,7 +211,7 @@ sourceSets {
 }
 
 // Ensure generation runs before compilation
-compileJava.dependsOn generateOpenApiDtosAll
+compileJava.dependsOn generateAllModels
 
 // Optional: Clean generated sources on clean
 clean {
@@ -222,9 +222,9 @@ clean {
 ## Generated Tasks
 
 For each spec named `{specName}`, the plugin creates:
-- `generateOpenApiDtosFor{SpecName}` - Generate DTOs for that specific spec
-- `generateOpenApiDtosAll` - Generate DTOs for all specs
-- `openapiModelgenHelp` - Display comprehensive plugin help and configuration options
+- `{specName}` - Generate models for that specific spec (e.g., `pets`, `orders`)
+- `generateAllModels` - Generate models for all specs
+- `generateHelp` - Display comprehensive plugin help and configuration options
 
 ### Command Line Options
 
@@ -232,16 +232,16 @@ All configuration options can be overridden via command line:
 
 ```bash
 # Generate with custom options
-./gradlew generateOpenApiDtosForPets --model-package=com.custom.model --validate-spec
+./gradlew pets --model-package=com.custom.model --validate-spec
 
 # Generate all specs with custom output
-./gradlew generateOpenApiDtosAll --output-dir=src/generated
+./gradlew generateAllModels --output-dir=src/generated
 
 # Override template settings
-./gradlew generateOpenApiDtosForPets --template-dir=custom-templates --model-name-suffix=Entity
+./gradlew pets --template-dir=custom-templates --model-name-suffix=Entity
 
 # Get help
-./gradlew openapiModelgenHelp
+./gradlew generateHelp
 ```
 
 ## Template Customization
@@ -315,8 +315,8 @@ plugins {
 ./gradlew plugin:generatePluginDocs
 
 # Test with sample application
-./gradlew test-app:generateOpenApiDtosForPets
-./gradlew test-app:generateOpenApiDtosAll
+./gradlew test-app:pets
+./gradlew test-app:generateAllModels
 ./gradlew test-app:build
 ```
 
@@ -384,10 +384,10 @@ openapi-modelgen/
 #### Debug Options
 ```bash
 # Enable debug logging
-./gradlew generateOpenApiDtosForPets --info
+./gradlew pets --info
 
 # Get comprehensive help
-./gradlew openapiModelgenHelp
+./gradlew generateHelp
 
 # Generate plugin documentation
 ./gradlew plugin:generatePluginDocs

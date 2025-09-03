@@ -178,6 +178,16 @@ group = 'com.guidedbyte'
 version = project.hasProperty('version') ? project.version : (findProperty('version') ?: gitVersion())
 description = 'A comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications'
 
+// Copy and process README with current version for publishing
+tasks.register('processReadme', Copy) {
+    from('../README.md')
+    into('build/processed-docs')
+    expand(version: project.version)
+    
+    // Ensure this runs before publishing
+    publishPlugins.dependsOn(this)
+}
+
 // Configure publishing
 publishing {
     publications {

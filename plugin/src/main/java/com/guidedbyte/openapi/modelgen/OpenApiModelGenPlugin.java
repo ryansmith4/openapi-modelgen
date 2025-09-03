@@ -387,7 +387,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * 
      * <p>For each spec in the extension configuration:</p>
      * <ul>
-     *   <li>Creates a spec-specific generation task (e.g., generateOpenApiDtosForPets)</li>
+     *   <li>Creates a spec-specific generation task (e.g., pets)</li>
      *   <li>Configures incremental build support with input/output tracking</li>
      *   <li>Sets up template resolution hierarchy (user > plugin > defaults)</li>
      *   <li>Applies configuration inheritance (defaults + spec overrides)</li>
@@ -403,7 +403,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
-            String taskName = "generateOpenApiDtosFor" + capitalize(specName);
+            String taskName = specName;
             
             TaskProvider<GenerateTask> specTask = tasks.register(taskName, GenerateTask.class, task -> {
                 configureGenerateTask(task, extension, specConfig, specName);
@@ -413,29 +413,29 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         
         // Create aggregate task that runs all spec tasks
         if (!extension.getSpecs().isEmpty()) {
-            TaskProvider<Task> aggregateTask = tasks.register("generateOpenApiDtosAll", task -> {
-                task.setDescription("Generates DTOs for all OpenAPI specifications");
-                task.setGroup("openapi");
+            TaskProvider<Task> aggregateTask = tasks.register("generateAllModels", task -> {
+                task.setDescription("Generates models for all OpenAPI specifications");
+                task.setGroup("openapi modelgen");
                 
                 // Make this task depend on all spec tasks
                 extension.getSpecs().keySet().forEach(specName -> {
-                    String specTaskName = "generateOpenApiDtosFor" + capitalize(specName);
+                    String specTaskName = specName;
                     task.dependsOn(specTaskName);
                 });
             });
         }
         
         // Create help task with usage information
-        tasks.register("openapiModelgenHelp", task -> {
+        tasks.register("generateHelp", task -> {
             task.setDescription("Shows usage information and examples for the OpenAPI Model Generator plugin");
-            task.setGroup("openapi");
+            task.setGroup("openapi modelgen");
             task.doLast(t -> {
                 System.out.println("\n=== OpenAPI Model Generator Plugin ===\n");
                 System.out.println("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.\n");
                 
                 System.out.println("Available Tasks:");
                 extension.getSpecs().forEach((specName, config) -> {
-                    String taskName = "generateOpenApiDtosFor" + capitalize(specName);
+                    String taskName = specName;
                     System.out.println("  " + taskName + " - Generate DTOs for " + specName + " specification");
                 });
                 if (!extension.getSpecs().isEmpty()) {
@@ -472,7 +472,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     
     private void configureGenerateTask(GenerateTask task, OpenApiModelGenExtension extension, 
                                      SpecConfig specConfig, String specName) {
-        task.setDescription("Generate DTOs for " + specName + " OpenAPI specification");
+        task.setDescription("Generate models for " + specName + " OpenAPI specification");
         task.setGroup("openapi");
         
         // Apply plugin defaults
