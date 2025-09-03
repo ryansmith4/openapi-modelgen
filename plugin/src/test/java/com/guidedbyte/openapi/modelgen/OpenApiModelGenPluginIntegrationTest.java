@@ -62,12 +62,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running gradle tasks
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("tasks", "--group=openapi")
+                .withArguments("tasks", "--all")
                 .withPluginClasspath()
                 .build();
 
         // Then: Plugin tasks should be available
-        assertTrue(result.getOutput().contains("openapiModelgenHelp"));
+        assertTrue(result.getOutput().contains("generateHelp"));
     }
 
     @Test
@@ -102,12 +102,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running the generation task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets", "--info")
+                .withArguments("generatePets", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed and generate files
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
@@ -144,7 +144,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running the generation task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .buildAndFail();
 
@@ -184,19 +184,19 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running generation task twice
         BuildResult firstResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .build();
 
         BuildResult secondResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .build();
 
         // Then: First run should succeed, second should be up-to-date
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generatePets").getOutcome());
     }
 
     @Test
@@ -236,14 +236,14 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running the aggregate task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosAll")
+                .withArguments("generateAllModels")
                 .withPluginClasspath()
                 .build();
 
         // Then: Both tasks should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForOrders").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosAll").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOrders").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateAllModels").getOutcome());
     }
 
     @Test
@@ -287,12 +287,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running generation with custom templates
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets", "--info")
+                .withArguments("generatePets", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
         // Verify custom template was used (check for custom comment in generated files)
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
@@ -329,14 +329,14 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running help task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("openapiModelgenHelp")
+                .withArguments("generateHelp")
                 .withPluginClasspath()
                 .build();
 
         // Then: Help should be displayed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":openapiModelgenHelp").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateHelp").getOutcome());
         assertTrue(result.getOutput().contains("OpenAPI Model Generator Plugin"));
-        assertTrue(result.getOutput().contains("generateOpenApiDtosForPets"));
+        assertTrue(result.getOutput().contains("generatePets"));
         assertTrue(result.getOutput().contains("Configuration Example"));
     }
 
@@ -374,12 +374,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .build();
 
         // Then: Generated files should contain Lombok annotations
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -427,12 +427,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .build();
 
         // Then: Template variables should be resolved
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -471,7 +471,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .buildAndFail();
 

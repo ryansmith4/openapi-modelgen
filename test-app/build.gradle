@@ -91,5 +91,5 @@ sourceSets {
 
 // Ensure DTOs are generated before compilation
 afterEvaluate {
-    compileJava.dependsOn generateOpenApiDtosAll
+    compileJava.dependsOn generateAllModels
 }

@@ -203,13 +203,13 @@ public class ConfigurationValidationTest {
 
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("tasks", "--group=openapi")
+                .withArguments("tasks", "--all")
                 .withPluginClasspath()
                 .build();
 
         // Should not create any generation tasks
         assertFalse(result.getOutput().contains("generateOpenApiDtosFor"));
-        assertTrue(result.getOutput().contains("openapiModelgenHelp"));
+        assertTrue(result.getOutput().contains("generateHelp"));
     }
 
     @Test
@@ -290,7 +290,7 @@ public class ConfigurationValidationTest {
 
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets", "--info")
+                .withArguments("generatePets", "--info")
                 .withPluginClasspath()
                 .build();
 

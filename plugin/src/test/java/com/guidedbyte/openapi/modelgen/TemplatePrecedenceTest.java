@@ -77,12 +77,12 @@ public class TemplatePrecedenceTest {
         // When: Running generation (this should use plugin templates)
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Generation should succeed with plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         assertTrue(result.getOutput().contains("Successfully extracted and cached plugin templates") ||
                   result.getOutput().contains("Extracting plugin templates"));
         
@@ -133,12 +133,12 @@ public class TemplatePrecedenceTest {
         // When: Running generation using plugin templates
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Generation should succeed using plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/test");
@@ -187,12 +187,12 @@ public class TemplatePrecedenceTest {
         // When: Running generation with spec-level validateSpec override
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should succeed despite defaults having validateSpec true
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
@@ -237,19 +237,19 @@ public class TemplatePrecedenceTest {
         // When: Running generation multiple times
         BuildResult firstResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         BuildResult secondResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: First run should extract templates, second should use cache
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForTest").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateTest").getOutcome());
         
         // Verify template cache directory exists
         File templateCacheDir = new File(testProjectDir, "build/plugin-templates/spring");
@@ -300,12 +300,12 @@ public class TemplatePrecedenceTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Generated files should contain expanded variables
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
@@ -353,7 +353,7 @@ public class TemplatePrecedenceTest {
         // When: Running configuration with non-existent template directory
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .buildAndFail();
 

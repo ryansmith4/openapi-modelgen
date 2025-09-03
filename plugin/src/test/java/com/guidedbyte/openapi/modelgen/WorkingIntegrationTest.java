@@ -84,12 +84,12 @@ public class WorkingIntegrationTest {
         // When: Running help task specifically
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("openapiModelgenHelp")
+                .withArguments("generateHelp")
                 .withPluginClasspath()
                 .build();
 
         // Then: Help task should run successfully
-        assertEquals(TaskOutcome.SUCCESS, result.task(":openapiModelgenHelp").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateHelp").getOutcome());
         assertTrue(result.getOutput().contains("OpenAPI Model Generator Plugin"));
         assertTrue(result.getOutput().contains("Configuration Example"));
     }
@@ -120,7 +120,7 @@ public class WorkingIntegrationTest {
         // When: Trying to run a generation task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest")
+                .withArguments("generateTest")
                 .withPluginClasspath()
                 .buildAndFail();
 
@@ -162,12 +162,12 @@ public class WorkingIntegrationTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest", "--info")
+                .withArguments("generateTest", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should generate code successfully
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         
         // Verify generated files exist in the default location (build/generated)
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/test");
@@ -210,19 +210,19 @@ public class WorkingIntegrationTest {
         // When: Running generation twice
         BuildResult firstResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest")
+                .withArguments("generateTest")
                 .withPluginClasspath()
                 .build();
 
         BuildResult secondResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForTest")
+                .withArguments("generateTest")
                 .withPluginClasspath()
                 .build();
 
         // Then: First should succeed, second should be up-to-date
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForTest").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateTest").getOutcome());
     }
 
     private void createValidSpecFile() throws IOException {

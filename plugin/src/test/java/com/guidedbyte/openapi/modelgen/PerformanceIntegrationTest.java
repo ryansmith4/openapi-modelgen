@@ -60,9 +60,9 @@ public class PerformanceIntegrationTest {
         BuildResult thirdResult = runGenerationTask();
 
         // Then: First run SUCCESS, second UP-TO-DATE, third SUCCESS due to spec change
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, thirdResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, thirdResult.task(":generatePets").getOutcome());
     }
 
     @Test
@@ -76,8 +76,8 @@ public class PerformanceIntegrationTest {
         BuildResult secondResult = runGenerationTask();
 
         // Then: Both runs should succeed (configuration change should invalidate cache)
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
     }
 
     @Test
@@ -93,8 +93,8 @@ public class PerformanceIntegrationTest {
         BuildResult secondResult = runGenerationTask();
 
         // Then: Template change should trigger regeneration
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
     }
 
     @Test
@@ -127,12 +127,12 @@ public class PerformanceIntegrationTest {
         // When: Running generation task with info logging
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets", "--info")
+                .withArguments("generatePets", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should see parallel processing messages in output
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         assertTrue(result.getOutput().contains("Parallel template extraction") || 
                   result.getOutput().contains("threads used") ||
                   result.getOutput().contains("templates processed"));
@@ -152,9 +152,9 @@ public class PerformanceIntegrationTest {
         BuildResult secondResult = runGenerationTask();
 
         // Then: Both generation runs should succeed (no UP-TO-DATE after clean)
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
         assertEquals(TaskOutcome.SUCCESS, cleanResult.task(":clean").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
     }
 
     @Test
@@ -193,7 +193,7 @@ public class PerformanceIntegrationTest {
         // When: Run all, then modify only one spec
         BuildResult firstResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosAll")
+                .withArguments("generateAllModels")
                 .withPluginClasspath()
                 .build();
         
@@ -202,16 +202,16 @@ public class PerformanceIntegrationTest {
         
         BuildResult secondResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosAll")
+                .withArguments("generateAllModels")
                 .withPluginClasspath()
                 .build();
 
         // Then: First run all SUCCESS, second run pets SUCCESS and orders UP-TO-DATE
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForOrders").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOrders").getOutcome());
         
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generateOpenApiDtosForPets").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForOrders").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOrders").getOutcome());
     }
 
     @Test
@@ -228,7 +228,7 @@ public class PerformanceIntegrationTest {
         long duration = endTime - startTime;
 
         // Then: Should complete successfully within reasonable time (< 30 seconds)
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         assertTrue(duration < 30000, "Generation should complete within 30 seconds, took: " + duration + "ms");
         
         // Verify multiple files were generated
@@ -243,7 +243,7 @@ public class PerformanceIntegrationTest {
     private BuildResult runGenerationTask() {
         return GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets")
+                .withArguments("generatePets")
                 .withPluginClasspath()
                 .build();
     }

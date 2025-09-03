@@ -222,7 +222,7 @@ clean {
 ## Generated Tasks
 
 For each spec named `{specName}`, the plugin creates:
-- `{specName}` - Generate models for that specific spec (e.g., `pets`, `orders`)
+- `generate{SpecName}` - Generate models for that specific spec (e.g., `generatePets`, `generateOrders`)
 - `generateAllModels` - Generate models for all specs
 - `generateHelp` - Display comprehensive plugin help and configuration options
 
@@ -232,13 +232,13 @@ All configuration options can be overridden via command line:
 
 ```bash
 # Generate with custom options
-./gradlew pets --model-package=com.custom.model --validate-spec
+./gradlew generatePets --model-package=com.custom.model --validate-spec
 
 # Generate all specs with custom output
 ./gradlew generateAllModels --output-dir=src/generated
 
 # Override template settings
-./gradlew pets --template-dir=custom-templates --model-name-suffix=Entity
+./gradlew generatePets --template-dir=custom-templates --model-name-suffix=Entity
 
 # Get help
 ./gradlew generateHelp
@@ -315,7 +315,7 @@ plugins {
 ./gradlew plugin:generatePluginDocs
 
 # Test with sample application
-./gradlew test-app:pets
+./gradlew test-app:generatePets
 ./gradlew test-app:generateAllModels
 ./gradlew test-app:build
 ```
@@ -384,7 +384,7 @@ openapi-modelgen/
 #### Debug Options
 ```bash
 # Enable debug logging
-./gradlew pets --info
+./gradlew generatePets --info
 
 # Get comprehensive help
 ./gradlew generateHelp

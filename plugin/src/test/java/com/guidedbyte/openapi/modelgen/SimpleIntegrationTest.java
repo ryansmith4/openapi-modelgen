@@ -126,7 +126,7 @@ public class SimpleIntegrationTest {
                 .build();
 
         // Then: Help task should be available
-        assertTrue(result.getOutput().contains("openapiModelgenHelp"));
+        assertTrue(result.getOutput().contains("generateHelp"));
     }
 
     @Test
@@ -162,12 +162,12 @@ public class SimpleIntegrationTest {
         // When: Running the generation task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForPets", "--info", "--stacktrace")
+                .withArguments("generatePets", "--info", "--stacktrace")
                 .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForPets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
         // Verify generated files exist in the default location (build/generated)
         File generatedPackageDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
@@ -202,13 +202,13 @@ public class SimpleIntegrationTest {
         // When: Listing tasks
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("tasks", "--group=openapi")
+                .withArguments("tasks", "--all")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should not create generation tasks, only help task
         assertFalse(result.getOutput().contains("generateOpenApiDtosFor"));
-        assertTrue(result.getOutput().contains("openapiModelgenHelp"));
+        assertTrue(result.getOutput().contains("generateHelp"));
     }
 
     private void createValidSpec() throws IOException {

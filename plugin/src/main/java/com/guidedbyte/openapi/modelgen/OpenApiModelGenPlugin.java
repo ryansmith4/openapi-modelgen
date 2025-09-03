@@ -403,7 +403,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
-            String taskName = specName;
+            String taskName = "generate" + capitalize(specName);
             
             TaskProvider<GenerateTask> specTask = tasks.register(taskName, GenerateTask.class, task -> {
                 configureGenerateTask(task, extension, specConfig, specName);
@@ -419,7 +419,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 
                 // Make this task depend on all spec tasks
                 extension.getSpecs().keySet().forEach(specName -> {
-                    String specTaskName = specName;
+                    String specTaskName = "generate" + capitalize(specName);
                     task.dependsOn(specTaskName);
                 });
             });
@@ -435,13 +435,13 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 
                 System.out.println("Available Tasks:");
                 extension.getSpecs().forEach((specName, config) -> {
-                    String taskName = specName;
+                    String taskName = "generate" + capitalize(specName);
                     System.out.println("  " + taskName + " - Generate DTOs for " + specName + " specification");
                 });
                 if (!extension.getSpecs().isEmpty()) {
-                    System.out.println("  generateOpenApiDtosAll - Generate DTOs for all specifications");
+                    System.out.println("  generateAllModels - Generate DTOs for all specifications");
                 }
-                System.out.println("  openapiModelgenHelp - Show this help information\n");
+                System.out.println("  generateHelp - Show this help information\n");
                 
                 System.out.println("Configuration Example:");
                 System.out.println("openapiModelgen {");

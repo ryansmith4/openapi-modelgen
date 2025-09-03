@@ -13,6 +13,7 @@
       "Bash(\"/c/gradle/gradle-8.5/bin/gradle\" plugin:test)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "acceptEdits"
   }
 }

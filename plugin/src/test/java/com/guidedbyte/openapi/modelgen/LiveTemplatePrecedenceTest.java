@@ -71,12 +71,12 @@ public class LiveTemplatePrecedenceTest {
         // When: Running generation task
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForMinimal", "--info")
+                .withArguments("generateMinimal", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should succeed using plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         
         // Verify plugin templates were extracted
@@ -134,12 +134,12 @@ public class LiveTemplatePrecedenceTest {
         // When: Running generation with template variables
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForMinimal", "--info")
+                .withArguments("generateMinimal", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Should succeed using plugin templates with custom variables
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/minimal");
@@ -188,19 +188,19 @@ public class LiveTemplatePrecedenceTest {
         // When: Running generation twice
         BuildResult firstResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForMinimal", "--info")
+                .withArguments("generateMinimal", "--info")
                 .withPluginClasspath()
                 .build();
 
         BuildResult secondResult = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForMinimal", "--info")
+                .withArguments("generateMinimal", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: First run should extract templates, second should be up-to-date
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOpenApiDtosForMinimal").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateOpenApiDtosForMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateMinimal").getOutcome());
+        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generateMinimal").getOutcome());
         
         // Verify template cache structure
         File templateCacheDir = new File(testProjectDir, "build/plugin-templates/spring");
@@ -252,12 +252,12 @@ public class LiveTemplatePrecedenceTest {
         // When: Running generation
         BuildResult result = GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withArguments("generateOpenApiDtosForMinimal", "--info")
+                .withArguments("generateMinimal", "--info")
                 .withPluginClasspath()
                 .build();
 
         // Then: Template variables should be expanded in generated files
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOpenApiDtosForMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/minimal");
         assertTrue(generatedDir.exists());
