@@ -1049,11 +1049,17 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 return true;
             }
 
-            // Get the resource URL
+            // Get the resource URL with fallback for module system environments
             URL resourceUrl = getClass().getResource(resourcePath);
             if (resourceUrl == null) {
-                project.getLogger().debug("No plugin templates found at resource path: {}", resourcePath);
-                return false;
+                // Try alternative classloader access for Spring Boot 3.x/Java 21 compatibility
+                resourceUrl = Thread.currentThread().getContextClassLoader().getResource(resourcePath.substring(1));
+                if (resourceUrl == null) {
+                    project.getLogger().warn("Plugin templates not found at resource path: {}. This may occur in Spring Boot 3.x/Java 21 environments. Consider using an external templateDir.", resourcePath);
+                    project.getLogger().warn("Workaround: Specify templateDir in your configuration to use external templates.");
+                    return false;
+                }
+                project.getLogger().info("Found plugin templates using context classloader (Spring Boot 3.x/Java 21 compatibility mode)");
             }
 
             // Clean existing templates before extraction
