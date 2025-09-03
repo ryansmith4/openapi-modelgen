@@ -40,7 +40,7 @@ jobs:
         run: ./gradlew plugin:validatePlugin --no-daemon
 
       - name: Test integration with test-app
-        run: ./gradlew test-app:generateOpenApiDtosAll --no-daemon
+        run: ./gradlew test-app:generateAllModels --no-daemon
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

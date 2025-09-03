@@ -52,12 +52,12 @@ openapi-modelgen/
 ```
 
 ## Build Commands
-- **Generate models**: `/c/gradle/gradle-8.5/bin/gradle test-app:generateOpenApiDtosForPets`
-- **Generate all**: `/c/gradle/gradle-8.5/bin/gradle test-app:generateOpenApiDtosAll`
+- **Generate models**: `/c/gradle/gradle-8.5/bin/gradle test-app:generatePets`
+- **Generate all**: `/c/gradle/gradle-8.5/bin/gradle test-app:generateAllModels`
 - **Clean build**: `/c/gradle/gradle-8.5/bin/gradle clean build`
 - **Test plugin**: `/c/gradle/gradle-8.5/bin/gradle plugin:test`
 - **Generate docs**: `/c/gradle/gradle-8.5/bin/gradle plugin:generatePluginDocs`
-- **Plugin help**: `/c/gradle/gradle-8.5/bin/gradle test-app:openapiModelgenHelp`
+- **Plugin help**: `/c/gradle/gradle-8.5/bin/gradle test-app:generateHelp`
 
 ## Current Configuration
 ### Lombok Annotations (test-app/build.gradle)
