@@ -9,7 +9,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
     // OpenAPI/Swagger annotations
-    implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.36'
     
     // JSR-305 annotations (for @Nullable, @Nonnull in generated code)
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
