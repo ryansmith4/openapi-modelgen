@@ -31,12 +31,12 @@ dependencies {
 openapiModelgen {
     specs {
         pets {
-            inputSpec "c:/dev/test-app2/src/main/resources/swagger/pets.yaml"
+            inputSpec "$projectDir/src/main/resources/swagger/pets.yaml"
             modelPackage "com.guidedbyte.testapp2.model.pets"
         }
         
         orders {
-            inputSpec "C:/dev/test-app2/src/main/resources/swagger/orders.yaml"
+            inputSpec "$projectDir/src/main/resources/swagger/orders.yaml"
             modelPackage "com.guidedbyte.testapp2.model.orders"
             // Override suffix for orders to demonstrate per-spec config
             modelNameSuffix "Entity"
