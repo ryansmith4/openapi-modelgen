@@ -83,7 +83,8 @@ public class TemplatePrecedenceTest {
 
         // Then: Generation should succeed with plugin templates
         assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
-        assertTrue(result.getOutput().contains("Successfully extracted and cached plugin templates") ||
+        assertTrue(result.getOutput().contains("Selectively extracted") ||
+                  result.getOutput().contains("Successfully extracted and cached plugin templates") ||
                   result.getOutput().contains("Extracting plugin templates"));
         
         // Verify generated files contain plugin template content

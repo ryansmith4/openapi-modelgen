@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -356,20 +357,17 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      */
     private String getPluginTemplateFingerprint(String generatorName) {
         try {
-            String pluginTemplatePath = "/templates/" + generatorName;
-            URL resourceUrl = getClass().getResource(pluginTemplatePath);
-            
-            if (resourceUrl == null) {
-                return "no-plugin-templates";
-            }
-            
-            // Create a fingerprint based on plugin version and resource path existence
+            // Use a stable fingerprint based on plugin version and known template structure
+            // This avoids expensive discovery during configuration phase and potential inconsistencies
             String pluginVersion = getPluginVersion();
-            String resourceFingerprint = pluginTemplatePath + ":" + pluginVersion;
             
-            // Add a hash of the resource URL to detect changes
+            // Include generator name and plugin version for basic fingerprinting
+            // The actual template discovery and content validation happens during execution
+            String resourceFingerprint = "selective-templates:" + generatorName + ":" + pluginVersion;
+            
+            // Add a hash to ensure uniqueness and detect plugin changes
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] hashBytes = md.digest((resourceFingerprint + ":" + resourceUrl.toString()).getBytes());
+            byte[] hashBytes = md.digest(resourceFingerprint.getBytes());
             StringBuilder sb = new StringBuilder();
             for (byte b : hashBytes) {
                 sb.append(String.format("%02x", b));
@@ -378,7 +376,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             
         } catch (NoSuchAlgorithmException e) {
             // Fallback to simple version-based fingerprint
-            return generatorName + ":" + getPluginVersion();
+            return "selective-templates:" + generatorName + ":" + getPluginVersion();
         }
     }
     
@@ -473,7 +471,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     private void configureGenerateTask(GenerateTask task, OpenApiModelGenExtension extension, 
                                      SpecConfig specConfig, String specName) {
         task.setDescription("Generate models for " + specName + " OpenAPI specification");
-        task.setGroup("openapi");
+        task.setGroup("openapi modelgen");
         
         // Apply plugin defaults
         applyPluginDefaults(task);
@@ -608,10 +606,12 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             specConfig.getTemplateDir().get() : 
             (extension.getDefaults().getTemplateDir().isPresent() ? extension.getDefaults().getTemplateDir().get() : null);
         
-        // Use lazy template resolution - defer extraction to execution time
-        task.getTemplateDir().set(task.getProject().provider(() -> 
-            resolveTemplateDir(task.getProject(), userTemplateDir, task.getGeneratorName().get())
-        ));
+        // Resolve template directory during configuration with immediate extraction if needed
+        String resolvedTemplateDir = resolveTemplateDir(task.getProject(), userTemplateDir, task.getGeneratorName().get());
+        if (resolvedTemplateDir != null) {
+            task.getTemplateDir().set(resolvedTemplateDir);
+        }
+        // If resolvedTemplateDir is null, templateDir remains unset, which lets OpenAPI generator use defaults
         
         // Merge spec-specific config options
         if (specConfig.getConfigOptions().isPresent()) {
@@ -806,9 +806,9 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             int major = Integer.parseInt(parts[0]);
             int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
             
-            // Check minimum supported version (7.14.0)
-            if (major < 7 || (major == 7 && minor < 14)) {
-                project.getLogger().warn("OpenAPI Generator {} may not be compatible. Plugin requires 7.14.0+", version);
+            // Check minimum supported version (7.10.0)
+            if (major < 7 || (major == 7 && minor < 10)) {
+                project.getLogger().warn("OpenAPI Generator {} may not be compatible. Plugin requires 7.10.0+", version);
             } else if (major > 7) {
                 project.getLogger().info("OpenAPI Generator {} detected. Plugin tested with 7.14.0 - newer versions should work", version);
             } else {
@@ -984,6 +984,25 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
+
+    /**
+     * Determines if plugin templates should be used without extracting them during provider evaluation.
+     * This method checks for available templates without side effects to maintain incremental build compatibility.
+     */
+    private boolean shouldUsePluginTemplates(Project project, String generatorName, File pluginTemplateDir) {
+        // Only return true if the directory already exists (templates have been extracted)
+        // This avoids the "directory doesn't exist" validation error
+        if (!pluginTemplateDir.exists()) {
+            return false;
+        }
+        
+        // Check if templates are already cached and valid
+        File cacheFile = new File(pluginTemplateDir, ".template-cache");
+        String currentPluginVersion = getPluginVersion();
+        String expectedCacheKey = computeSelectiveTemplateCacheKey(generatorName, currentPluginVersion);
+        
+        return isTemplateCacheValidWithHashes(cacheFile, expectedCacheKey, pluginTemplateDir);
+    }
     
     /**
      * Resolves template directory with the following precedence:
@@ -1005,23 +1024,11 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             project.getLogger().warn("User-specified template directory does not exist: {}. Falling back to plugin templates.", userTemplateDir);
         }
         
-        // 2. Check for plugin-provided templates
-        String pluginTemplatePath = "/templates/" + generatorName;
-        InputStream templateResource = getClass().getResourceAsStream(pluginTemplatePath + "/pojo.mustache");
-        if (templateResource != null) {
-            try {
-                templateResource.close(); // Close the test stream
-            } catch (IOException ignored) {
-                // Ignore close errors for test stream
-            }
-            
-            // Plugin templates exist, extract them to a temporary directory
-            File pluginTemplateDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(), "plugin-templates/" + generatorName);
-            project.getLogger().info("Extracting plugin templates for generator '{}' at execution time", generatorName);
-            if (extractPluginTemplates(project, pluginTemplatePath, pluginTemplateDir)) {
-                project.getLogger().debug("Template extraction completed: {}", pluginTemplateDir.getAbsolutePath());
-                return pluginTemplateDir.getAbsolutePath();
-            }
+        // 2. Check for plugin-provided templates (selective extraction)
+        File pluginTemplateDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(), "plugin-templates/" + generatorName);
+        if (extractSelectivePluginTemplates(project, generatorName, pluginTemplateDir)) {
+            project.getLogger().debug("Selective template extraction completed: {}", pluginTemplateDir.getAbsolutePath());
+            return pluginTemplateDir.getAbsolutePath();
         }
         
         // 3. Fall back to OpenAPI generator default templates (return null to let generator use defaults)
@@ -1029,7 +1036,213 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     }
     
     /**
+     * Extracts only the plugin templates we actually have, allowing generator to use its own defaults for missing templates
+     */
+    private boolean extractSelectivePluginTemplates(Project project, String generatorName, File targetDir) {
+        String resourcePath = "/templates/" + generatorName;
+        
+        // Dynamically discover what templates our plugin actually provides
+        List<String> ourTemplates = discoverAvailablePluginTemplates(resourcePath);
+        boolean anyTemplateExtracted = false;
+        
+        // Ensure target directory exists
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            project.getLogger().warn("Failed to create template directory: {}", targetDir.getAbsolutePath());
+            return false;
+        }
+        
+        // Check cache first
+        File cacheFile = new File(targetDir, ".template-cache");
+        String currentPluginVersion = getPluginVersion();
+        String expectedCacheKey = computeSelectiveTemplateCacheKey(generatorName, currentPluginVersion);
+        
+        if (isTemplateCacheValidWithHashes(cacheFile, expectedCacheKey, targetDir)) {
+            project.getLogger().debug("Using cached selective plugin templates from {}", targetDir.getAbsolutePath());
+            // Cache is valid - templates are available for use
+            return true;
+        }
+        
+        // Clean existing templates before extraction
+        try {
+            cleanTemplateDirectory(targetDir, cacheFile);
+        } catch (IOException e) {
+            project.getLogger().warn("Failed to clean template directory: {}", e.getMessage());
+        }
+        
+        // If no templates discovered, return early
+        if (ourTemplates.isEmpty()) {
+            project.getLogger().debug("No plugin templates discovered for generator '{}' - will use generator defaults", generatorName);
+            return false;
+        }
+        
+        project.getLogger().debug("Discovered {} plugin templates for generator '{}'", ourTemplates.size(), generatorName);
+        
+        // Extract only our templates that exist
+        for (String templateName : ourTemplates) {
+            String templateResourcePath = resourcePath + "/" + templateName;
+            
+            // Try multiple classloader strategies for this specific template
+            InputStream templateStream = null;
+            String accessMethod = null;
+            
+            // Strategy 1: Plugin classloader
+            templateStream = getClass().getResourceAsStream(templateResourcePath);
+            if (templateStream != null) {
+                accessMethod = "plugin classloader";
+            }
+            
+            // Strategy 2: Context classloader
+            if (templateStream == null) {
+                templateStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(templateResourcePath.substring(1));
+                if (templateStream != null) {
+                    accessMethod = "context classloader";
+                }
+            }
+            
+            // Strategy 3: System classloader  
+            if (templateStream == null) {
+                templateStream = ClassLoader.getSystemClassLoader().getResourceAsStream(templateResourcePath.substring(1));
+                if (templateStream != null) {
+                    accessMethod = "system classloader";
+                }
+            }
+            
+            if (templateStream != null) {
+                try {
+                    File targetFile = new File(targetDir, templateName);
+                    Files.copy(templateStream, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    project.getLogger().debug("Extracted template {} using {}", templateName, accessMethod);
+                    anyTemplateExtracted = true;
+                } catch (IOException e) {
+                    project.getLogger().warn("Failed to extract template {}: {}", templateName, e.getMessage());
+                } finally {
+                    try {
+                        templateStream.close();
+                    } catch (IOException ignored) {
+                        // Ignore close errors
+                    }
+                }
+            } else {
+                // This is normal - we might not have all templates, and that's OK
+                project.getLogger().debug("Template {} not found in plugin (will use generator default)", templateName);
+            }
+        }
+        
+        if (anyTemplateExtracted) {
+            // Update cache with selective template extraction key
+            try {
+                updateTemplateCache(cacheFile, expectedCacheKey);
+                project.getLogger().debug("Updated template cache with key: {}", expectedCacheKey);
+                
+                // Save template content hashes for change detection
+                Map<String, String> templateHashes = new HashMap<>();
+                try (Stream<Path> paths = Files.walk(targetDir.toPath())) {
+                    for (Path templatePath : paths.filter(Files::isRegularFile)
+                                                   .filter(path -> {
+                                                       String fileName = path.getFileName().toString();
+                                                       return fileName.endsWith(".mustache") || 
+                                                              fileName.endsWith(".hbs") || 
+                                                              fileName.endsWith(".handlebars");
+                                                   })
+                                                   .toArray(Path[]::new)) {
+                        String relativePath = targetDir.toPath().relativize(templatePath).toString().replace(File.separatorChar, '/');
+                        String hash = calculateFileContentHash(templatePath);
+                        templateHashes.put(relativePath, hash);
+                    }
+                }
+                storeTemplateHashes(targetDir, templateHashes);
+                project.getLogger().debug("Saved template hashes for {} templates", templateHashes.size());
+            } catch (IOException e) {
+                project.getLogger().warn("Failed to update template cache: {}", e.getMessage());
+            }
+            long extractedCount = ourTemplates.stream()
+                .mapToInt(name -> new File(targetDir, name).exists() ? 1 : 0)
+                .sum();
+            project.getLogger().info("Selectively extracted {} plugin templates to {}", 
+                extractedCount, targetDir.getAbsolutePath());
+            return true;
+        } else {
+            project.getLogger().debug("No plugin templates found for generator '{}' - will use generator defaults", generatorName);
+            return false;
+        }
+    }
+    
+    /**
+     * Dynamically discovers what templates are available in our plugin resources
+     */
+    private List<String> discoverAvailablePluginTemplates(String resourcePath) {
+        List<String> templates = new ArrayList<>();
+        
+        // Try to get the resource URL using multiple strategies
+        URL resourceUrl = null;
+        
+        // Strategy 1: Plugin classloader
+        resourceUrl = getClass().getResource(resourcePath);
+        
+        // Strategy 2: Context classloader  
+        if (resourceUrl == null) {
+            resourceUrl = Thread.currentThread().getContextClassLoader().getResource(resourcePath.substring(1));
+        }
+        
+        // Strategy 3: System classloader
+        if (resourceUrl == null) {
+            resourceUrl = ClassLoader.getSystemClassLoader().getResource(resourcePath.substring(1));
+        }
+        
+        if (resourceUrl == null) {
+            return templates; // Empty list if no templates found
+        }
+        
+        try {
+            URI resourceUri = resourceUrl.toURI();
+            Path templateSourcePath;
+            FileSystem fileSystem = null;
+            boolean needToCloseFileSystem = false;
+            
+            try {
+                if (resourceUri.getScheme().equals("jar")) {
+                    try {
+                        fileSystem = FileSystems.getFileSystem(resourceUri);
+                    } catch (FileSystemNotFoundException e) {
+                        fileSystem = FileSystems.newFileSystem(resourceUri, Collections.emptyMap());
+                        needToCloseFileSystem = true;
+                    }
+                    templateSourcePath = fileSystem.getPath(resourcePath);
+                } else {
+                    templateSourcePath = Paths.get(resourceUri);
+                }
+                
+                if (Files.exists(templateSourcePath) && Files.isDirectory(templateSourcePath)) {
+                    try (Stream<Path> paths = Files.list(templateSourcePath)) {
+                        templates = paths.filter(Files::isRegularFile)
+                                        .filter(path -> path.toString().endsWith(".mustache") || 
+                                                       path.toString().endsWith(".hbs") ||
+                                                       path.toString().endsWith(".handlebars"))
+                                        .map(path -> path.getFileName().toString())
+                                        .collect(Collectors.toList());
+                    }
+                }
+                
+            } finally {
+                if (needToCloseFileSystem && fileSystem != null) {
+                    try {
+                        fileSystem.close();
+                    } catch (IOException ignored) {
+                        // Ignore close errors
+                    }
+                }
+            }
+            
+        } catch (URISyntaxException | IOException e) {
+            // Return empty list if discovery fails - this is not an error condition
+        }
+        
+        return templates;
+    }
+    
+    /**
      * Extracts plugin templates from resources to the specified directory with caching optimization
+     * @deprecated Use extractSelectivePluginTemplates for better forward compatibility
      */
     private boolean extractPluginTemplates(Project project, String resourcePath, File targetDir) {
         try {
@@ -1049,17 +1262,52 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 return true;
             }
 
-            // Get the resource URL with fallback for module system environments
-            URL resourceUrl = getClass().getResource(resourcePath);
+            // Get the resource URL with comprehensive module system compatibility
+            URL resourceUrl = null;
+            String accessMethod = null;
+            
+            // Strategy 1: Plugin classloader (standard approach)
+            resourceUrl = getClass().getResource(resourcePath);
+            if (resourceUrl != null) {
+                accessMethod = "plugin classloader";
+            }
+            
+            // Strategy 2: Thread context classloader (Spring Boot compatibility)
             if (resourceUrl == null) {
-                // Try alternative classloader access for Spring Boot 3.x/Java 21 compatibility
                 resourceUrl = Thread.currentThread().getContextClassLoader().getResource(resourcePath.substring(1));
-                if (resourceUrl == null) {
-                    project.getLogger().warn("Plugin templates not found at resource path: {}. This may occur in Spring Boot 3.x/Java 21 environments. Consider using an external templateDir.", resourcePath);
-                    project.getLogger().warn("Workaround: Specify templateDir in your configuration to use external templates.");
-                    return false;
+                if (resourceUrl != null) {
+                    accessMethod = "context classloader";
                 }
-                project.getLogger().info("Found plugin templates using context classloader (Spring Boot 3.x/Java 21 compatibility mode)");
+            }
+            
+            // Strategy 3: System classloader (module system fallback)
+            if (resourceUrl == null) {
+                resourceUrl = ClassLoader.getSystemClassLoader().getResource(resourcePath.substring(1));
+                if (resourceUrl != null) {
+                    accessMethod = "system classloader";
+                }
+            }
+            
+            // Strategy 4: Try without leading slash (alternative path format)
+            if (resourceUrl == null && resourcePath.startsWith("/")) {
+                String alternatePath = resourcePath.substring(1);
+                resourceUrl = getClass().getClassLoader().getResource(alternatePath);
+                if (resourceUrl != null) {
+                    accessMethod = "alternate path format";
+                }
+            }
+            
+            if (resourceUrl == null) {
+                project.getLogger().warn("Plugin templates not found at resource path: {}. This indicates a Java module system compatibility issue.", resourcePath);
+                project.getLogger().warn("Common causes:");
+                project.getLogger().warn("  - Spring Boot 3.x fat JAR nested classloader isolation");
+                project.getLogger().warn("  - Java 9+ module system access restrictions");
+                project.getLogger().warn("  - Plugin JAR not properly included in classpath");
+                project.getLogger().warn("WORKAROUND: Specify templateDir in your configuration to use external templates:");
+                project.getLogger().warn("  openapiModelgen {{ defaults {{ templateDir 'path/to/custom/templates' }} }}");
+                return false;
+            } else {
+                project.getLogger().debug("Found plugin templates using: {} (path: {})", accessMethod, resourceUrl);
             }
 
             // Clean existing templates before extraction
@@ -1134,6 +1382,25 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         } catch (NoSuchAlgorithmException e) {
             // Fallback to simple string concatenation
             return resourcePath.replace("/", "_") + "_" + pluginVersion;
+        }
+    }
+
+    /**
+     * Computes a cache key for selective template extraction based on generator name and plugin version
+     */
+    private String computeSelectiveTemplateCacheKey(String generatorName, String pluginVersion) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            String input = "selective-templates:" + generatorName + ":" + pluginVersion;
+            byte[] hashBytes = md.digest(input.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // Fallback to simple string concatenation
+            return "selective_" + generatorName + "_" + pluginVersion;
         }
     }
 

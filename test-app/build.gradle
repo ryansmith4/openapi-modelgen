@@ -1,7 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
-    id 'com.guidedbyte.openapi-modelgen'
+    id 'com.guidedbyte.openapi-modelgen' version '1.0.4'
 }
 
 dependencies {
@@ -29,51 +29,15 @@ dependencies {
 
 // Configure our custom plugin
 openapiModelgen {
-    defaults {
-        outputDir "$buildDir/generated-sources/openapi"
-        modelNameSuffix "Dto"
-        generateModelTests false
-        generateApiTests false
-        generateApiDocumentation false
-        generateModelDocumentation false
-
-        templateVariables([
-                companyName: "GuidedByte Technologies Inc.",
-                shortCopyright: "© {{currentYear}} {{companyName}}",
-                fullCopyright: "Copyright {{shortCopyright}}",
-                header: "{{fullCopyright}}"
-        ])
-
-        configOptions([
-            dateLibrary: "java8",
-            useBeanValidation: "true",
-            performBeanValidation: "true", 
-            useSpringBoot3: "true",
-            useJakartaEe: "true",
-            serializableModel: "true",
-            hideGenerationTimestamp: "true",
-            enumUnknownDefaultCase: "true",
-            generateBuilders: "false",
-            legacyDiscriminatorBehavior: "false",
-            disallowAdditionalPropertiesIfNotPresent: "false",
-            useEnumCaseInsensitive: "true",
-            openApiNullable: "false",
-            generateConstructorWithAllArgs: "false",
-            generatedConstructorWithRequiredArgs: "false",
-            generateDefaultConstructor: "false",
-            additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
-        ])
-    }
-    
     specs {
         pets {
-            inputSpec "$projectDir/src/main/resources/openapi/pets.yaml"
-            modelPackage "com.guidedbyte.testapp.model.pets"
+            inputSpec "c:/dev/test-app2/src/main/resources/swagger/pets.yaml"
+            modelPackage "com.guidedbyte.testapp2.model.pets"
         }
         
         orders {
-            inputSpec "$projectDir/src/main/resources/openapi/orders.yaml"  
-            modelPackage "com.guidedbyte.testapp.model.orders"
+            inputSpec "C:/dev/test-app2/src/main/resources/swagger/orders.yaml"
+            modelPackage "com.guidedbyte.testapp2.model.orders"
             // Override suffix for orders to demonstrate per-spec config
             modelNameSuffix "Entity"
         }

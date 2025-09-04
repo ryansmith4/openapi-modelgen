@@ -7,7 +7,7 @@ A comprehensive Gradle plugin that wraps the OpenAPI Generator with enhanced fea
 - **Template Precedence System**: user templates > plugin templates > OpenAPI generator defaults
 - **Incremental Build Support**: Only regenerates when inputs actually change
 - **Configuration Validation**: Comprehensive validation with detailed error reporting
-- **Parallel Template Processing**: Concurrent template extraction for large template sets
+- **Dynamic Template Discovery**: Automatic detection of custom templates for forward compatibility
 - **Content-Based Change Detection**: SHA-256 hashing for reliable template change detection
 - **Lazy Template Extraction**: Templates extracted at execution time for better performance
 - **@Internal Property Optimization**: Precise incremental build invalidation
@@ -79,7 +79,7 @@ additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(flu
 - **Mustache template engine**: Custom templates with HTML escaping controls (`{{{.}}}`)
 - **Recursive variable expansion**: Nested template variables with inheritance
 - **SHA-256 content hashing**: Template change detection for efficient caching
-- **Parallel processing**: Multi-threaded template extraction for performance
+- **Selective extraction**: Only extracts custom templates, allowing generator defaults for missing templates
 - **Configuration validation**: Comprehensive error reporting with actionable messages
 - **Lazy evaluation**: Template extraction deferred until task execution
 
@@ -167,7 +167,7 @@ This design enables:
   - Fixed all test path and configuration issues (61/61 tests passing)
 
 ## Dependencies
-- **OpenAPI Generator 7.14.0**: Core code generation engine
+- **OpenAPI Generator 7.10.0+**: Core code generation engine
 - **Lombok**: Generated model annotations and builders
 - **Jackson**: JSON serialization support
 - **Spring Boot Validation**: Model validation annotations
@@ -205,3 +205,50 @@ This design enables:
 - **Generated output**: `test-app/build/generated-sources/openapi/`
 - **OpenAPI spec**: `test-app/src/main/resources/openapi-spec/pets.yaml`
 - **Test configuration**: `test-app/build.gradle`
+
+## Documentation Update Requirements
+**CRITICAL**: After any feature or functionality changes, ALL documentation sources MUST be updated for consistency:
+
+### Documentation Sources That Require Updates
+1. **README.md** - Main project documentation with usage examples and detailed configuration
+2. **CLAUDE.md** - This file with technical details and recently completed work
+3. **plugin-description.md** - Controls Gradle Plugin Portal documentation (keep minimal/concise)
+4. **Javadoc comments** - In-code documentation for classes and methods
+5. **Test documentation** - TestSummary.md and test method comments
+6. **Version requirements** - Across all files when compatibility changes
+
+### Plugin Portal Documentation Guidelines
+- **plugin-description.md** should be **plain text** (no markdown formatting)
+- Keep **concise** - focus on purpose, requirements, key features, basic usage
+- **Avoid** extensive configuration examples (save for README.md)
+- **Always** include link to GitHub repository for detailed documentation
+
+### Update Checklist for Feature Changes
+- [ ] Update feature descriptions (parallel → dynamic, version requirements, etc.)
+- [ ] Update task names and examples if task naming changes
+- [ ] Update version compatibility ranges if minimum versions change
+- [ ] Update technical concepts section if implementation changes
+- [ ] Verify all code examples use current API/configuration syntax
+- [ ] Check that all file references and paths are accurate
+- [ ] Update "Recently Completed Work" section with latest changes
+
+**Example**: When we changed from parallel template processing to selective template extraction, we needed to update all mentions of "parallel template processing" to "dynamic template discovery" across README.md, CLAUDE.md, and plugin-description.md.
+
+### Documentation Sources That Require Updates
+1. **README.md** - Main project documentation with usage examples
+2. **CLAUDE.md** - This file with technical details and recently completed work
+3. **plugin-description.md** - Controls Gradle Plugin Portal documentation
+4. **Javadoc comments** - In-code documentation for classes and methods
+5. **Test documentation** - TestSummary.md and test method comments
+6. **Version requirements** - Across all files when compatibility changes
+
+### Update Checklist for Feature Changes
+- [ ] Update feature descriptions (parallel → dynamic, version requirements, etc.)
+- [ ] Update task names and examples if task naming changes
+- [ ] Update version compatibility ranges if minimum versions change
+- [ ] Update technical concepts section if implementation changes
+- [ ] Verify all code examples use current API/configuration syntax
+- [ ] Check that all file references and paths are accurate
+- [ ] Update "Recently Completed Work" section with latest changes
+
+**Example**: When we changed from parallel template processing to selective template extraction, we needed to update all mentions of "parallel template processing" to "dynamic template discovery" across README.md, CLAUDE.md, and plugin-description.md.

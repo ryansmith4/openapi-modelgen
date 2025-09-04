@@ -13,11 +13,12 @@ repositories {
 dependencies {
     implementation gradleApi()
     
-    // Default OpenAPI Generator version - can be overridden by configuration plugins
+    // Default OpenAPI Generator version - can be overridden by user dependencies
     implementation('org.openapitools:openapi-generator-gradle-plugin:7.14.0') {
-        // Allow version to be overridden by user dependencies
+        // Allow version to be overridden by user dependencies (supports 7.10.0+)
         version {
             prefer '7.14.0'
+            reject '[0,7.10.0)'  // Reject versions below 7.10.0
         }
     }
     

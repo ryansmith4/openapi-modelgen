@@ -60,6 +60,9 @@ gradle.properties.local
 test-results/
 reports/
 
+# Debug directories
+test-debug-tmp/
+
 # Backup files
 *.bak
 *.backup

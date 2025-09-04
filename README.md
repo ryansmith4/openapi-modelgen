@@ -14,7 +14,7 @@ A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI spe
 
 ### Performance & Enterprise Features
 - **Automatic version detection**: Works with any OpenAPI Generator version from configuration plugins
-- **Parallel template processing**: Concurrent template extraction for large template sets
+- **Dynamic template discovery**: Automatic detection of custom templates for forward compatibility
 - **Content-based change detection**: SHA-256 hashing for reliable template change detection
 - **Lazy template extraction**: Templates extracted at execution time for better performance
 - **Configuration validation**: Comprehensive validation with detailed error reporting
@@ -361,7 +361,7 @@ openapi-modelgen/
 ### Requirements
 - **Java 17+**
 - **Gradle 8.0+** 
-- **OpenAPI Generator 7.14.0+** (automatically managed)
+- **OpenAPI Generator 7.10.0+** (automatically managed)
 
 ### Key Technical Features
 - **Composite build structure**: Plugin in separate directory with `includeBuild`
