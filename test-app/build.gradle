@@ -1,6 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.openapi.generator' version '7.14.0'
     id 'com.guidedbyte.openapi-modelgen' version '1.0.4'
 }
 
@@ -49,6 +50,27 @@ sourceSets {
     main {
         java {
             srcDirs += file("$buildDir/generated/sources/openapi/src/main/java")
+        }
+    }
+}
+
+tasks.register('listPluginVersions') {
+    doLast {
+        println "Applied Gradle Plugin Versions:"
+        project.plugins.each { plugin ->
+            def pluginClass = plugin.class
+            def pluginName = pluginClass.simpleName
+            def version = "Unknown"
+
+            // Attempt to find version information from the plugin's JAR
+            def jarFile = pluginClass.protectionDomain?.codeSource?.location?.file
+            if (jarFile) {
+                def matcher = (jarFile =~ /-(\d+\.\d+(\.\d+)?(-\w+)?)\.jar$/) // Matches versions like 1.0, 1.2.3, 1.0-SNAPSHOT
+                if (matcher.find()) {
+                    version = matcher.group(1)
+                }
+            }
+            println "  - $pluginName: $version"
         }
     }
 }

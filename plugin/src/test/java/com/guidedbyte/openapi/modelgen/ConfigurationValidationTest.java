@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * <p>These tests ensure users get clear, actionable error messages for configuration issues.</p>
  */
-public class ConfigurationValidationTest {
+public class ConfigurationValidationTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -48,6 +48,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -66,10 +67,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));
@@ -81,6 +80,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -99,10 +99,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));
@@ -117,6 +115,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -135,10 +134,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));
@@ -153,6 +150,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -171,10 +169,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));
@@ -186,6 +182,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -201,10 +198,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--all")
-                .withPluginClasspath()
                 .build();
 
         // Should not create any generation tasks
@@ -221,6 +216,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -243,10 +239,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));
@@ -261,6 +255,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -288,10 +283,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets", "--info")
-                .withPluginClasspath()
                 .build();
 
         assertFalse(result.getOutput().contains("Configuration validation failed"));
@@ -306,6 +299,7 @@ public class ConfigurationValidationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -327,10 +321,8 @@ public class ConfigurationValidationTest {
             """;
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks")
-                .withPluginClasspath()
                 .buildAndFail();
 
         assertTrue(result.getOutput().contains("configuration validation failed"));

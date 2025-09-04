@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
  */
-public class LiveTemplatePrecedenceTest {
+public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
 
     @TempDir 
     File testProjectDir;
@@ -46,6 +46,7 @@ public class LiveTemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -56,6 +57,7 @@ public class LiveTemplatePrecedenceTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
+                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 
                 specs {
@@ -69,10 +71,8 @@ public class LiveTemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateMinimal", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Should succeed using plugin templates
@@ -105,6 +105,7 @@ public class LiveTemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -132,10 +133,8 @@ public class LiveTemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation with template variables
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateMinimal", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Should succeed using plugin templates with custom variables
@@ -163,6 +162,7 @@ public class LiveTemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -173,6 +173,7 @@ public class LiveTemplatePrecedenceTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
+                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 
                 specs {
@@ -186,16 +187,12 @@ public class LiveTemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation twice
-        BuildResult firstResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult firstResult = createGradleRunner(testProjectDir)
                 .withArguments("generateMinimal", "--info")
-                .withPluginClasspath()
                 .build();
 
-        BuildResult secondResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult secondResult = createGradleRunner(testProjectDir)
                 .withArguments("generateMinimal", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: First run should extract templates, second should be up-to-date
@@ -222,6 +219,7 @@ public class LiveTemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -250,10 +248,8 @@ public class LiveTemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateMinimal", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Template variables should be expanded in generated files

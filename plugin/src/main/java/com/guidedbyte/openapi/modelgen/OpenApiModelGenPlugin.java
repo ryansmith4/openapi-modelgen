@@ -153,16 +153,15 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             }
         }
         
-        // Validate template directory if specified
+        // Validate template directory if specified (warn about missing directories but don't fail)
         if (defaults.getTemplateDir().isPresent()) {
             String templateDir = defaults.getTemplateDir().get();
             if (templateDir != null && !templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
-                if (!templateDirFile.exists()) {
-                    errors.add("defaults.templateDir does not exist: " + templateDir);
-                } else if (!templateDirFile.isDirectory()) {
+                if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
                     errors.add("defaults.templateDir is not a directory: " + templateDir);
                 }
+                // Note: Missing directories are allowed - plugin will fall back to built-in templates
             }
         }
         
@@ -233,11 +232,10 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             String templateDir = specConfig.getTemplateDir().get();
             if (templateDir != null && !templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
-                if (!templateDirFile.exists()) {
-                    errors.add(specPrefix + ": templateDir does not exist: " + templateDir);
-                } else if (!templateDirFile.isDirectory()) {
+                if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
                     errors.add(specPrefix + ": templateDir is not a directory: " + templateDir);
                 }
+                // Note: Missing directories are allowed - plugin will fall back to built-in templates
             }
         }
         
@@ -1028,22 +1026,27 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             project.getLogger().warn("User-specified template directory does not exist: {}. Falling back to plugin templates.", userTemplateDir);
         }
         
-        // 2. Check if we have plugin templates to extract
-        List<String> availableTemplates = discoverAvailablePluginTemplates("/templates/" + generatorName);
-        if (!availableTemplates.isEmpty()) {
-            project.getLogger().debug("Found {} plugin templates for generator '{}' - preparing extraction", 
-                availableTemplates.size(), generatorName);
-            
-            // Create plugin template cache directory
-            File pluginTemplateDir = new File(project.getBuildDir(), "plugin-templates/" + generatorName);
-            
-            // Extract plugin templates to the cache directory
-            boolean extracted = extractSelectivePluginTemplates(project, generatorName, pluginTemplateDir);
-            if (extracted) {
-                project.getLogger().debug("Plugin templates extracted to: {}", pluginTemplateDir.getAbsolutePath());
-                return pluginTemplateDir.getAbsolutePath();
-            } else {
-                project.getLogger().warn("Failed to extract plugin templates for generator '{}'. Falling back to generator defaults.", generatorName);
+        // 2. Only provide plugin templates if user explicitly requested customization
+        // This prevents conflicts with OpenAPI Generator's built-in templates
+        // Plugin templates are now considered "advanced customization" that requires explicit opt-in
+        if (userTemplateDir != null && !userTemplateDir.trim().isEmpty()) {
+            // User requested template customization but directory doesn't exist
+            // Check if we have plugin templates as a fallback
+            List<String> availableTemplates = discoverAvailablePluginTemplates("/templates/" + generatorName);
+            if (!availableTemplates.isEmpty()) {
+                project.getLogger().info("User requested template customization. Using plugin templates as fallback for generator '{}'", generatorName);
+                
+                // Create plugin template cache directory
+                File pluginTemplateDir = new File(project.getBuildDir(), "plugin-templates/" + generatorName);
+                
+                // Extract plugin templates to the cache directory
+                boolean extracted = extractSelectivePluginTemplates(project, generatorName, pluginTemplateDir);
+                if (extracted) {
+                    project.getLogger().debug("Plugin templates extracted to: {}", pluginTemplateDir.getAbsolutePath());
+                    return pluginTemplateDir.getAbsolutePath();
+                } else {
+                    project.getLogger().warn("Failed to extract plugin templates for generator '{}'. Falling back to generator defaults.", generatorName);
+                }
             }
         }
         

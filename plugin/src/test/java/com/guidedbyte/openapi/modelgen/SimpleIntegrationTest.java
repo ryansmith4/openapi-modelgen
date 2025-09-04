@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * <p>These tests use TestKit for realistic Gradle environment testing.</p>
  */
-public class SimpleIntegrationTest {
+public class SimpleIntegrationTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -50,6 +51,7 @@ public class SimpleIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -60,10 +62,8 @@ public class SimpleIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running gradle tasks
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--all")
-                .withPluginClasspath()
                 .build();
 
         // Then: Plugin should be applied successfully
@@ -77,6 +77,7 @@ public class SimpleIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -93,10 +94,8 @@ public class SimpleIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running the check task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("checkExtension")
-                .withPluginClasspath()
                 .build();
 
         // Then: Extension should be registered
@@ -109,6 +108,7 @@ public class SimpleIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -119,10 +119,8 @@ public class SimpleIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Listing all tasks
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--all")
-                .withPluginClasspath()
                 .build();
 
         // Then: Help task should be available
@@ -138,6 +136,7 @@ public class SimpleIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -160,10 +159,8 @@ public class SimpleIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running the generation task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets", "--info", "--stacktrace")
-                .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed
@@ -184,6 +181,7 @@ public class SimpleIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -200,10 +198,8 @@ public class SimpleIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Listing tasks
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--all")
-                .withPluginClasspath()
                 .build();
 
         // Then: Should not create generation tasks, only help task

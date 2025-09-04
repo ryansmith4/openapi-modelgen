@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
  */
-public class PerformanceIntegrationTest {
+public class PerformanceIntegrationTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -103,6 +103,7 @@ public class PerformanceIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -113,6 +114,7 @@ public class PerformanceIntegrationTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
+                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 specs {
                     pets {
@@ -125,10 +127,8 @@ public class PerformanceIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation task with info logging
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed and templates should be processed efficiently
@@ -143,10 +143,8 @@ public class PerformanceIntegrationTest {
         // When: Run, clean, run again
         BuildResult firstResult = runGenerationTask();
         
-        BuildResult cleanResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult cleanResult = createGradleRunner(testProjectDir)
                 .withArguments("clean")
-                .withPluginClasspath()
                 .build();
         
         BuildResult secondResult = runGenerationTask();
@@ -165,6 +163,7 @@ public class PerformanceIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -191,19 +190,15 @@ public class PerformanceIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Run all, then modify only one spec
-        BuildResult firstResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult firstResult = createGradleRunner(testProjectDir)
                 .withArguments("generateAllModels")
-                .withPluginClasspath()
                 .build();
         
         // Modify only pets spec
         modifySpecFile();
         
-        BuildResult secondResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult secondResult = createGradleRunner(testProjectDir)
                 .withArguments("generateAllModels")
-                .withPluginClasspath()
                 .build();
 
         // Then: First run all SUCCESS, second run pets SUCCESS and orders UP-TO-DATE
@@ -241,10 +236,8 @@ public class PerformanceIntegrationTest {
     }
 
     private BuildResult runGenerationTask() {
-        return GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        return createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .build();
     }
 
@@ -252,6 +245,7 @@ public class PerformanceIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -338,6 +332,7 @@ public class PerformanceIntegrationTest {
         String updatedBuildFile = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -373,6 +368,7 @@ public class PerformanceIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             

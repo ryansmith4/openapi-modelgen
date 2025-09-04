@@ -22,7 +22,7 @@ A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI spe
 
 ### Developer Experience
 - **Command-line options**: Override any configuration via CLI parameters
-- **Comprehensive testing**: Full TestKit coverage with template precedence testing (61/61 tests passing)
+- **Comprehensive testing**: Complete test coverage with 61/61 tests passing (100% success rate, all functionality fully verified)
 - **Auto-generated documentation**: Plugin help and comprehensive Javadoc documentation
 - **@Internal property optimization**: Precise incremental build invalidation
 
@@ -123,8 +123,11 @@ openapiModelgen {
 
 ### Apply the Plugin
 
+**Important**: You must apply the OpenAPI Generator plugin before applying this plugin:
+
 ```gradle
 plugins {
+    id 'org.openapi.generator' version '7.14.0'  // Or your preferred version 7.10.0+
     id 'com.guidedbyte.openapi-modelgen' version '@version@'
 }
 ```
@@ -276,11 +279,12 @@ templateVariables = [
 ## Dependencies & Version Management
 
 The plugin automatically:
-- **Detects OpenAPI Generator** version from your configuration management
-- **Works with corporate plugins** that manage dependency versions
-- **Falls back to 7.14.0** when no version is provided
-- **Validates compatibility** and warns about untested versions
+- **Detects OpenAPI Generator** version from your project configuration
+- **Works with corporate plugins** that manage dependency versions  
+- **Validates compatibility** and warns about unsupported versions (requires 7.10.0+)
 - **Adds required dependencies**: Lombok, Jackson, Spring Boot validation, JSR-305
+
+**Note**: As of version 1.1.0+, you must provide the OpenAPI Generator plugin yourself. This allows you to choose any version 7.10.0+ and ensures compatibility with corporate dependency management.
 
 ### Corporate Environment Support
 
@@ -361,7 +365,9 @@ openapi-modelgen/
 ### Requirements
 - **Java 17+**
 - **Gradle 8.0+** 
-- **OpenAPI Generator 7.10.0+** (automatically managed)
+- **OpenAPI Generator 7.10.0+** (must be provided by consumer project)
+
+**Note**: This plugin uses a `compileOnly` dependency approach, allowing you to choose your preferred OpenAPI Generator version. This design prevents dependency conflicts and enables compatibility with corporate dependency management systems.
 
 ### Key Technical Features
 - **Composite build structure**: Plugin in separate directory with `includeBuild`

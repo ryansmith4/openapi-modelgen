@@ -13,15 +13,13 @@ repositories {
 dependencies {
     implementation gradleApi()
     
-    // Default OpenAPI Generator version - can be overridden by user dependencies
-    implementation('org.openapitools:openapi-generator-gradle-plugin:7.14.0') {
-        // Allow version to be overridden by user dependencies (supports 7.10.0+)
-        version {
-            prefer '7.14.0'
-            reject '[0,7.10.0)'  // Reject versions below 7.10.0
-        }
-    }
+    // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled
+    // Consumer projects must provide their own version (7.10.0+)
+    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.10.0'
     
+    // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime
+    testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
+    testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.1.1'
     testImplementation gradleTestKit()

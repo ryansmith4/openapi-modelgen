@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
  */
-public class OpenApiModelGenPluginIntegrationTest {
+public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -50,6 +50,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -60,10 +61,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running gradle tasks
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--all")
-                .withPluginClasspath()
                 .build();
 
         // Then: Plugin tasks should be available
@@ -77,6 +76,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -100,10 +100,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running the generation task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed and generate files
@@ -124,6 +122,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -142,10 +141,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running the generation task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .buildAndFail();
 
         // Then: Build should fail with validation errors
@@ -160,6 +157,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -182,16 +180,12 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation task twice
-        BuildResult firstResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult firstResult = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .build();
 
-        BuildResult secondResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult secondResult = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .build();
 
         // Then: First run should succeed, second should be up-to-date
@@ -208,6 +202,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -234,10 +229,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running the aggregate task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateAllModels")
-                .withPluginClasspath()
                 .build();
 
         // Then: Both tasks should succeed
@@ -262,6 +255,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -285,10 +279,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation with custom templates
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Task should succeed
@@ -312,6 +304,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -327,10 +320,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running help task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateHelp")
-                .withPluginClasspath()
                 .build();
 
         // Then: Help should be displayed
@@ -347,6 +338,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -372,10 +364,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .build();
 
         // Then: Generated files should contain Lombok annotations
@@ -398,6 +388,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -425,10 +416,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .build();
 
         // Then: Template variables should be resolved
@@ -450,6 +439,7 @@ public class OpenApiModelGenPluginIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -469,10 +459,8 @@ public class OpenApiModelGenPluginIntegrationTest {
         Files.write(buildFile.toPath(), buildFileContent.getBytes());
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generatePets")
-                .withPluginClasspath()
                 .buildAndFail();
 
         // Then: Build should fail with appropriate error message

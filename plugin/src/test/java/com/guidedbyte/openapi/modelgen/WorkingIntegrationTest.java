@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
  */
-public class WorkingIntegrationTest {
+public class WorkingIntegrationTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -44,6 +44,7 @@ public class WorkingIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -54,10 +55,8 @@ public class WorkingIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running gradle tasks
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("tasks", "--group=help")
-                .withPluginClasspath()
                 .build();
 
         // Then: Build should succeed
@@ -72,6 +71,7 @@ public class WorkingIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -82,10 +82,8 @@ public class WorkingIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running help task specifically
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateHelp")
-                .withPluginClasspath()
                 .build();
 
         // Then: Help task should run successfully
@@ -100,6 +98,7 @@ public class WorkingIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -118,10 +117,8 @@ public class WorkingIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Trying to run a generation task
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest")
-                .withPluginClasspath()
                 .buildAndFail();
 
         // Then: Should fail with validation error
@@ -138,6 +135,7 @@ public class WorkingIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -160,10 +158,8 @@ public class WorkingIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Should generate code successfully
@@ -186,6 +182,7 @@ public class WorkingIntegrationTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -208,16 +205,12 @@ public class WorkingIntegrationTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation twice
-        BuildResult firstResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult firstResult = createGradleRunner(testProjectDir)
                 .withArguments("generateTest")
-                .withPluginClasspath()
                 .build();
 
-        BuildResult secondResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult secondResult = createGradleRunner(testProjectDir)
                 .withArguments("generateTest")
-                .withPluginClasspath()
                 .build();
 
         // Then: First should succeed, second should be up-to-date

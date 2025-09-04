@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
  */
-public class TemplatePrecedenceTest {
+public class TemplatePrecedenceTest extends BaseTestKitTest {
 
     @TempDir
     File testProjectDir;
@@ -49,10 +49,11 @@ public class TemplatePrecedenceTest {
 
     @Test
     void testPluginTemplatesOverrideDefaults() throws IOException {
-        // Given: Configuration without custom templates (uses plugin templates)
+        // Given: Configuration with templateDir specified (triggers plugin template usage)
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -63,6 +64,7 @@ public class TemplatePrecedenceTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
+                    templateDir "src/main/templates/custom" // Request customization (triggers plugin templates as fallback)
                 }
                 specs {
                     test {
@@ -75,10 +77,8 @@ public class TemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation (this should use plugin templates)
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Generation should succeed with plugin templates
@@ -109,6 +109,7 @@ public class TemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -132,10 +133,8 @@ public class TemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation using plugin templates
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Generation should succeed using plugin templates
@@ -163,6 +162,7 @@ public class TemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -186,10 +186,8 @@ public class TemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation with spec-level validateSpec override
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Should succeed despite defaults having validateSpec true
@@ -214,6 +212,7 @@ public class TemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -224,6 +223,7 @@ public class TemplatePrecedenceTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
+                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 specs {
                     test {
@@ -236,16 +236,12 @@ public class TemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation multiple times
-        BuildResult firstResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult firstResult = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
-        BuildResult secondResult = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult secondResult = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: First run should extract templates, second should use cache
@@ -272,6 +268,7 @@ public class TemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -299,10 +296,8 @@ public class TemplatePrecedenceTest {
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
         // When: Running generation
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
                 .build();
 
         // Then: Generated files should contain expanded variables
@@ -329,6 +324,7 @@ public class TemplatePrecedenceTest {
         String buildFileContent = """
             plugins {
                 id 'java'
+                id 'org.openapi.generator' version '7.14.0'
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -351,18 +347,16 @@ public class TemplatePrecedenceTest {
             """;
         Files.write(buildFile.toPath(), List.of(buildFileContent.split("\\n")));
 
-        // When: Running configuration with non-existent template directory
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
+        // When: Running generation with non-existent template directory (should fall back to plugin templates)
+        BuildResult result = createGradleRunner(testProjectDir)
                 .withArguments("generateTest", "--info")
-                .withPluginClasspath()
-                .buildAndFail();
+                .build();
 
-        // Then: Should fail with validation error for non-existent template directory
-        assertTrue(result.getOutput().contains("templateDir does not exist: src/main/resources/non-existent-templates"),
-                  "Should report template directory validation error");
-        assertTrue(result.getOutput().contains("OpenAPI Model Generator configuration validation failed"),
-                  "Should report configuration validation failure");
+        // Then: Should succeed with fallback to plugin templates
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertTrue(result.getOutput().contains("User-specified template directory does not exist") ||
+                  result.getOutput().contains("Falling back to plugin templates"),
+                  "Should report template directory fallback behavior");
     }
 
     private void createValidOpenApiSpec() throws IOException {

@@ -12,9 +12,14 @@ Key Features:
 Requirements:
 • Java 17+
 • Gradle 8.0+  
-• OpenAPI Generator 7.10.0+ (automatically managed)
+• OpenAPI Generator 7.10.0+ (must be applied by consumer project)
 
 Basic Usage:
+plugins {
+    id 'org.openapi.generator' version '7.11.0'  // Or your preferred version 7.10.0+
+    id 'com.guidedbyte.openapi-modelgen'
+}
+
 openapiModelgen {
     specs {
         myApi {
@@ -29,6 +34,6 @@ Generated Tasks:
 • generateAllModels - Generate models for all specs
 • generateHelp - Show plugin help and configuration options
 
-The plugin automatically detects OpenAPI Generator versions and adds required dependencies. Supports template customization and works with corporate dependency management.
+The plugin automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0+). Supports template customization and works with corporate dependency management.
 
 For detailed documentation and examples visit: https://github.com/ryansmith4/openapi-modelgen
