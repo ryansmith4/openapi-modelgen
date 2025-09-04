@@ -56,6 +56,9 @@ hs_err_pid*
 local.properties
 gradle.properties.local
 
+# Claude Code settings (user preferences and local configuration)
+.claude/
+
 # Test outputs
 test-results/
 reports/

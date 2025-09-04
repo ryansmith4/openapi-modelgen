@@ -36,7 +36,7 @@ A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI spe
 // ✅ CORRECT - Method call syntax
 openapiModelgen {
     defaults {
-        outputDir "build/generated"           // Calls outputDir(String value)
+        outputDir "build/generated/sources/openapi" // Calls outputDir(String value)
         validateSpec true                     // Calls validateSpec(Boolean value)
     }
     specs {
@@ -66,7 +66,7 @@ The plugin provides sensible defaults for all configuration options. When no exp
 ```gradle
 // These defaults are applied automatically - no configuration needed
 defaults {
-    outputDir "build/generated"              // Generated code output directory
+    outputDir "build/generated/sources/openapi"  // Generated code output directory
     modelNameSuffix "Dto"                    // Suffix for generated model classes
     validateSpec false                       // OpenAPI spec validation disabled by default
     generateModelTests false                 // Model test generation disabled
@@ -152,7 +152,7 @@ openapiModelgen {
 ```gradle
 openapiModelgen {
     defaults {
-        outputDir "build/generated-sources/openapi"
+        outputDir "build/generated/sources/openapi"
         templateDir "src/main/resources/openapi-templates"
         modelNameSuffix "Dto"
         validateSpec true
@@ -205,7 +205,7 @@ openapiModelgen {
 sourceSets {
     main {
         java {
-            srcDirs += file("build/generated-sources/openapi/src/main/java")
+            srcDirs += file("build/generated/sources/openapi/src/main/java")
         }
     }
 }
@@ -215,7 +215,7 @@ compileJava.dependsOn generateAllModels
 
 // Optional: Clean generated sources on clean
 clean {
-    delete file("build/generated-sources/openapi")
+    delete file("build/generated/sources/openapi")
 }
 ```
 
@@ -353,7 +353,7 @@ openapi-modelgen/
     ├── build.gradle                 # Plugin configuration example
     └── src/main/resources/openapi-spec/  # OpenAPI specifications
         ├── pets.yaml                # Pet store API specification
-        └── orders.yaml              # Orders API specification (if exists)
+        └── orders.yaml              # Orders API specification
 ```
 
 ## Technical Details

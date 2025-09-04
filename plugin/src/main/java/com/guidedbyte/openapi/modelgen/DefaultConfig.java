@@ -15,7 +15,7 @@ import java.util.Map;
  * 
  * <h2>Supported Configuration Options:</h2>
  * <ul>
- *   <li><strong>outputDir:</strong> Base directory for generated code (default: "build/generated")</li>
+ *   <li><strong>outputDir:</strong> Base directory for generated code (default: "build/generated/sources/openapi")</li>
  *   <li><strong>templateDir:</strong> Custom template directory path</li>
  *   <li><strong>modelNameSuffix:</strong> Suffix appended to model class names (e.g., "Dto")</li>
  *   <li><strong>validateSpec:</strong> Enable/disable OpenAPI specification validation</li>
@@ -27,7 +27,7 @@ import java.util.Map;
  * <h2>Example Usage:</h2>
  * <pre>{@code
  * defaults {
- *     outputDir "build/generated-sources/openapi"
+ *     outputDir "build/generated/sources/openapi"
  *     modelNameSuffix "Dto" 
  *     validateSpec true
  *     templateVariables([

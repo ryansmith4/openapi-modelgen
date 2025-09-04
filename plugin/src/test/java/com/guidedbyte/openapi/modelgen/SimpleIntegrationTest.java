@@ -169,8 +169,8 @@ public class SimpleIntegrationTest {
         // Then: Task should succeed
         assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
         
-        // Verify generated files exist in the default location (build/generated)
-        File generatedPackageDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
+        // Verify generated files exist in the default location (build/generated/sources/openapi)
+        File generatedPackageDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
         assertTrue(generatedPackageDir.exists(), "Generated directory should exist");
         
         File[] generatedFiles = generatedPackageDir.listFiles((dir, name) -> name.endsWith(".java"));

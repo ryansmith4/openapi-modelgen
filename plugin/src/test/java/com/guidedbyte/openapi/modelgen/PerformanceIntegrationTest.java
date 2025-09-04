@@ -232,7 +232,7 @@ public class PerformanceIntegrationTest {
         assertTrue(duration < 30000, "Generation should complete within 30 seconds, took: " + duration + "ms");
         
         // Verify multiple files were generated
-        File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/model/pets");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
         assertTrue(generatedDir.exists());
         
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));

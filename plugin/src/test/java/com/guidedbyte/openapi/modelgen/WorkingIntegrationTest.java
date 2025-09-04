@@ -169,8 +169,8 @@ public class WorkingIntegrationTest {
         // Then: Should generate code successfully
         assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
         
-        // Verify generated files exist in the default location (build/generated)
-        File generatedDir = new File(testProjectDir, "build/generated/src/main/java/com/example/test");
+        // Verify generated files exist in the default location (build/generated/sources/openapi)
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
         assertTrue(generatedDir.exists(), "Generated directory should exist");
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));

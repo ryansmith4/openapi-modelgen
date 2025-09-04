@@ -27,7 +27,7 @@ import java.util.Map;
  *         // Global defaults applied to all specs
  *         validateSpec true
  *         modelNameSuffix "Dto"
- *         outputDir "build/generated-sources/openapi"
+ *         outputDir "build/generated/sources/openapi"
  *         templateVariables([...])
  *     }
  *     specs {

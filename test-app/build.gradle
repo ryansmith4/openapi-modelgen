@@ -31,13 +31,13 @@ dependencies {
 openapiModelgen {
     specs {
         pets {
-            inputSpec "$projectDir/src/main/resources/swagger/pets.yaml"
-            modelPackage "com.guidedbyte.testapp2.model.pets"
+            inputSpec "$projectDir/src/main/resources/openapi/pets.yaml"
+            modelPackage "com.guidedbyte.testapp.model.pets"
         }
         
         orders {
-            inputSpec "$projectDir/src/main/resources/swagger/orders.yaml"
-            modelPackage "com.guidedbyte.testapp2.model.orders"
+            inputSpec "$projectDir/src/main/resources/openapi/orders.yaml"
+            modelPackage "com.guidedbyte.testapp.model.orders"
             // Override suffix for orders to demonstrate per-spec config
             modelNameSuffix "Entity"
         }
@@ -48,7 +48,7 @@ openapiModelgen {
 sourceSets {
     main {
         java {
-            srcDirs += file("$buildDir/generated-sources/openapi/src/main/java")
+            srcDirs += file("$buildDir/generated/sources/openapi/src/main/java")
         }
     }
 }

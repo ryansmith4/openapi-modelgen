@@ -444,7 +444,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 System.out.println("Configuration Example:");
                 System.out.println("openapiModelgen {");
                 System.out.println("    defaults {");
-                System.out.println("        outputDir = \"build/generated-sources/openapi\"");
+                System.out.println("        outputDir = \"build/generated/sources/openapi\"");
                 System.out.println("        modelNameSuffix = \"Dto\"");
                 System.out.println("        validateSpec = true");
                 System.out.println("    }");
@@ -486,7 +486,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     private void applyPluginDefaults(GenerateTask task) {
         // Built-in sensible defaults for model-only generation
         task.getGeneratorName().set("spring");
-        task.getOutputDir().set(task.getProject().getLayout().getBuildDirectory().dir("generated").get().getAsFile().getAbsolutePath());
+        task.getOutputDir().set(task.getProject().getLayout().getBuildDirectory().dir("generated/sources/openapi").get().getAsFile().getAbsolutePath());
         task.getModelNameSuffix().set("Dto");
         task.getGenerateModelTests().set(false);
         task.getGenerateApiTests().set(false);
@@ -606,12 +606,16 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             specConfig.getTemplateDir().get() : 
             (extension.getDefaults().getTemplateDir().isPresent() ? extension.getDefaults().getTemplateDir().get() : null);
         
-        // Resolve template directory during configuration with immediate extraction if needed
-        String resolvedTemplateDir = resolveTemplateDir(task.getProject(), userTemplateDir, task.getGeneratorName().get());
-        if (resolvedTemplateDir != null) {
-            task.getTemplateDir().set(resolvedTemplateDir);
-        }
-        // If resolvedTemplateDir is null, templateDir remains unset, which lets OpenAPI generator use defaults
+        // Set up lazy template directory resolution using Provider API
+        // This delays resolution until execution time, avoiding Gradle validation issues
+        task.getTemplateDir().set(task.getProject().provider(() -> {
+            String resolvedTemplateDir = resolveTemplateDir(task.getProject(), userTemplateDir, task.getGeneratorName().get());
+            if (resolvedTemplateDir != null) {
+                task.getProject().getLogger().debug("Template directory resolved lazily: {}", resolvedTemplateDir);
+                return resolvedTemplateDir;
+            }
+            return null;
+        }));
         
         // Merge spec-specific config options
         if (specConfig.getConfigOptions().isPresent()) {
@@ -1007,11 +1011,11 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     /**
      * Resolves template directory with the following precedence:
      * 1. User-provided template directory (external)
-     * 2. Plugin-provided templates (plugin/src/main/resources/templates/<generator_name>)
+     * 2. Plugin-provided templates (extracted to build/plugin-templates/<generator_name>)
      * 3. OpenAPI generator default templates (no templateDir set)
      * 
-     * This method is called lazily at task execution time to avoid expensive 
-     * template extraction during configuration phase.
+     * This method creates and extracts plugin templates to avoid Gradle validation issues
+     * while maintaining template precedence functionality.
      */
     private String resolveTemplateDir(Project project, String userTemplateDir, String generatorName) {
         // 1. User-provided template directory has highest precedence
@@ -1024,11 +1028,23 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             project.getLogger().warn("User-specified template directory does not exist: {}. Falling back to plugin templates.", userTemplateDir);
         }
         
-        // 2. Check for plugin-provided templates (selective extraction)
-        File pluginTemplateDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(), "plugin-templates/" + generatorName);
-        if (extractSelectivePluginTemplates(project, generatorName, pluginTemplateDir)) {
-            project.getLogger().debug("Selective template extraction completed: {}", pluginTemplateDir.getAbsolutePath());
-            return pluginTemplateDir.getAbsolutePath();
+        // 2. Check if we have plugin templates to extract
+        List<String> availableTemplates = discoverAvailablePluginTemplates("/templates/" + generatorName);
+        if (!availableTemplates.isEmpty()) {
+            project.getLogger().debug("Found {} plugin templates for generator '{}' - preparing extraction", 
+                availableTemplates.size(), generatorName);
+            
+            // Create plugin template cache directory
+            File pluginTemplateDir = new File(project.getBuildDir(), "plugin-templates/" + generatorName);
+            
+            // Extract plugin templates to the cache directory
+            boolean extracted = extractSelectivePluginTemplates(project, generatorName, pluginTemplateDir);
+            if (extracted) {
+                project.getLogger().debug("Plugin templates extracted to: {}", pluginTemplateDir.getAbsolutePath());
+                return pluginTemplateDir.getAbsolutePath();
+            } else {
+                project.getLogger().warn("Failed to extract plugin templates for generator '{}'. Falling back to generator defaults.", generatorName);
+            }
         }
         
         // 3. Fall back to OpenAPI generator default templates (return null to let generator use defaults)
