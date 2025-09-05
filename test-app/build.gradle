@@ -30,6 +30,12 @@ dependencies {
 
 // Configure our custom plugin
 openapiModelgen {
+    defaults {
+        templateDir "src/main/templates/custom" // Trigger use of plugin templates
+        templateVariables([
+                header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
+        ])
+    }
     specs {
         pets {
             inputSpec "$projectDir/src/main/resources/openapi/pets.yaml"

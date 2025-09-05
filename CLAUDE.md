@@ -173,9 +173,10 @@ This design enables:
   - Fixed TestKit tests to work with compileOnly dependencies using comprehensive classpath configuration
   - Added BaseTestKitTest class for proper TestKit dependency management
   - Updated template validation logic to support fallback behavior
+  - Added sealed.mustache and permits.mustache templates for backward compatibility
   - Fixed all remaining test assertion issues related to template processing changes
   - **ACHIEVED PERFECT SUCCESS: 61/61 tests passing (100% success rate)**
-  - Real-world usage fully functional (test-app and test-app2 build successfully)
+  - Real-world usage fully functional with both 7.11.0 and 7.14.0+ versions
 
 ## Dependencies
 - **OpenAPI Generator 7.10.0+**: Core code generation engine
