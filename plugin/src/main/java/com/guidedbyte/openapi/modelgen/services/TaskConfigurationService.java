@@ -202,7 +202,10 @@ public class TaskConfigurationService implements Serializable {
         File outputDirFile = new File(project.getProjectDir(), resolvedConfig.getOutputDir());
         task.getOutputDir().set(outputDirFile.getAbsolutePath());
         
-        // Configure model name suffix from resolved config
+        // Configure model name prefix and suffix from resolved config
+        if (resolvedConfig.getModelNamePrefix() != null) {
+            task.getModelNamePrefix().set(resolvedConfig.getModelNamePrefix());
+        }
         task.getModelNameSuffix().set(resolvedConfig.getModelNameSuffix());
         
         /**
@@ -424,6 +427,7 @@ public class TaskConfigurationService implements Serializable {
         // Spec configuration that affects output
         outputAffecting.put("inputSpec", specConfig.getInputSpec().getOrNull());
         outputAffecting.put("modelPackage", specConfig.getModelPackage().getOrNull());
+        outputAffecting.put("modelNamePrefix", specConfig.getModelNamePrefix().getOrNull());
         outputAffecting.put("modelNameSuffix", specConfig.getModelNameSuffix().getOrNull());
         
         // Config options that affect output

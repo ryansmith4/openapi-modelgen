@@ -64,6 +64,7 @@ public class SpecConfig {
     
     private final Property<String> inputSpec;
     private final Property<String> modelPackage;
+    private final Property<String> modelNamePrefix;
     private final Property<String> modelNameSuffix;
     private final Property<String> outputDir;
     private final Property<String> templateDir;
@@ -90,6 +91,7 @@ public class SpecConfig {
     public SpecConfig(Project project) {
         this.inputSpec = project.getObjects().property(String.class);
         this.modelPackage = project.getObjects().property(String.class);
+        this.modelNamePrefix = project.getObjects().property(String.class);
         this.modelNameSuffix = project.getObjects().property(String.class);
         this.outputDir = project.getObjects().property(String.class);
         this.templateDir = project.getObjects().property(String.class);
@@ -124,6 +126,10 @@ public class SpecConfig {
     
     public Property<String> getModelPackage() {
         return modelPackage;
+    }
+    
+    public Property<String> getModelNamePrefix() {
+        return modelNamePrefix;
     }
     
     public Property<String> getModelNameSuffix() {
@@ -192,6 +198,11 @@ public class SpecConfig {
     @Option(option = "model-package", description = "Java package name for generated model classes (e.g., 'com.example.model')")
     public void modelPackage(String value) {
         this.modelPackage.set(value);
+    }
+    
+    @Option(option = "model-name-prefix", description = "Prefix to prepend to generated model class names for this spec")
+    public void modelNamePrefix(String value) {
+        this.modelNamePrefix.set(value);
     }
     
     @Option(option = "model-name-suffix", description = "Suffix to append to generated model class names for this spec")

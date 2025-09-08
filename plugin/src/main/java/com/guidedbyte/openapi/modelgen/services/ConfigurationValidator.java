@@ -205,7 +205,13 @@ public class ConfigurationValidator implements Serializable {
             }
         }
         
-        // Note: modelNamePrefix is not supported in current SpecConfig - removed validation
+        // Validate optional modelNamePrefix
+        if (specConfig.getModelNamePrefix().isPresent()) {
+            String prefix = specConfig.getModelNamePrefix().get();
+            if (prefix != null && !prefix.trim().isEmpty() && !prefix.matches("[A-Za-z0-9_]*")) {
+                errors.add(specPrefix + ": modelNamePrefix can only contain letters, numbers, and underscores: " + prefix);
+            }
+        }
         
         // Validate config options
         if (specConfig.getConfigOptions().isPresent()) {

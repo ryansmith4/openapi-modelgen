@@ -43,6 +43,7 @@ public class ResolvedSpecConfig {
     private final String outputDir;
     private final String templateDir;
     private final String templateCustomizationsDir;
+    private final String modelNamePrefix;
     private final String modelNameSuffix;
     
     // Generation flags
@@ -69,6 +70,7 @@ public class ResolvedSpecConfig {
         this.outputDir = builder.outputDir;
         this.templateDir = builder.templateDir;
         this.templateCustomizationsDir = builder.templateCustomizationsDir;
+        this.modelNamePrefix = builder.modelNamePrefix;
         this.modelNameSuffix = builder.modelNameSuffix;
         this.validateSpec = builder.validateSpec;
         this.generateModelTests = builder.generateModelTests;
@@ -109,6 +111,10 @@ public class ResolvedSpecConfig {
     
     public String getTemplateCustomizationsDir() {
         return templateCustomizationsDir;
+    }
+    
+    public String getModelNamePrefix() {
+        return modelNamePrefix;
     }
     
     public String getModelNameSuffix() {
@@ -186,6 +192,7 @@ public class ResolvedSpecConfig {
         private String outputDir = "build/generated/sources/openapi";
         private String templateDir;
         private String templateCustomizationsDir;
+        private String modelNamePrefix; // No default value
         private String modelNameSuffix = "Dto";
         private boolean validateSpec = false;
         private boolean generateModelTests = false;
@@ -273,6 +280,9 @@ public class ResolvedSpecConfig {
             if (defaults.getTemplateCustomizationsDir().isPresent()) {
                 this.templateCustomizationsDir = defaults.getTemplateCustomizationsDir().get();
             }
+            if (defaults.getModelNamePrefix().isPresent()) {
+                this.modelNamePrefix = defaults.getModelNamePrefix().get();
+            }
             if (defaults.getModelNameSuffix().isPresent()) {
                 this.modelNameSuffix = defaults.getModelNameSuffix().get();
             }
@@ -328,6 +338,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getTemplateCustomizationsDir().isPresent()) {
                 this.templateCustomizationsDir = spec.getTemplateCustomizationsDir().get();
+            }
+            if (spec.getModelNamePrefix().isPresent()) {
+                this.modelNamePrefix = spec.getModelNamePrefix().get();
             }
             if (spec.getModelNameSuffix().isPresent()) {
                 this.modelNameSuffix = spec.getModelNameSuffix().get();

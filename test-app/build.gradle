@@ -54,6 +54,7 @@ openapiModelgen {
     defaults {
         templateDir "src/main/templates" // Use explicit user templates
         templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
+        modelNamePrefix "Api" // Add prefix to test the new feature
         templateSources([
             'user-templates',           // Use explicit user templates first
             'user-customizations',      // Then user YAML customizations
@@ -78,8 +79,8 @@ openapiModelgen {
         orders {
             inputSpec "$projectDir/src/main/resources/openapi/orders.yaml"
             modelPackage "com.guidedbyte.testapp.model.orders"
-            // Override suffix for orders to demonstrate per-spec config
-            modelNameSuffix "Entity"
+            modelNamePrefix "Custom" // Override default prefix for orders
+            modelNameSuffix "Entity" // Override suffix for orders to demonstrate per-spec config
         }
     }
 }
