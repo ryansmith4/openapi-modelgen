@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,6 +34,7 @@ import java.util.Map;
  */
 public class TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(TemplateResolver.class);
+    private final TemplateSourceDiscovery templateSourceDiscovery = new TemplateSourceDiscovery();
     
     /**
      * Resolves template configuration at configuration time without library support.
@@ -82,51 +84,78 @@ public class TemplateResolver {
             Map<String, String> templateVariables,
             LibraryTemplateExtractor.LibraryExtractionResult libraryContent) {
         
-        String userTemplateDir = resolvedConfig.getTemplateDir();
-        String userTemplateCustomizationsDir = resolvedConfig.getTemplateCustomizationsDir();
-        boolean applyPluginCustomizations = resolvedConfig.isApplyPluginCustomizations();
-        
-        // Resolve relative paths against the project directory at configuration time
-        String resolvedUserTemplateDir = userTemplateDir != null ? 
-            projectLayout.getProjectDirectory().dir(userTemplateDir).getAsFile().getAbsolutePath() : null;
-        String resolvedUserCustomizationsDir = userTemplateCustomizationsDir != null ? 
-            projectLayout.getProjectDirectory().dir(userTemplateCustomizationsDir).getAsFile().getAbsolutePath() : null;
-        
-        // Check for actual template files at configuration time
-        boolean hasUserTemplates = hasUserTemplatesForGenerator(resolvedUserTemplateDir, generatorName);
-        boolean hasUserCustomizations = hasUserCustomizationsForGenerator(resolvedUserCustomizationsDir, generatorName);
-        boolean hasPluginCustomizations = applyPluginCustomizations && hasPluginCustomizations(generatorName);
-        
-        // Check for library content if enabled
-        boolean hasLibraryTemplates = false;
-        boolean hasLibraryCustomizations = false;
-        if (libraryContent != null) {
-            hasLibraryTemplates = resolvedConfig.isUseLibraryTemplates() && libraryContent.hasTemplates();
-            hasLibraryCustomizations = resolvedConfig.isUseLibraryCustomizations() && libraryContent.hasCustomizations();
+        // Get configured template sources (with fallback to defaults)
+        List<String> configuredTemplateSources = resolvedConfig.getTemplateSources();
+        if (configuredTemplateSources == null || configuredTemplateSources.isEmpty()) {
+            configuredTemplateSources = TemplateSourceDiscovery.ALL_TEMPLATE_SOURCES;
+            logger.debug("No template sources configured for '{}', using all available sources", generatorName);
         }
         
-        logger.debug("Template resolution for '{}': userTemplates={}, userCustomizations={}, libraryTemplates={}, libraryCustomizations={}, pluginCustomizations={}, applyPluginCustomizations={}", 
-            generatorName, hasUserTemplates, hasUserCustomizations, hasLibraryTemplates, hasLibraryCustomizations, hasPluginCustomizations, applyPluginCustomizations);
+        // Auto-discover which sources are actually available
+        boolean hasLibraryDependencies = libraryContent != null;
+        List<String> availableTemplateSources = templateSourceDiscovery.discoverAvailableSources(
+            configuredTemplateSources, resolvedConfig, projectLayout, hasLibraryDependencies
+        );
         
-        // Debug logging for template precedence if enabled
+        // Convert to boolean flags for backward compatibility with TemplateConfiguration
+        boolean hasUserTemplates = availableTemplateSources.contains("user-templates");
+        boolean hasUserCustomizations = availableTemplateSources.contains("user-customizations");
+        boolean hasLibraryTemplates = availableTemplateSources.contains("library-templates") && 
+            libraryContent != null && libraryContent.hasTemplates();
+        boolean hasLibraryCustomizations = availableTemplateSources.contains("library-customizations") && 
+            libraryContent != null && libraryContent.hasCustomizations();
+        boolean hasPluginCustomizations = availableTemplateSources.contains("plugin-customizations") && 
+            hasPluginCustomizations(generatorName);
+        
+        // For backward compatibility, also check the old applyPluginCustomizations flag
+        boolean applyPluginCustomizations = resolvedConfig.isApplyPluginCustomizations();
+        if (!applyPluginCustomizations && hasPluginCustomizations) {
+            logger.debug("Plugin customizations available but disabled by applyPluginCustomizations=false for '{}'", generatorName);
+            hasPluginCustomizations = false;
+        }
+        
+        // Resolve paths for user templates and customizations
+        String resolvedUserTemplateDir = null;
+        String resolvedUserCustomizationsDir = null;
+        
+        if (hasUserTemplates && resolvedConfig.getTemplateDir() != null) {
+            resolvedUserTemplateDir = projectLayout.getProjectDirectory()
+                .dir(resolvedConfig.getTemplateDir()).getAsFile().getAbsolutePath();
+        }
+        
+        if (hasUserCustomizations && resolvedConfig.getTemplateCustomizationsDir() != null) {
+            resolvedUserCustomizationsDir = projectLayout.getProjectDirectory()
+                .dir(resolvedConfig.getTemplateCustomizationsDir()).getAsFile().getAbsolutePath();
+        }
+        
+        logger.debug("Template resolution for '{}': configured sources={}, available sources={}", 
+            generatorName, configuredTemplateSources, availableTemplateSources);
+        
+        // Enhanced debug logging for template resolution
         if (resolvedConfig.isDebugTemplateResolution()) {
-            logger.info("Template precedence for generator '{}': {}", generatorName, resolvedConfig.getTemplatePrecedence());
+            logger.info("=== Template Resolution Debug for '{}' ===", generatorName);
+            logger.info("Configured template sources: {}", configuredTemplateSources);
+            logger.info("Available template sources: {}", availableTemplateSources);
+            
             if (hasUserTemplates) {
-                logger.info("Template source 'user-templates' active for generator '{}': {}", generatorName, resolvedUserTemplateDir);
+                logger.info("✅ user-templates: {}", resolvedUserTemplateDir);
             }
             if (hasUserCustomizations) {
-                logger.info("Template source 'user-customizations' active for generator '{}': {}", generatorName, resolvedUserCustomizationsDir);
+                logger.info("✅ user-customizations: {}", resolvedUserCustomizationsDir);
             }
             if (hasLibraryTemplates) {
-                logger.info("Template source 'library-templates' active for generator '{}': {} templates from libraries", generatorName, libraryContent.getTemplates().size());
+                logger.info("✅ library-templates: {} templates from libraries", libraryContent.getTemplates().size());
             }
             if (hasLibraryCustomizations) {
-                logger.info("Template source 'library-customizations' active for generator '{}': {} customizations from libraries", generatorName, libraryContent.getCustomizations().size());
+                logger.info("✅ library-customizations: {} customizations from libraries", libraryContent.getCustomizations().size());
             }
             if (hasPluginCustomizations) {
-                logger.info("Template source 'plugin-customizations' active for generator '{}': built-in YAML customizations", generatorName);
+                logger.info("✅ plugin-customizations: built-in YAML customizations");
             }
-            logger.info("Template source 'openapi-generator' active for generator '{}': OpenAPI Generator default templates", generatorName);
+            if (availableTemplateSources.contains("openapi-generator") || availableTemplateSources.isEmpty()) {
+                logger.info("✅ openapi-generator: OpenAPI Generator default templates (fallback)");
+            }
+            logger.info("=== End Template Resolution Debug ===");
         }
         
         // Determine template work directory path at configuration time

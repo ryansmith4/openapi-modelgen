@@ -6,6 +6,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.options.Option;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -22,7 +23,8 @@ import java.util.Map;
  *   <li><strong>modelNameSuffix:</strong> Suffix appended to model class names (default: "Dto")</li>
  *   <li><strong>validateSpec:</strong> Enable/disable OpenAPI specification validation (default: false)</li>
  *   <li><strong>applyPluginCustomizations:</strong> Enable/disable built-in plugin YAML customizations (default: true)</li>
- *   <li><strong>templatePrecedence:</strong> Configurable template resolution order (default: ["user-templates", "user-customizations", "plugin-customizations", "openapi-generator"])</li>
+ *   <li><strong>templateSources:</strong> <em>(Preferred)</em> Ordered list of template sources with auto-discovery (default: all sources)</li>
+ *   <li><strong>templatePrecedence:</strong> <em>(Advanced)</em> Configurable template resolution order for fine-grained control</li>
  *   <li><strong>debugTemplateResolution:</strong> Enable debug logging for template source resolution (default: false)</li>
  *   <li><strong>templateVariables:</strong> Variables available in Mustache templates (supports nested expansion)</li>
  *   <li><strong>configOptions:</strong> OpenAPI Generator configuration options (pre-configured for Spring Boot 3 + Jakarta EE + Lombok)</li>
@@ -33,6 +35,12 @@ import java.util.Map;
  *   <li><strong>generateModelDocumentation:</strong> Enable/disable model documentation generation (default: false)</li>
  * </ul>
  * 
+ * <h2>Migration from Deprecated Properties:</h2>
+ * <ul>
+ *   <li><strong>useLibraryTemplates:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-templates", "library-templates", "plugin-customizations", "openapi-generator"])} instead</li>
+ *   <li><strong>useLibraryCustomizations:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-customizations", "library-customizations", "plugin-customizations", "openapi-generator"])} instead</li>
+ * </ul>
+ * 
  * <h2>Example Usage:</h2>
  * <pre>{@code
  * defaults {
@@ -40,12 +48,14 @@ import java.util.Map;
  *     modelNameSuffix "Dto" 
  *     validateSpec true
  *     
- *     // Configure template resolution
- *     templatePrecedence([
- *         "user-customizations",     // YAML customizations first for consistency  
- *         "user-templates",          // Direct templates second
+ *     // Configure template resolution (new simplified approach)
+ *     templateSources([
+ *         "user-templates",          // Project .mustache templates (highest priority)
+ *         "user-customizations",     // Project YAML customizations
+ *         "library-templates",       // Library .mustache templates
+ *         "library-customizations",  // Library YAML customizations
  *         "plugin-customizations",   // Built-in plugin customizations
- *         "openapi-generator"        // OpenAPI Generator defaults
+ *         "openapi-generator"        // OpenAPI Generator defaults (fallback)
  *     ])
  *     debugTemplateResolution true  // Show template source debug info
  *     
@@ -76,6 +86,7 @@ public class DefaultConfig {
     private final Property<Boolean> validateSpec;
     private final Property<Boolean> applyPluginCustomizations;
     private final ListProperty<String> templatePrecedence;
+    private final ListProperty<String> templateSources;
     private final Property<Boolean> debugTemplateResolution;
     private final MapProperty<String, String> configOptions;
     private final MapProperty<String, String> globalProperties;
@@ -103,7 +114,18 @@ public class DefaultConfig {
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
         this.templatePrecedence = project.getObjects().listProperty(String.class);
+        this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
+        
+        // Set smart defaults for templateSources - all possible sources with auto-discovery
+        this.templateSources.convention(Arrays.asList(
+            "user-templates",           // Explicit .mustache files in templateDir
+            "user-customizations",      // YAML customizations in templateCustomizationsDir
+            "library-templates",        // Templates from JAR dependencies
+            "library-customizations",   // YAML customizations from JAR dependencies
+            "plugin-customizations",    // Built-in plugin YAML customizations
+            "openapi-generator"         // OpenAPI Generator default templates (always available)
+        ));
         this.configOptions = project.getObjects().mapProperty(String.class, String.class);
         this.globalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
@@ -168,14 +190,45 @@ public class DefaultConfig {
         return templatePrecedence;
     }
     
+    /**
+     * Gets the template sources list property.
+     * 
+     * <p>Defines the ordered list of template sources to use for template resolution.
+     * Sources are processed in order from highest to lowest priority. Available sources:
+     * <ul>
+     *   <li><strong>user-templates:</strong> Explicit .mustache files in templateDir</li>
+     *   <li><strong>user-customizations:</strong> YAML customizations in templateCustomizationsDir</li>
+     *   <li><strong>library-templates:</strong> Templates from JAR dependencies</li>
+     *   <li><strong>library-customizations:</strong> YAML customizations from JAR dependencies</li>
+     *   <li><strong>plugin-customizations:</strong> Built-in plugin YAML customizations</li>
+     *   <li><strong>openapi-generator:</strong> OpenAPI Generator default templates (always available)</li>
+     * </ul>
+     * 
+     * <p>The plugin automatically discovers which sources are available and only processes
+     * those that exist. Non-existent sources are silently skipped.</p>
+     * 
+     * @return the template sources list property
+     */
+    public ListProperty<String> getTemplateSources() {
+        return templateSources;
+    }
+    
     public Property<Boolean> getDebugTemplateResolution() {
         return debugTemplateResolution;
     }
     
+    /**
+     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-templates" is in the templateSources list.
+     */
+    @Deprecated
     public Property<Boolean> getUseLibraryTemplates() {
         return useLibraryTemplates;
     }
     
+    /**
+     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-customizations" is in the templateSources list.
+     */
+    @Deprecated
     public Property<Boolean> getUseLibraryCustomizations() {
         return useLibraryCustomizations;
     }
@@ -280,6 +333,29 @@ public class DefaultConfig {
     }
     
     /**
+     * Sets the template sources list for template resolution.
+     * 
+     * <p>Defines the ordered list of template sources to use, from highest to lowest priority.
+     * The plugin will automatically discover which sources are available and skip missing ones.
+     * 
+     * <p>Available sources:</p>
+     * <ul>
+     *   <li><strong>user-templates:</strong> Explicit .mustache files</li>
+     *   <li><strong>user-customizations:</strong> YAML customization files</li>
+     *   <li><strong>library-templates:</strong> Templates from JAR dependencies</li>
+     *   <li><strong>library-customizations:</strong> YAML customizations from JARs</li>
+     *   <li><strong>plugin-customizations:</strong> Built-in plugin customizations</li>
+     *   <li><strong>openapi-generator:</strong> OpenAPI Generator defaults (always available)</li>
+     * </ul>
+     * 
+     * @param sources the ordered list of template sources to use
+     */
+    @Option(option = "template-sources", description = "Ordered list of template sources to use for template resolution")
+    public void templateSources(java.util.List<String> sources) {
+        this.templateSources.set(sources);
+    }
+    
+    /**
      * Enables debug logging to show which template source was used for each template.
      * 
      * <p>When enabled, logs will show messages like:</p>
@@ -302,8 +378,12 @@ public class DefaultConfig {
      * the configured template precedence order.</p>
      * 
      * @param use {@code true} to enable library templates, {@code false} to disable
+     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-templates" 
+     *             in your templateSources list to enable library templates with better control over precedence.
+     *             Example: {@code templateSources(["user-templates", "library-templates", "plugin-customizations", "openapi-generator"])}
      */
-    @Option(option = "use-library-templates", description = "Enable templates from library dependencies")
+    @Deprecated
+    @Option(option = "use-library-templates", description = "Enable templates from library dependencies (deprecated: use templateSources instead)")
     public void useLibraryTemplates(Boolean use) {
         this.useLibraryTemplates.set(use);
     }
@@ -315,8 +395,12 @@ public class DefaultConfig {
      * applied according to the configured precedence order.</p>
      * 
      * @param use {@code true} to enable library customizations, {@code false} to disable
+     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-customizations" 
+     *             in your templateSources list to enable library customizations with better control over precedence.
+     *             Example: {@code templateSources(["user-customizations", "library-customizations", "plugin-customizations", "openapi-generator"])}
      */
-    @Option(option = "use-library-customizations", description = "Enable YAML customizations from library dependencies")
+    @Deprecated
+    @Option(option = "use-library-customizations", description = "Enable YAML customizations from library dependencies (deprecated: use templateSources instead)")
     public void useLibraryCustomizations(Boolean use) {
         this.useLibraryCustomizations.set(use);
     }

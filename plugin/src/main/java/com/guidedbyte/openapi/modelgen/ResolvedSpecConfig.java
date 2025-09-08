@@ -55,6 +55,7 @@ public class ResolvedSpecConfig {
     
     // Template resolution configuration
     private final List<String> templatePrecedence;
+    private final List<String> templateSources;
     private final boolean debugTemplateResolution;
     
     // Library support configuration
@@ -82,6 +83,7 @@ public class ResolvedSpecConfig {
         this.generateApiDocumentation = builder.generateApiDocumentation;
         this.generateModelDocumentation = builder.generateModelDocumentation;
         this.templatePrecedence = builder.templatePrecedence;
+        this.templateSources = builder.templateSources;
         this.debugTemplateResolution = builder.debugTemplateResolution;
         this.useLibraryTemplates = builder.useLibraryTemplates;
         this.useLibraryCustomizations = builder.useLibraryCustomizations;
@@ -163,6 +165,15 @@ public class ResolvedSpecConfig {
         return templatePrecedence;
     }
     
+    /**
+     * Gets the resolved template sources list for this specification.
+     * 
+     * @return the list of template sources in priority order, or null if not configured
+     */
+    public List<String> getTemplateSources() {
+        return templateSources;
+    }
+    
     public boolean isDebugTemplateResolution() {
         return debugTemplateResolution;
     }
@@ -206,6 +217,14 @@ public class ResolvedSpecConfig {
         private boolean generateApiDocumentation = false;
         private boolean generateModelDocumentation = false;
         private List<String> templatePrecedence;
+        private List<String> templateSources = Arrays.asList(
+            "user-templates",
+            "user-customizations",
+            "library-templates",
+            "library-customizations",
+            "plugin-customizations",
+            "openapi-generator"
+        );
         private boolean debugTemplateResolution = false;
         private boolean useLibraryTemplates = false;
         private boolean useLibraryCustomizations = false;
@@ -321,6 +340,9 @@ public class ResolvedSpecConfig {
             if (defaults.getTemplatePrecedence().isPresent()) {
                 this.templatePrecedence = defaults.getTemplatePrecedence().get();
             }
+            if (defaults.getTemplateSources().isPresent()) {
+                this.templateSources = defaults.getTemplateSources().get();
+            }
             if (defaults.getDebugTemplateResolution().isPresent()) {
                 this.debugTemplateResolution = defaults.getDebugTemplateResolution().get();
             }
@@ -373,6 +395,21 @@ public class ResolvedSpecConfig {
             }
             if (spec.getGenerateModelDocumentation().isPresent()) {
                 this.generateModelDocumentation = spec.getGenerateModelDocumentation().get();
+            }
+            if (spec.getTemplatePrecedence().isPresent()) {
+                this.templatePrecedence = spec.getTemplatePrecedence().get();
+            }
+            if (spec.getTemplateSources().isPresent()) {
+                this.templateSources = spec.getTemplateSources().get();
+            }
+            if (spec.getDebugTemplateResolution().isPresent()) {
+                this.debugTemplateResolution = spec.getDebugTemplateResolution().get();
+            }
+            if (spec.getUseLibraryTemplates().isPresent()) {
+                this.useLibraryTemplates = spec.getUseLibraryTemplates().get();
+            }
+            if (spec.getUseLibraryCustomizations().isPresent()) {
+                this.useLibraryCustomizations = spec.getUseLibraryCustomizations().get();
             }
             if (spec.getConfigOptions().isPresent()) {
                 this.configOptions.putAll(spec.getConfigOptions().get());
