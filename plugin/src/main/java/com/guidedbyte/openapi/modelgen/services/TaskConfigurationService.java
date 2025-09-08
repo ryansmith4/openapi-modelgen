@@ -285,6 +285,15 @@ public class TaskConfigurationService implements Serializable {
             logger.debug("Configured {} type mappings for spec: {}", typeMappings.size(), specName);
         }
         
+        // Apply additional properties from resolved config
+        Map<String, String> additionalProperties = resolvedConfig.getAdditionalProperties();
+        if (!additionalProperties.isEmpty()) {
+            for (Map.Entry<String, String> entry : additionalProperties.entrySet()) {
+                task.getAdditionalProperties().put(entry.getKey(), entry.getValue());
+            }
+            logger.debug("Configured {} additional properties for spec: {}", additionalProperties.size(), specName);
+        }
+        
         // Configure template variables from resolved configuration
         Map<String, String> templateVariables = resolvedConfig.getTemplateVariables();
         if (!templateVariables.isEmpty()) {

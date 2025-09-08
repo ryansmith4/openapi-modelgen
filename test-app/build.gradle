@@ -76,6 +76,12 @@ openapiModelgen {
             'string+date': 'LocalDate',
             'string+date-time': 'LocalDateTime'
         ])
+        additionalProperties([
+            'library': 'spring-boot',
+            'beanValidations': 'true',
+            'performBeanValidation': 'true',
+            'useSpringBoot3': 'true'
+        ])
         validateSpec false
         configOptions([
             additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
@@ -97,6 +103,10 @@ openapiModelgen {
             ])
             typeMappings([
                 'string+date-time': 'Instant'   // Override default mapping for orders
+            ])
+            additionalProperties([
+                'reactive': 'false',            // Override reactive setting for orders
+                'enablePostProcessFile': 'true' // Orders-specific additional property
             ])
         }
     }

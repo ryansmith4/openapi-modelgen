@@ -63,6 +63,7 @@ public class ResolvedSpecConfig {
     private final Map<String, String> templateVariables;
     private final Map<String, String> importMappings;
     private final Map<String, String> typeMappings;
+    private final Map<String, String> additionalProperties;
     
     private ResolvedSpecConfig(Builder builder) {
         this.specName = builder.specName;
@@ -86,6 +87,7 @@ public class ResolvedSpecConfig {
         this.templateVariables = new HashMap<>(builder.templateVariables);
         this.importMappings = new HashMap<>(builder.importMappings);
         this.typeMappings = new HashMap<>(builder.typeMappings);
+        this.additionalProperties = new HashMap<>(builder.additionalProperties);
     }
     
     // Getters
@@ -166,6 +168,10 @@ public class ResolvedSpecConfig {
         return new HashMap<>(typeMappings);
     }
     
+    public Map<String, String> getAdditionalProperties() {
+        return new HashMap<>(additionalProperties);
+    }
+    
     
     /**
      * Gets the resolved template sources list for this specification.
@@ -225,6 +231,7 @@ public class ResolvedSpecConfig {
         private Map<String, String> templateVariables = new HashMap<>();
         private Map<String, String> importMappings = new HashMap<>();
         private Map<String, String> typeMappings = new HashMap<>();
+        private Map<String, String> additionalProperties = new HashMap<>();
         
         private Builder(String specName, DefaultConfig userDefaults, SpecConfig specConfig) {
             this.specName = specName;
@@ -330,6 +337,9 @@ public class ResolvedSpecConfig {
             if (defaults.getTypeMappings().isPresent()) {
                 this.typeMappings.putAll(defaults.getTypeMappings().get());
             }
+            if (defaults.getAdditionalProperties().isPresent()) {
+                this.additionalProperties.putAll(defaults.getAdditionalProperties().get());
+            }
             if (defaults.getTemplateSources().isPresent()) {
                 this.templateSources = defaults.getTemplateSources().get();
             }
@@ -400,6 +410,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getTypeMappings().isPresent()) {
                 this.typeMappings.putAll(spec.getTypeMappings().get());
+            }
+            if (spec.getAdditionalProperties().isPresent()) {
+                this.additionalProperties.putAll(spec.getAdditionalProperties().get());
             }
         }
         

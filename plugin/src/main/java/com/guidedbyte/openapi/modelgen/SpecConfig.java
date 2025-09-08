@@ -38,6 +38,7 @@ import java.util.Map;
  *   <li><strong>configOptions:</strong> Spec-specific OpenAPI Generator options</li>
  *   <li><strong>importMappings:</strong> Additional or override import mappings (merged with defaults)</li>
  *   <li><strong>typeMappings:</strong> Additional or override type mappings (merged with defaults)</li>
+ *   <li><strong>additionalProperties:</strong> Additional or override OpenAPI Generator properties (merged with defaults)</li>
  * </ul>
  * 
  * <h2>Example Usage:</h2>
@@ -60,6 +61,10 @@ import java.util.Map;
  *         ])
  *         typeMappings([
  *             'string+legacy-id': 'LegacyId'  // Custom type for legacy spec
+ *         ])
+ *         additionalProperties([
+ *             'library': 'spring-cloud',  // Override default library
+ *             'reactive': 'true'          // Legacy-specific additional property
  *         ])
  *     }
  * }
@@ -89,6 +94,7 @@ public class SpecConfig {
     private final MapProperty<String, String> templateVariables;
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
+    private final MapProperty<String, String> additionalProperties;
     
     /**
      * Creates a new specification configuration for the given project.
@@ -129,6 +135,7 @@ public class SpecConfig {
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
     }
     
     // Getter methods
@@ -207,6 +214,10 @@ public class SpecConfig {
     
     public MapProperty<String, String> getTypeMappings() {
         return typeMappings;
+    }
+    
+    public MapProperty<String, String> getAdditionalProperties() {
+        return additionalProperties;
     }
     
     // Convenience setter methods for Gradle DSL
@@ -299,5 +310,9 @@ public class SpecConfig {
     
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
+    }
+    
+    public void additionalProperties(Map<String, String> properties) {
+        this.additionalProperties.set(properties);
     }
 }

@@ -34,6 +34,7 @@ import java.util.Map;
  *   <li><strong>generateModelDocumentation:</strong> Enable/disable model documentation generation (default: false)</li>
  *   <li><strong>importMappings:</strong> Map type names to fully qualified import statements (merged with spec-level mappings)</li>
  *   <li><strong>typeMappings:</strong> Map OpenAPI types to Java types (merged with spec-level mappings)</li>
+ *   <li><strong>additionalProperties:</strong> Additional properties passed to OpenAPI Generator (merged with spec-level properties)</li>
  * </ul>
  * 
  * 
@@ -73,6 +74,11 @@ import java.util.Map;
  *         'string+uuid': 'UUID',
  *         'string+date': 'LocalDate'
  *     ])
+ *     additionalProperties([
+ *         'library': 'spring-boot',
+ *         'beanValidations': 'true',
+ *         'useSpringBoot3': 'true'
+ *     ])
  * }
  * }</pre>
  * 
@@ -98,6 +104,7 @@ public class DefaultConfig {
     private final MapProperty<String, String> templateVariables;
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
+    private final MapProperty<String, String> additionalProperties;
     
     /**
      * Creates a new default configuration for the given project.
@@ -135,6 +142,7 @@ public class DefaultConfig {
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
     }
     
     // Getter methods
@@ -196,6 +204,10 @@ public class DefaultConfig {
     
     public MapProperty<String, String> getTypeMappings() {
         return typeMappings;
+    }
+    
+    public MapProperty<String, String> getAdditionalProperties() {
+        return additionalProperties;
     }
     
     
@@ -312,6 +324,10 @@ public class DefaultConfig {
     
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
+    }
+    
+    public void additionalProperties(Map<String, String> properties) {
+        this.additionalProperties.set(properties);
     }
     
     

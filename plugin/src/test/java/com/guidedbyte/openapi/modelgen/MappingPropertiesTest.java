@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for importMappings and typeMappings configuration properties.
+ * Tests for importMappings, typeMappings, and additionalProperties configuration properties.
  * 
  * <p>Validates that the new mapping properties are properly configured and merged:</p>
  * <ul>
@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Spec-level mappings are applied and merged with defaults</li>
  *   <li>Spec-level mappings override defaults for duplicate keys</li>
  *   <li>Empty mappings are handled correctly</li>
+ *   <li>Additional properties are passed to OpenAPI Generator</li>
  * </ul>
  */
 public class MappingPropertiesTest extends BaseTestKitTest {
@@ -73,7 +74,7 @@ public class MappingPropertiesTest extends BaseTestKitTest {
     }
 
     @Test
-    void testImportAndTypeMappingsCompileSuccessfully() throws IOException {
+    void testImportTypeMappingsAndAdditionalPropertiesCompileSuccessfully() throws IOException {
         String buildFileContent = """
             plugins {
                 id 'java'
@@ -91,6 +92,10 @@ public class MappingPropertiesTest extends BaseTestKitTest {
                         'string+uuid': 'UUID',
                         'string+date-time': 'LocalDateTime'
                     ])
+                    additionalProperties([
+                        'library': 'spring-boot',
+                        'beanValidations': 'true'
+                    ])
                 }
                 specs {
                     test {
@@ -101,6 +106,9 @@ public class MappingPropertiesTest extends BaseTestKitTest {
                         ])
                         typeMappings([
                             'string+uuid': 'String'  // Override default mapping
+                        ])
+                        additionalProperties([
+                            'reactive': 'true'  // Additional property for this spec only
                         ])
                     }
                 }
@@ -128,8 +136,9 @@ public class MappingPropertiesTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     outputDir "build/generated"
-                    importMappings([:])  // Empty map
-                    typeMappings([:])    // Empty map
+                    importMappings([:])       // Empty map
+                    typeMappings([:])         // Empty map
+                    additionalProperties([:]) // Empty map
                 }
                 specs {
                     test {
@@ -147,6 +156,46 @@ public class MappingPropertiesTest extends BaseTestKitTest {
             .build();
         
         // Should handle empty mappings without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+    
+    @Test
+    void testAdditionalPropertiesConfigurationWorks() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+            
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    additionalProperties([
+                        'library': 'spring-boot',
+                        'reactive': 'false',
+                        'serializableModel': 'true'
+                    ])
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        additionalProperties([
+                            'reactive': 'true',      // Override default
+                            'useSpringBoot3': 'true' // Additional property
+                        ])
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+        
+        // Should compile and configure additional properties without errors
         assertTrue(result.getOutput().contains("generateTest"));
         assertFalse(result.getOutput().contains("FAILED"));
     }
