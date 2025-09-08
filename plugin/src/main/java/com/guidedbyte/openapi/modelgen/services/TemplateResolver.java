@@ -107,13 +107,6 @@ public class TemplateResolver {
         boolean hasPluginCustomizations = availableTemplateSources.contains("plugin-customizations") && 
             hasPluginCustomizations(generatorName);
         
-        // For backward compatibility, also check the old applyPluginCustomizations flag
-        boolean applyPluginCustomizations = resolvedConfig.isApplyPluginCustomizations();
-        if (!applyPluginCustomizations && hasPluginCustomizations) {
-            logger.debug("Plugin customizations available but disabled by applyPluginCustomizations=false for '{}'", generatorName);
-            hasPluginCustomizations = false;
-        }
-        
         // Resolve paths for user templates and customizations
         String resolvedUserTemplateDir = null;
         String resolvedUserCustomizationsDir = null;
@@ -217,7 +210,6 @@ public class TemplateResolver {
             .hasLibraryTemplates(hasLibraryTemplates)
             .hasLibraryCustomizations(hasLibraryCustomizations)
             .hasPluginCustomizations(hasPluginCustomizations)
-            .applyPluginCustomizations(applyPluginCustomizations)
             .userTemplateDirectory(resolvedUserTemplateDir)
             .userCustomizationsDirectory(resolvedUserCustomizationsDir)
             .libraryTemplates(generatorLibraryTemplates)

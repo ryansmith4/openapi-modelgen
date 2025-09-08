@@ -35,7 +35,6 @@ public class TemplateConfiguration implements Serializable {
     private final boolean hasUserTemplates;
     private final boolean hasUserCustomizations;
     private final boolean hasPluginCustomizations;
-    private final boolean applyPluginCustomizations;
     private final String userTemplateDirectory;
     private final String userCustomizationsDirectory;
     private final Map<String, String> templateVariables;
@@ -56,7 +55,6 @@ public class TemplateConfiguration implements Serializable {
         this.hasUserTemplates = builder.hasUserTemplates;
         this.hasUserCustomizations = builder.hasUserCustomizations;
         this.hasPluginCustomizations = builder.hasPluginCustomizations;
-        this.applyPluginCustomizations = builder.applyPluginCustomizations;
         this.userTemplateDirectory = builder.userTemplateDirectory;
         this.userCustomizationsDirectory = builder.userCustomizationsDirectory;
         this.templateVariables = builder.templateVariables != null ? 
@@ -86,7 +84,6 @@ public class TemplateConfiguration implements Serializable {
     public boolean hasUserTemplates() { return hasUserTemplates; }
     public boolean hasUserCustomizations() { return hasUserCustomizations; }
     public boolean hasPluginCustomizations() { return hasPluginCustomizations; }
-    public boolean shouldApplyPluginCustomizations() { return applyPluginCustomizations; }
     public String getUserTemplateDirectory() { return userTemplateDirectory; }
     public String getUserCustomizationsDirectory() { return userCustomizationsDirectory; }
     public Map<String, String> getTemplateVariables() { return templateVariables; }
@@ -113,7 +110,6 @@ public class TemplateConfiguration implements Serializable {
         return hasUserTemplates == that.hasUserTemplates &&
                 hasUserCustomizations == that.hasUserCustomizations &&
                 hasPluginCustomizations == that.hasPluginCustomizations &&
-                applyPluginCustomizations == that.applyPluginCustomizations &&
                 templateProcessingEnabled == that.templateProcessingEnabled &&
                 debugTemplateResolution == that.debugTemplateResolution &&
                 Objects.equals(generatorName, that.generatorName) &&
@@ -127,7 +123,7 @@ public class TemplateConfiguration implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(generatorName, templateWorkDirectory, hasUserTemplates, hasUserCustomizations,
-                hasPluginCustomizations, applyPluginCustomizations, userTemplateDirectory,
+                hasPluginCustomizations, userTemplateDirectory,
                 userCustomizationsDirectory, templateVariables, templateProcessingEnabled,
                 templatePrecedence, debugTemplateResolution);
     }
@@ -150,7 +146,6 @@ public class TemplateConfiguration implements Serializable {
         private boolean hasUserTemplates;
         private boolean hasUserCustomizations;
         private boolean hasPluginCustomizations;
-        private boolean applyPluginCustomizations;
         private String userTemplateDirectory;
         private String userCustomizationsDirectory;
         private Map<String, String> templateVariables;
@@ -189,10 +184,6 @@ public class TemplateConfiguration implements Serializable {
             return this;
         }
         
-        public Builder applyPluginCustomizations(boolean applyPluginCustomizations) {
-            this.applyPluginCustomizations = applyPluginCustomizations;
-            return this;
-        }
         
         public Builder userTemplateDirectory(String userTemplateDirectory) {
             this.userTemplateDirectory = userTemplateDirectory;

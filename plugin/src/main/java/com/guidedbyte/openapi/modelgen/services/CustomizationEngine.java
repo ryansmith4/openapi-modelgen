@@ -645,7 +645,7 @@ public class CustomizationEngine {
                     break;
                     
                 case "plugin-customizations":
-                    if (templateConfig.hasPluginCustomizations() && templateConfig.shouldApplyPluginCustomizations()) {
+                    if (templateConfig.hasPluginCustomizations()) {
                         applyPluginCustomizations(templateConfig, templateWorkDir);
                     }
                     break;
@@ -688,7 +688,7 @@ public class CustomizationEngine {
         logger.debug("Using legacy customization application order");
         
         // Apply plugin customizations if enabled
-        if (templateConfig.hasPluginCustomizations() && templateConfig.shouldApplyPluginCustomizations()) {
+        if (templateConfig.hasPluginCustomizations()) {
             applyPluginCustomizations(templateConfig, templateWorkDir);
         }
         
@@ -892,7 +892,7 @@ public class CustomizationEngine {
      * Adds templates from plugin customizations to the extraction set.
      */
     private void addTemplatesFromPluginCustomizations(TemplateConfiguration templateConfig, Set<String> templatesToExtract) {
-        if (!templateConfig.shouldApplyPluginCustomizations()) {
+        if (!templateConfig.hasPluginCustomizations()) {
             return;
         }
         
@@ -1134,7 +1134,7 @@ public class CustomizationEngine {
         projectProps.put("hasUserTemplates", String.valueOf(templateConfig.hasUserTemplates()));
         projectProps.put("hasUserCustomizations", String.valueOf(templateConfig.hasUserCustomizations()));
         projectProps.put("hasPluginCustomizations", String.valueOf(templateConfig.hasPluginCustomizations()));
-        projectProps.put("applyPluginCustomizations", String.valueOf(templateConfig.shouldApplyPluginCustomizations()));
+        projectProps.put("applyPluginCustomizations", String.valueOf(templateConfig.hasPluginCustomizations()));
         projectProps.put("debugTemplateResolution", String.valueOf(templateConfig.isDebugTemplateResolution()));
         
         return EvaluationContext.builder()

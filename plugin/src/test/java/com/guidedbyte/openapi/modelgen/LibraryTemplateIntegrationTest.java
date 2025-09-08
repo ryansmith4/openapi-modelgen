@@ -110,7 +110,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'plugin-customizations',
                             'openapi-generator'
                         ])
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {
@@ -167,7 +167,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'user-customizations',
                             'openapi-generator'  // Exclude library sources
                         ])
-                        applyPluginCustomizations false  // Disable plugin customizations to avoid YAML parsing issues
+                        // plugin-customizations excluded to avoid YAML parsing issues
                     }
                     specs {
                         pets {
@@ -304,7 +304,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'user-customizations',
                             'openapi-generator'  // Skip plugin-customizations
                         ])
-                        applyPluginCustomizations false  // Disable plugin customizations to avoid YAML parsing issues
+                        // plugin-customizations excluded to avoid YAML parsing issues
                     }
                     specs {
                         pets {
@@ -467,7 +467,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'plugin-customizations',
                             'openapi-generator'
                         ])
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {
@@ -747,7 +747,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'user-customizations',
                             'openapi-generator'
                         ])
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {
@@ -785,7 +785,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'library-customizations',
                             'openapi-generator'
                         ])
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {
@@ -823,7 +823,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'library-customizations',
                             'openapi-generator'
                         ])
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {
@@ -864,7 +864,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'openapi-generator'         // Lowest precedence
                         ])
                         debugTemplateResolution true  // Enable debug logging
-                        applyPluginCustomizations false
+                        // plugin-customizations excluded
                     }
                     specs {
                         pets {

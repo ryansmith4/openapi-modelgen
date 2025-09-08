@@ -47,7 +47,6 @@ public class ResolvedSpecConfig {
     
     // Generation flags
     private final boolean validateSpec;
-    private final boolean applyPluginCustomizations;
     private final boolean generateModelTests;
     private final boolean generateApiTests;
     private final boolean generateApiDocumentation;
@@ -72,7 +71,6 @@ public class ResolvedSpecConfig {
         this.templateCustomizationsDir = builder.templateCustomizationsDir;
         this.modelNameSuffix = builder.modelNameSuffix;
         this.validateSpec = builder.validateSpec;
-        this.applyPluginCustomizations = builder.applyPluginCustomizations;
         this.generateModelTests = builder.generateModelTests;
         this.generateApiTests = builder.generateApiTests;
         this.generateApiDocumentation = builder.generateApiDocumentation;
@@ -121,9 +119,6 @@ public class ResolvedSpecConfig {
         return validateSpec;
     }
     
-    public boolean isApplyPluginCustomizations() {
-        return applyPluginCustomizations;
-    }
     
     public boolean isGenerateModelTests() {
         return generateModelTests;
@@ -193,7 +188,6 @@ public class ResolvedSpecConfig {
         private String templateCustomizationsDir;
         private String modelNameSuffix = "Dto";
         private boolean validateSpec = false;
-        private boolean applyPluginCustomizations = true;
         private boolean generateModelTests = false;
         private boolean generateApiTests = false;
         private boolean generateApiDocumentation = false;
@@ -285,9 +279,6 @@ public class ResolvedSpecConfig {
             if (defaults.getValidateSpec().isPresent()) {
                 this.validateSpec = defaults.getValidateSpec().get();
             }
-            if (defaults.getApplyPluginCustomizations().isPresent()) {
-                this.applyPluginCustomizations = defaults.getApplyPluginCustomizations().get();
-            }
             if (defaults.getGenerateModelTests().isPresent()) {
                 this.generateModelTests = defaults.getGenerateModelTests().get();
             }
@@ -343,9 +334,6 @@ public class ResolvedSpecConfig {
             }
             if (spec.getValidateSpec().isPresent()) {
                 this.validateSpec = spec.getValidateSpec().get();
-            }
-            if (spec.getApplyPluginCustomizations().isPresent()) {
-                this.applyPluginCustomizations = spec.getApplyPluginCustomizations().get();
             }
             if (spec.getGenerateModelTests().isPresent()) {
                 this.generateModelTests = spec.getGenerateModelTests().get();

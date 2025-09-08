@@ -54,7 +54,12 @@ openapiModelgen {
     defaults {
         templateDir "src/main/templates" // Use explicit user templates
         templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
-        applyPluginCustomizations false // Disable plugin customizations to test user precedence
+        templateSources([
+            'user-templates',           // Use explicit user templates first
+            'user-customizations',      // Then user YAML customizations
+            // Exclude 'plugin-customizations' to test user precedence
+            'openapi-generator'         // Fallback to OpenAPI Generator defaults
+        ])
         
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."

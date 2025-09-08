@@ -69,7 +69,6 @@ public class SpecConfig {
     private final Property<String> templateDir;
     private final Property<String> templateCustomizationsDir;
     private final Property<Boolean> validateSpec;
-    private final Property<Boolean> applyPluginCustomizations;
     private final ListProperty<String> templateSources;
     private final Property<Boolean> debugTemplateResolution;
     private final Property<Boolean> generateModelTests;
@@ -96,7 +95,6 @@ public class SpecConfig {
         this.templateDir = project.getObjects().property(String.class);
         this.templateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
-        this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
         
@@ -147,11 +145,6 @@ public class SpecConfig {
     public Property<Boolean> getValidateSpec() {
         return validateSpec;
     }
-    
-    public Property<Boolean> getApplyPluginCustomizations() {
-        return applyPluginCustomizations;
-    }
-    
     
     public ListProperty<String> getTemplateSources() {
         return templateSources;
@@ -225,12 +218,6 @@ public class SpecConfig {
     public void validateSpec(boolean value) {
         this.validateSpec.set(value);
     }
-    
-    @Option(option = "apply-plugin-customizations", description = "Apply built-in plugin YAML customizations for this spec")
-    public void applyPluginCustomizations(boolean value) {
-        this.applyPluginCustomizations.set(value);
-    }
-    
     
     @Option(option = "template-sources", description = "Ordered list of template sources for this spec")
     public void templateSources(java.util.List<String> sources) {

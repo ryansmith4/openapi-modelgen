@@ -78,7 +78,6 @@ public class DefaultConfig {
     private final Property<Boolean> generateApiDocumentation;
     private final Property<Boolean> generateModelDocumentation;
     private final Property<Boolean> validateSpec;
-    private final Property<Boolean> applyPluginCustomizations;
     private final ListProperty<String> templateSources;
     private final Property<Boolean> debugTemplateResolution;
     private final MapProperty<String, String> configOptions;
@@ -103,7 +102,6 @@ public class DefaultConfig {
         this.generateApiDocumentation = project.getObjects().property(Boolean.class);
         this.generateModelDocumentation = project.getObjects().property(Boolean.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
-        this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
         
@@ -156,10 +154,6 @@ public class DefaultConfig {
     
     public Property<Boolean> getValidateSpec() {
         return validateSpec;
-    }
-    
-    public Property<Boolean> getApplyPluginCustomizations() {
-        return applyPluginCustomizations;
     }
     
     public MapProperty<String, String> getConfigOptions() {
@@ -263,11 +257,6 @@ public class DefaultConfig {
     @Option(option = "validate-spec", description = "Validate OpenAPI specification before code generation")
     public void validateSpec(Boolean value) {
         this.validateSpec.set(value);
-    }
-    
-    @Option(option = "apply-plugin-customizations", description = "Apply built-in plugin YAML customizations to enhance code readability")
-    public void applyPluginCustomizations(Boolean value) {
-        this.applyPluginCustomizations.set(value);
     }
     
     public void configOptions(Map<String, String> options) {
