@@ -32,6 +32,7 @@ import java.util.Map;
  * <ul>
  *   <li><strong>Task Creation:</strong> Creates setup, spec-specific, aggregate, and help tasks</li>
  *   <li><strong>Task Configuration:</strong> Applies OpenAPI Generator settings, Lombok annotations, and validation rules</li>
+ *   <li><strong>Mapping Configuration:</strong> Applies import mappings, type mappings, and additional properties</li>
  *   <li><strong>Dependency Management:</strong> Establishes proper task dependencies and execution order</li>
  *   <li><strong>Incremental Builds:</strong> Configures inputs and outputs for efficient change detection</li>
  *   <li><strong>Template Variables:</strong> Expands nested template variables with built-in values</li>

@@ -23,6 +23,7 @@ import java.util.Map;
  *   <li>Generation control flags (validateSpec, generateTests, generateDocs)</li>
  *   <li>Template customization settings (applyPluginCustomizations)</li>
  *   <li>OpenAPI Generator options and template variables</li>
+ *   <li>Type and import mappings (importMappings, typeMappings, additionalProperties)</li>
  * </ul>
  * 
  * <p>This class simplifies method signatures throughout the plugin by providing
@@ -156,18 +157,38 @@ public class ResolvedSpecConfig {
         return new HashMap<>(globalProperties);
     }
     
+    /**
+     * Gets the resolved template variables for this specification.
+     * 
+     * @return merged map of template variables (defaults + spec overrides)
+     */
     public Map<String, String> getTemplateVariables() {
         return new HashMap<>(templateVariables);
     }
     
+    /**
+     * Gets the resolved import mappings for this specification.
+     * 
+     * @return merged map of type names to import statements (defaults + spec overrides)
+     */
     public Map<String, String> getImportMappings() {
         return new HashMap<>(importMappings);
     }
     
+    /**
+     * Gets the resolved type mappings for this specification.
+     * 
+     * @return merged map of OpenAPI types to Java types (defaults + spec overrides)
+     */
     public Map<String, String> getTypeMappings() {
         return new HashMap<>(typeMappings);
     }
     
+    /**
+     * Gets the resolved additional properties for this specification.
+     * 
+     * @return merged map of additional properties (defaults + spec overrides)
+     */
     public Map<String, String> getAdditionalProperties() {
         return new HashMap<>(additionalProperties);
     }

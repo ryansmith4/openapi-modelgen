@@ -16,6 +16,7 @@ features including template customization, incremental builds, performance optim
 - **Incremental build support**: Only regenerates when inputs actually change
 - **Lombok integration**: Full annotation support with constructor conflict resolution
 - **Template variable expansion**: Nested variables like `{{copyright}}` containing `{{currentYear}}`
+- **OpenAPI Generator mapping support**: Import mappings, type mappings, and additional properties with merging
 
 ### Performance & Enterprise Features
 
@@ -225,6 +226,23 @@ openapiModelgen {
             copyright: "Copyright © {{currentYear}} {{companyName}}",
             currentYear: "2025",
             companyName: "GuidedByte Technologies Inc."
+        ])
+        
+        // OpenAPI Generator mappings
+        importMappings([
+            'UUID': 'java.util.UUID',
+            'LocalDate': 'java.time.LocalDate',
+            'LocalDateTime': 'java.time.LocalDateTime'
+        ])
+        typeMappings([
+            'string+uuid': 'UUID',
+            'string+date': 'LocalDate',
+            'string+date-time': 'LocalDateTime'
+        ])
+        additionalProperties([
+            'library': 'spring-boot',
+            'beanValidations': 'true',
+            'useSpringBoot3': 'true'
         ])
         
         globalProperties([
@@ -806,6 +824,68 @@ specs {
     }
 }
 ```
+
+### OpenAPI Generator Mappings
+
+The plugin provides comprehensive support for OpenAPI Generator's mapping configuration options:
+
+#### Import Mappings
+
+Map type names to fully qualified import statements. These are merged between default and spec levels, with spec-level taking precedence:
+
+```gradle
+openapiModelgen {
+    defaults {
+        importMappings([
+            'UUID': 'java.util.UUID',
+            'LocalDate': 'java.time.LocalDate',
+            'BigDecimal': 'java.math.BigDecimal'
+        ])
+    }
+    specs {
+        mySpec {
+            importMappings([
+                'Instant': 'java.time.Instant',  // Additional import for this spec
+                'UUID': 'java.lang.String'      // Overrides default UUID mapping
+            ])
+        }
+    }
+}
+```
+
+#### Type Mappings  
+
+Map OpenAPI types to Java types. Supports format-specific mappings with `+` notation:
+
+```gradle
+typeMappings([
+    'string+uuid': 'UUID',           // string format=uuid -> UUID
+    'string+date': 'LocalDate',      // string format=date -> LocalDate
+    'string+date-time': 'LocalDateTime',
+    'integer+int64': 'Long'
+])
+```
+
+#### Additional Properties
+
+Pass generator-specific configuration options equivalent to `--additional-properties` CLI option:
+
+```gradle
+additionalProperties([
+    'library': 'spring-boot',        // Use Spring Boot library
+    'beanValidations': 'true',       // Enable bean validation
+    'useSpringBoot3': 'true',        // Use Spring Boot 3 features
+    'reactive': 'false',             // Disable reactive features
+    'serializableModel': 'true'      // Make models serializable
+])
+```
+
+#### Mapping Precedence
+
+All mapping properties follow the same merge pattern:
+1. **Default-level mappings** are applied first
+2. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
+3. **Final merged mappings** are passed to OpenAPI Generator
 
 ### Best Practices
 

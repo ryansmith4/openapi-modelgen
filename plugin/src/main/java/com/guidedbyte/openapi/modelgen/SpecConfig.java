@@ -296,22 +296,52 @@ public class SpecConfig {
         this.configOptions.set(options);
     }
     
+    /**
+     * Sets global properties for this specification.
+     * These are merged with default global properties, with spec taking precedence.
+     * 
+     * @param properties map of global properties specific to this spec
+     */
     public void globalProperties(Map<String, String> properties) {
         this.globalProperties.set(properties);
     }
     
+    /**
+     * Sets template variables for this specification.
+     * These are merged with default template variables, with spec taking precedence.
+     * 
+     * @param variables map of template variables specific to this spec
+     */
     public void templateVariables(Map<String, String> variables) {
         this.templateVariables.set(variables);
     }
     
+    /**
+     * Sets import mappings for this specification.
+     * These are merged with default import mappings, with spec taking precedence.
+     * 
+     * @param mappings map of type names to fully qualified import statements
+     */
     public void importMappings(Map<String, String> mappings) {
         this.importMappings.set(mappings);
     }
     
+    /**
+     * Sets type mappings for this specification.
+     * These are merged with default type mappings, with spec taking precedence.
+     * 
+     * @param mappings map of OpenAPI types to Java types
+     */
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
     }
     
+    /**
+     * Sets additional properties for this specification.
+     * These are merged with default additional properties, with spec taking precedence.
+     * 
+     * @param properties map of additional properties for generator-specific configuration
+     */
     public void additionalProperties(Map<String, String> properties) {
         this.additionalProperties.set(properties);
     }

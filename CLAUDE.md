@@ -138,6 +138,32 @@ openapi-modelgen/
 additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
 ```
 
+### OpenAPI Generator Mappings
+
+The plugin supports comprehensive mapping configuration:
+
+- **importMappings**: Map type names to fully qualified import statements (merged between defaults and specs)
+- **typeMappings**: Map OpenAPI types to Java types with format support (e.g., 'string+uuid': 'UUID')  
+- **additionalProperties**: Pass generator-specific options equivalent to --additional-properties CLI option
+
+Example configuration:
+```gradle
+defaults {
+    importMappings([
+        'UUID': 'java.util.UUID',
+        'LocalDateTime': 'java.time.LocalDateTime'
+    ])
+    typeMappings([
+        'string+uuid': 'UUID',
+        'string+date-time': 'LocalDateTime'
+    ])
+    additionalProperties([
+        'library': 'spring-boot',
+        'useSpringBoot3': 'true'
+    ])
+}
+```
+
 ### Plugin Customization Control
 
 - `applyPluginCustomizations`: Boolean flag to enable/disable built-in YAML customizations (default: true)

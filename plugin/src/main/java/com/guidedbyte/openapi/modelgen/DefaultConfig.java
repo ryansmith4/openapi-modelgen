@@ -306,26 +306,64 @@ public class DefaultConfig {
         this.validateSpec.set(value);
     }
     
+    /**
+     * Sets OpenAPI Generator configuration options.
+     * 
+     * @param options map of configuration options passed to the generator
+     */
     public void configOptions(Map<String, String> options) {
         this.configOptions.set(options);
     }
     
+    /**
+     * Sets global properties passed to the OpenAPI Generator.
+     * 
+     * @param properties map of global properties
+     */
     public void globalProperties(Map<String, String> properties) {
         this.globalProperties.set(properties);
     }
     
+    /**
+     * Sets template variables available in Mustache templates.
+     * Supports nested variable expansion (e.g., {{copyright}} containing {{currentYear}}).
+     * 
+     * @param variables map of template variables and their values
+     */
     public void templateVariables(Map<String, String> variables) {
         this.templateVariables.set(variables);
     }
     
+    /**
+     * Sets type name to import statement mappings.
+     * These mappings are merged with spec-level mappings, with spec taking precedence.
+     * 
+     * @param mappings map of type names to fully qualified import statements
+     */
+    @Option(option = "import-mappings", description = "Map type names to import statements")
     public void importMappings(Map<String, String> mappings) {
         this.importMappings.set(mappings);
     }
     
+    /**
+     * Sets OpenAPI type to Java type mappings.
+     * These mappings are merged with spec-level mappings, with spec taking precedence.
+     * 
+     * @param mappings map of OpenAPI types (e.g., 'string+uuid') to Java types (e.g., 'UUID')
+     */
+    @Option(option = "type-mappings", description = "Map OpenAPI types to Java types")
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
     }
     
+    /**
+     * Sets additional properties passed to the OpenAPI Generator.
+     * These properties are merged with spec-level properties, with spec taking precedence.
+     * Equivalent to the --additional-properties CLI option.
+     * 
+     * @param properties map of additional properties for generator-specific configuration
+     */
+    @Option(option = "additional-properties", description = "Additional properties for OpenAPI Generator")
     public void additionalProperties(Map<String, String> properties) {
         this.additionalProperties.set(properties);
     }
