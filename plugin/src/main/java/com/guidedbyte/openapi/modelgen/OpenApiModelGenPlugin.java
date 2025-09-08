@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * 
  * <h2>Key Features:</h2>
  * <ul>
- *   <li><strong>Configurable Template Precedence:</strong> Customizable resolution order with user templates &gt; user YAML customizations &gt; plugin YAML customizations &gt; OpenAPI generator defaults</li>
+ *   <li><strong>Unified Template Sources:</strong> Simplified template configuration with auto-discovery and configurable precedence order</li>
  *   <li><strong>Debug Template Resolution:</strong> Optional debug logging to show which template source was used for each template</li>
  *   <li><strong>YAML Template Customization:</strong> Modify existing templates using structured YAML configuration files</li>
  *   <li><strong>Multi-Level Caching System:</strong> Session → local → global cache hierarchy with 90% faster no-change builds</li>
@@ -43,10 +43,12 @@ import java.util.stream.Stream;
  *         validateSpec true
  *         modelNameSuffix "Dto" 
  *         
- *         // Configure template resolution
- *         templatePrecedence([
+ *         // Configure template resolution (unified approach)
+ *         templateSources([
  *             "user-templates",          // Project Mustache templates (highest)
  *             "user-customizations",     // Project YAML customizations
+ *             "library-templates",       // Library Mustache templates  
+ *             "library-customizations",  // Library YAML customizations
  *             "plugin-customizations",   // Built-in plugin customizations
  *             "openapi-generator"        // OpenAPI Generator defaults (lowest)
  *         ])

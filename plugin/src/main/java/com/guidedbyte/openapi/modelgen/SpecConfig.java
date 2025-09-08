@@ -158,6 +158,11 @@ public class SpecConfig {
         return applyPluginCustomizations;
     }
     
+    /**
+     * @deprecated Use {@link #getTemplateSources()} instead. The templateSources list serves as both 
+     *             source specification and precedence order, making this property redundant.
+     */
+    @Deprecated
     public ListProperty<String> getTemplatePrecedence() {
         return templatePrecedence;
     }
@@ -255,6 +260,11 @@ public class SpecConfig {
         this.applyPluginCustomizations.set(value);
     }
     
+    /**
+     * @deprecated Use {@link #templateSources(java.util.List)} instead. The templateSources list serves as both 
+     *             source specification and precedence order. Simply reorder the templateSources list to change precedence.
+     */
+    @Deprecated
     public void templatePrecedence(java.util.List<String> precedence) {
         this.templatePrecedence.set(precedence);
     }

@@ -224,7 +224,7 @@ public class TemplateResolver {
             .libraryCustomizations(generatorLibraryCustomizations)
             .templateVariables(templateVariables != null ? Map.copyOf(templateVariables) : Map.of())
             .templateProcessingEnabled(templateProcessingEnabled)
-            .templatePrecedence(resolvedConfig.getTemplatePrecedence())
+            .templatePrecedence(resolvedConfig.getEffectiveTemplatePrecedence())
             .debugTemplateResolution(resolvedConfig.isDebugTemplateResolution())
             .build();
     }

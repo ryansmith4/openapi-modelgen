@@ -37,6 +37,7 @@ import java.util.Map;
  * 
  * <h2>Migration from Deprecated Properties:</h2>
  * <ul>
+ *   <li><strong>templatePrecedence:</strong> <em>Deprecated.</em> Use {@code templateSources} instead - it serves as both source list and precedence order</li>
  *   <li><strong>useLibraryTemplates:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-templates", "library-templates", "plugin-customizations", "openapi-generator"])} instead</li>
  *   <li><strong>useLibraryCustomizations:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-customizations", "library-customizations", "plugin-customizations", "openapi-generator"])} instead</li>
  * </ul>
@@ -186,6 +187,11 @@ public class DefaultConfig {
         return templateVariables;
     }
     
+    /**
+     * @deprecated Use {@link #getTemplateSources()} instead. The templateSources list serves as both 
+     *             source specification and precedence order, making this property redundant.
+     */
+    @Deprecated
     public ListProperty<String> getTemplatePrecedence() {
         return templatePrecedence;
     }
@@ -326,8 +332,12 @@ public class DefaultConfig {
      * <p>Default order: {@code ['user-templates', 'user-customizations', 'plugin-customizations', 'openapi-generator']}</p>
      * 
      * @param precedence ordered list of template sources from highest to lowest precedence
+     * @deprecated Use {@link #templateSources(java.util.List)} instead. The templateSources list serves as both 
+     *             source specification and precedence order. Simply reorder the templateSources list to change precedence.
+     *             Example: {@code templateSources(["user-customizations", "user-templates", "plugin-customizations", "openapi-generator"])}
      */
-    @Option(option = "template-precedence", description = "Template resolution precedence order (comma-separated list)")
+    @Deprecated
+    @Option(option = "template-precedence", description = "Template resolution precedence order (deprecated: use templateSources instead)")
     public void templatePrecedence(java.util.List<String> precedence) {
         this.templatePrecedence.set(precedence);
     }
