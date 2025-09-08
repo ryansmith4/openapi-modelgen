@@ -32,6 +32,8 @@ import java.util.Map;
  *   <li><strong>generateApiTests:</strong> Enable/disable API unit test generation (default: false)</li>
  *   <li><strong>generateApiDocumentation:</strong> Enable/disable API documentation generation (default: false)</li>
  *   <li><strong>generateModelDocumentation:</strong> Enable/disable model documentation generation (default: false)</li>
+ *   <li><strong>importMappings:</strong> Map type names to fully qualified import statements (merged with spec-level mappings)</li>
+ *   <li><strong>typeMappings:</strong> Map OpenAPI types to Java types (merged with spec-level mappings)</li>
  * </ul>
  * 
  * 
@@ -62,6 +64,15 @@ import java.util.Map;
  *     configOptions([
  *         additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.SuperBuilder"
  *     ])
+ *     importMappings([
+ *         'UUID': 'java.util.UUID',
+ *         'LocalDate': 'java.time.LocalDate',
+ *         'BigDecimal': 'java.math.BigDecimal'
+ *     ])
+ *     typeMappings([
+ *         'string+uuid': 'UUID',
+ *         'string+date': 'LocalDate'
+ *     ])
  * }
  * }</pre>
  * 
@@ -85,6 +96,8 @@ public class DefaultConfig {
     private final MapProperty<String, String> configOptions;
     private final MapProperty<String, String> globalProperties;
     private final MapProperty<String, String> templateVariables;
+    private final MapProperty<String, String> importMappings;
+    private final MapProperty<String, String> typeMappings;
     
     /**
      * Creates a new default configuration for the given project.
@@ -120,6 +133,8 @@ public class DefaultConfig {
         this.configOptions = project.getObjects().mapProperty(String.class, String.class);
         this.globalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
+        this.importMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
     }
     
     // Getter methods
@@ -173,6 +188,14 @@ public class DefaultConfig {
     
     public MapProperty<String, String> getTemplateVariables() {
         return templateVariables;
+    }
+    
+    public MapProperty<String, String> getImportMappings() {
+        return importMappings;
+    }
+    
+    public MapProperty<String, String> getTypeMappings() {
+        return typeMappings;
     }
     
     
@@ -281,6 +304,14 @@ public class DefaultConfig {
     
     public void templateVariables(Map<String, String> variables) {
         this.templateVariables.set(variables);
+    }
+    
+    public void importMappings(Map<String, String> mappings) {
+        this.importMappings.set(mappings);
+    }
+    
+    public void typeMappings(Map<String, String> mappings) {
+        this.typeMappings.set(mappings);
     }
     
     

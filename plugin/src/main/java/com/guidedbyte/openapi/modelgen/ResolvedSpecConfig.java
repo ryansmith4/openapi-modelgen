@@ -61,6 +61,8 @@ public class ResolvedSpecConfig {
     private final Map<String, String> configOptions;
     private final Map<String, String> globalProperties;
     private final Map<String, String> templateVariables;
+    private final Map<String, String> importMappings;
+    private final Map<String, String> typeMappings;
     
     private ResolvedSpecConfig(Builder builder) {
         this.specName = builder.specName;
@@ -82,6 +84,8 @@ public class ResolvedSpecConfig {
         this.configOptions = new HashMap<>(builder.configOptions);
         this.globalProperties = new HashMap<>(builder.globalProperties);
         this.templateVariables = new HashMap<>(builder.templateVariables);
+        this.importMappings = new HashMap<>(builder.importMappings);
+        this.typeMappings = new HashMap<>(builder.typeMappings);
     }
     
     // Getters
@@ -154,6 +158,14 @@ public class ResolvedSpecConfig {
         return new HashMap<>(templateVariables);
     }
     
+    public Map<String, String> getImportMappings() {
+        return new HashMap<>(importMappings);
+    }
+    
+    public Map<String, String> getTypeMappings() {
+        return new HashMap<>(typeMappings);
+    }
+    
     
     /**
      * Gets the resolved template sources list for this specification.
@@ -211,6 +223,8 @@ public class ResolvedSpecConfig {
         private Map<String, String> configOptions = new HashMap<>();
         private Map<String, String> globalProperties = new HashMap<>();
         private Map<String, String> templateVariables = new HashMap<>();
+        private Map<String, String> importMappings = new HashMap<>();
+        private Map<String, String> typeMappings = new HashMap<>();
         
         private Builder(String specName, DefaultConfig userDefaults, SpecConfig specConfig) {
             this.specName = specName;
@@ -310,6 +324,12 @@ public class ResolvedSpecConfig {
             if (defaults.getTemplateVariables().isPresent()) {
                 this.templateVariables.putAll(defaults.getTemplateVariables().get());
             }
+            if (defaults.getImportMappings().isPresent()) {
+                this.importMappings.putAll(defaults.getImportMappings().get());
+            }
+            if (defaults.getTypeMappings().isPresent()) {
+                this.typeMappings.putAll(defaults.getTypeMappings().get());
+            }
             if (defaults.getTemplateSources().isPresent()) {
                 this.templateSources = defaults.getTemplateSources().get();
             }
@@ -374,6 +394,12 @@ public class ResolvedSpecConfig {
             }
             if (spec.getTemplateVariables().isPresent()) {
                 this.templateVariables.putAll(spec.getTemplateVariables().get());
+            }
+            if (spec.getImportMappings().isPresent()) {
+                this.importMappings.putAll(spec.getImportMappings().get());
+            }
+            if (spec.getTypeMappings().isPresent()) {
+                this.typeMappings.putAll(spec.getTypeMappings().get());
             }
         }
         

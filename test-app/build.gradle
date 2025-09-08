@@ -65,6 +65,17 @@ openapiModelgen {
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
         ])
+        importMappings([
+            'UUID': 'java.util.UUID',
+            'LocalDate': 'java.time.LocalDate',
+            'LocalDateTime': 'java.time.LocalDateTime',
+            'BigDecimal': 'java.math.BigDecimal'
+        ])
+        typeMappings([
+            'string+uuid': 'UUID',
+            'string+date': 'LocalDate',
+            'string+date-time': 'LocalDateTime'
+        ])
         validateSpec false
         configOptions([
             additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
@@ -81,6 +92,12 @@ openapiModelgen {
             modelPackage "com.guidedbyte.testapp.model.orders"
             modelNamePrefix "Custom" // Override default prefix for orders
             modelNameSuffix "Entity" // Override suffix for orders to demonstrate per-spec config
+            importMappings([
+                'Instant': 'java.time.Instant'  // Additional import for orders only
+            ])
+            typeMappings([
+                'string+date-time': 'Instant'   // Override default mapping for orders
+            ])
         }
     }
 }

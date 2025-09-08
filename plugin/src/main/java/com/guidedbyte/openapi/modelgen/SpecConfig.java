@@ -36,6 +36,8 @@ import java.util.Map;
  *   <li><strong>generateModelDocumentation:</strong> Override model documentation generation for this spec</li>
  *   <li><strong>templateVariables:</strong> Additional or override template variables</li>
  *   <li><strong>configOptions:</strong> Spec-specific OpenAPI Generator options</li>
+ *   <li><strong>importMappings:</strong> Additional or override import mappings (merged with defaults)</li>
+ *   <li><strong>typeMappings:</strong> Additional or override type mappings (merged with defaults)</li>
  * </ul>
  * 
  * <h2>Example Usage:</h2>
@@ -53,6 +55,12 @@ import java.util.Map;
  *         templateDir "src/main/resources/legacy-templates"
  *         generateModelTests false  // Skip tests for legacy spec
  *         generateApiDocumentation true  // Generate docs despite being legacy
+ *         importMappings([
+ *             'OrderStatus': 'com.example.legacy.OrderStatus'  // Legacy-specific mapping
+ *         ])
+ *         typeMappings([
+ *             'string+legacy-id': 'LegacyId'  // Custom type for legacy spec
+ *         ])
  *     }
  * }
  * }</pre>
@@ -79,6 +87,8 @@ public class SpecConfig {
     private final MapProperty<String, String> configOptions;
     private final MapProperty<String, String> globalProperties;
     private final MapProperty<String, String> templateVariables;
+    private final MapProperty<String, String> importMappings;
+    private final MapProperty<String, String> typeMappings;
     
     /**
      * Creates a new specification configuration for the given project.
@@ -117,6 +127,8 @@ public class SpecConfig {
         this.configOptions = project.getObjects().mapProperty(String.class, String.class);
         this.globalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
+        this.importMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
     }
     
     // Getter methods
@@ -187,6 +199,14 @@ public class SpecConfig {
     
     public MapProperty<String, String> getTemplateVariables() {
         return templateVariables;
+    }
+    
+    public MapProperty<String, String> getImportMappings() {
+        return importMappings;
+    }
+    
+    public MapProperty<String, String> getTypeMappings() {
+        return typeMappings;
     }
     
     // Convenience setter methods for Gradle DSL
@@ -271,5 +291,13 @@ public class SpecConfig {
     
     public void templateVariables(Map<String, String> variables) {
         this.templateVariables.set(variables);
+    }
+    
+    public void importMappings(Map<String, String> mappings) {
+        this.importMappings.set(mappings);
+    }
+    
+    public void typeMappings(Map<String, String> mappings) {
+        this.typeMappings.set(mappings);
     }
 }

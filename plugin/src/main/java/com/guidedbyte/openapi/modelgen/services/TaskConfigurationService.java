@@ -267,6 +267,24 @@ public class TaskConfigurationService implements Serializable {
             task.getGlobalProperties().put(entry.getKey(), entry.getValue());
         }
         
+        // Apply import mappings from resolved config
+        Map<String, String> importMappings = resolvedConfig.getImportMappings();
+        if (!importMappings.isEmpty()) {
+            for (Map.Entry<String, String> entry : importMappings.entrySet()) {
+                task.getImportMappings().put(entry.getKey(), entry.getValue());
+            }
+            logger.debug("Configured {} import mappings for spec: {}", importMappings.size(), specName);
+        }
+        
+        // Apply type mappings from resolved config
+        Map<String, String> typeMappings = resolvedConfig.getTypeMappings();
+        if (!typeMappings.isEmpty()) {
+            for (Map.Entry<String, String> entry : typeMappings.entrySet()) {
+                task.getTypeMappings().put(entry.getKey(), entry.getValue());
+            }
+            logger.debug("Configured {} type mappings for spec: {}", typeMappings.size(), specName);
+        }
+        
         // Configure template variables from resolved configuration
         Map<String, String> templateVariables = resolvedConfig.getTemplateVariables();
         if (!templateVariables.isEmpty()) {
