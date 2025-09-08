@@ -109,6 +109,9 @@ public class TaskConfigurationService implements Serializable {
             });
         }
         
+        // Create clean task for removing generated code and caches
+        createCleanTask(tasks, extension, projectLayout);
+        
         // Create help task with usage information
         createHelpTask(tasks, extension);
         
@@ -336,6 +339,96 @@ public class TaskConfigurationService implements Serializable {
         } else {
             logger.debug("Sequential execution configured for {} specifications", specCount);
         }
+    }
+    
+    /**
+     * Creates the clean task for removing generated code and clearing caches.
+     * 
+     * @param tasks the task container to register the clean task with
+     * @param extension the plugin extension containing configuration
+     * @param projectLayout the project layout for path resolution
+     */
+    private void createCleanTask(TaskContainer tasks, OpenApiModelGenExtension extension, ProjectLayout projectLayout) {
+        tasks.register("generateClean", task -> {
+            task.setDescription("Removes all generated OpenAPI models and clears template caches");
+            task.setGroup("openapi modelgen");
+            task.doLast(t -> {
+                boolean anythingDeleted = false;
+                
+                // Clean generated output directories for each spec
+                for (Map.Entry<String, SpecConfig> entry : extension.getSpecs().entrySet()) {
+                    String specName = entry.getKey();
+                    SpecConfig specConfig = entry.getValue();
+                    
+                    // Resolve the output directory for this spec
+                    ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(
+                        specName, extension.getDefaults(), specConfig).build();
+                    
+                    File outputDir = new File(t.getProject().getProjectDir(), resolvedConfig.getOutputDir());
+                    if (outputDir.exists()) {
+                        logger.info("Cleaning generated models for '{}' from: {}", specName, outputDir.getAbsolutePath());
+                        if (deleteRecursively(outputDir)) {
+                            anythingDeleted = true;
+                            System.out.println("✓ Cleaned generated models for '" + specName + "'");
+                        }
+                    }
+                }
+                
+                // Clean template working directories
+                File templateWorkDir = projectLayout.getBuildDirectory()
+                    .dir("template-work").get().getAsFile();
+                if (templateWorkDir.exists()) {
+                    logger.info("Cleaning template working directory: {}", templateWorkDir.getAbsolutePath());
+                    if (deleteRecursively(templateWorkDir)) {
+                        anythingDeleted = true;
+                        System.out.println("✓ Cleaned template working directories");
+                    }
+                }
+                
+                // Clean local working directory caches (.working-dir-cache files)
+                // These are stored within the template-work directories, so already cleaned above
+                
+                // Clear global template cache if it exists
+                File globalCacheDir = new File(System.getProperty("user.home"), 
+                    ".gradle/caches/openapi-modelgen");
+                if (globalCacheDir.exists()) {
+                    logger.info("Clearing global template cache: {}", globalCacheDir.getAbsolutePath());
+                    if (deleteRecursively(globalCacheDir)) {
+                        anythingDeleted = true;
+                        System.out.println("✓ Cleared global template cache");
+                    }
+                }
+                
+                // Also clear the session cache managed by TemplateCacheManager
+                // Since this is in-memory, we can't clear it from here, but the deletion
+                // of working directories and global cache will force cache misses
+                
+                if (!anythingDeleted) {
+                    System.out.println("No generated files or caches to clean");
+                } else {
+                    System.out.println("\nSuccessfully cleaned all generated models and template caches");
+                    System.out.println("Next generation will extract fresh templates and rebuild caches");
+                }
+            });
+        });
+    }
+    
+    /**
+     * Recursively deletes a directory and all its contents.
+     * 
+     * @param file the file or directory to delete
+     * @return true if deletion was successful, false otherwise
+     */
+    private boolean deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        return file.delete();
     }
     
     /**
