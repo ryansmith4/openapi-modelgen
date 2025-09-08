@@ -19,7 +19,7 @@ import java.util.Map;
  * 
  * <p>This class is configuration-cache compatible and contains all resolved values including:</p>
  * <ul>
- *   <li>Template resolution configuration (templatePrecedence, debugTemplateResolution)</li>
+ *   <li>Template resolution configuration (templateSources, debugTemplateResolution)</li>
  *   <li>Generation control flags (validateSpec, generateTests, generateDocs)</li>
  *   <li>Template customization settings (applyPluginCustomizations)</li>
  *   <li>OpenAPI Generator options and template variables</li>
@@ -54,13 +54,8 @@ public class ResolvedSpecConfig {
     private final boolean generateModelDocumentation;
     
     // Template resolution configuration
-    private final List<String> templatePrecedence;
     private final List<String> templateSources;
     private final boolean debugTemplateResolution;
-    
-    // Library support configuration
-    private final boolean useLibraryTemplates;
-    private final boolean useLibraryCustomizations;
     
     // OpenAPI Generator configuration
     private final Map<String, String> configOptions;
@@ -82,11 +77,8 @@ public class ResolvedSpecConfig {
         this.generateApiTests = builder.generateApiTests;
         this.generateApiDocumentation = builder.generateApiDocumentation;
         this.generateModelDocumentation = builder.generateModelDocumentation;
-        this.templatePrecedence = builder.templatePrecedence;
         this.templateSources = builder.templateSources;
         this.debugTemplateResolution = builder.debugTemplateResolution;
-        this.useLibraryTemplates = builder.useLibraryTemplates;
-        this.useLibraryCustomizations = builder.useLibraryCustomizations;
         this.configOptions = new HashMap<>(builder.configOptions);
         this.globalProperties = new HashMap<>(builder.globalProperties);
         this.templateVariables = new HashMap<>(builder.templateVariables);
@@ -161,24 +153,6 @@ public class ResolvedSpecConfig {
         return new HashMap<>(templateVariables);
     }
     
-    public List<String> getTemplatePrecedence() {
-        return templatePrecedence;
-    }
-    
-    /**
-     * Gets the effective template precedence, preferring templateSources over templatePrecedence.
-     * This provides backward compatibility while encouraging use of the unified templateSources approach.
-     * 
-     * @return the effective precedence list (templateSources if available, otherwise templatePrecedence)
-     */
-    public List<String> getEffectiveTemplatePrecedence() {
-        // Use templateSources as precedence if templatePrecedence is the default (not explicitly set)
-        // This provides a smooth transition from templatePrecedence to templateSources
-        if (templateSources != null && !templateSources.isEmpty()) {
-            return templateSources;
-        }
-        return templatePrecedence != null ? templatePrecedence : List.of();
-    }
     
     /**
      * Gets the resolved template sources list for this specification.
@@ -193,13 +167,6 @@ public class ResolvedSpecConfig {
         return debugTemplateResolution;
     }
     
-    public boolean isUseLibraryTemplates() {
-        return useLibraryTemplates;
-    }
-    
-    public boolean isUseLibraryCustomizations() {
-        return useLibraryCustomizations;
-    }
     
     /**
      * Creates a new builder for ResolvedSpecConfig.
@@ -231,7 +198,6 @@ public class ResolvedSpecConfig {
         private boolean generateApiTests = false;
         private boolean generateApiDocumentation = false;
         private boolean generateModelDocumentation = false;
-        private List<String> templatePrecedence;
         private List<String> templateSources = Arrays.asList(
             "user-templates",
             "user-customizations",
@@ -241,8 +207,6 @@ public class ResolvedSpecConfig {
             "openapi-generator"
         );
         private boolean debugTemplateResolution = false;
-        private boolean useLibraryTemplates = false;
-        private boolean useLibraryCustomizations = false;
         private Map<String, String> configOptions = new HashMap<>();
         private Map<String, String> globalProperties = new HashMap<>();
         private Map<String, String> templateVariables = new HashMap<>();
@@ -301,13 +265,6 @@ public class ResolvedSpecConfig {
             templateVariables.put("generatedBy", "OpenAPI Model Generator Plugin");
             templateVariables.put("pluginVersion", getPluginVersion());
             
-            // Default template precedence
-            templatePrecedence = Arrays.asList(
-                "user-templates",
-                "user-customizations", 
-                "plugin-customizations",
-                "openapi-generator"
-            );
         }
         
         private void applyUserDefaults(DefaultConfig defaults) {
@@ -352,20 +309,11 @@ public class ResolvedSpecConfig {
             if (defaults.getTemplateVariables().isPresent()) {
                 this.templateVariables.putAll(defaults.getTemplateVariables().get());
             }
-            if (defaults.getTemplatePrecedence().isPresent()) {
-                this.templatePrecedence = defaults.getTemplatePrecedence().get();
-            }
             if (defaults.getTemplateSources().isPresent()) {
                 this.templateSources = defaults.getTemplateSources().get();
             }
             if (defaults.getDebugTemplateResolution().isPresent()) {
                 this.debugTemplateResolution = defaults.getDebugTemplateResolution().get();
-            }
-            if (defaults.getUseLibraryTemplates().isPresent()) {
-                this.useLibraryTemplates = defaults.getUseLibraryTemplates().get();
-            }
-            if (defaults.getUseLibraryCustomizations().isPresent()) {
-                this.useLibraryCustomizations = defaults.getUseLibraryCustomizations().get();
             }
         }
         
@@ -411,20 +359,11 @@ public class ResolvedSpecConfig {
             if (spec.getGenerateModelDocumentation().isPresent()) {
                 this.generateModelDocumentation = spec.getGenerateModelDocumentation().get();
             }
-            if (spec.getTemplatePrecedence().isPresent()) {
-                this.templatePrecedence = spec.getTemplatePrecedence().get();
-            }
             if (spec.getTemplateSources().isPresent()) {
                 this.templateSources = spec.getTemplateSources().get();
             }
             if (spec.getDebugTemplateResolution().isPresent()) {
                 this.debugTemplateResolution = spec.getDebugTemplateResolution().get();
-            }
-            if (spec.getUseLibraryTemplates().isPresent()) {
-                this.useLibraryTemplates = spec.getUseLibraryTemplates().get();
-            }
-            if (spec.getUseLibraryCustomizations().isPresent()) {
-                this.useLibraryCustomizations = spec.getUseLibraryCustomizations().get();
             }
             if (spec.getConfigOptions().isPresent()) {
                 this.configOptions.putAll(spec.getConfigOptions().get());

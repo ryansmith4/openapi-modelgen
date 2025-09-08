@@ -54,20 +54,18 @@ public class LibraryProcessor implements Serializable {
             return false;
         }
         
-        // Check if any library features are enabled at default level
+        // Check if any library sources are enabled in templateSources
         DefaultConfig defaults = extension.getDefaults();
-        if (defaults != null) {
-            boolean useLibraryTemplates = defaults.getUseLibraryTemplates().isPresent() && defaults.getUseLibraryTemplates().get();
-            boolean useLibraryCustomizations = defaults.getUseLibraryCustomizations().isPresent() && defaults.getUseLibraryCustomizations().get();
+        if (defaults != null && defaults.getTemplateSources().isPresent()) {
+            java.util.List<String> templateSources = defaults.getTemplateSources().get();
+            boolean hasLibrarySources = templateSources.contains("library-templates") || 
+                                       templateSources.contains("library-customizations");
             
-            if (useLibraryTemplates || useLibraryCustomizations) {
-                logger.debug("Library features enabled at defaults level");
+            if (hasLibrarySources) {
+                logger.debug("Library sources enabled in templateSources: {}", templateSources);
                 return true;
             }
         }
-        
-        // Note: SpecConfig doesn't have library settings, they're only in DefaultConfig
-        // So we only check defaults level for library configuration
         
         logger.debug("No library features enabled, skipping library processing");
         return false;

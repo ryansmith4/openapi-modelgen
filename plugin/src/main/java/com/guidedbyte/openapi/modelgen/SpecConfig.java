@@ -70,11 +70,8 @@ public class SpecConfig {
     private final Property<String> templateCustomizationsDir;
     private final Property<Boolean> validateSpec;
     private final Property<Boolean> applyPluginCustomizations;
-    private final ListProperty<String> templatePrecedence;
     private final ListProperty<String> templateSources;
     private final Property<Boolean> debugTemplateResolution;
-    private final Property<Boolean> useLibraryTemplates;
-    private final Property<Boolean> useLibraryCustomizations;
     private final Property<Boolean> generateModelTests;
     private final Property<Boolean> generateApiTests;
     private final Property<Boolean> generateApiDocumentation;
@@ -100,11 +97,8 @@ public class SpecConfig {
         this.templateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
-        this.templatePrecedence = project.getObjects().listProperty(String.class);
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
-        this.useLibraryTemplates = project.getObjects().property(Boolean.class);
-        this.useLibraryCustomizations = project.getObjects().property(Boolean.class);
         
         // Set smart defaults for templateSources - same as DefaultConfig
         this.templateSources.convention(Arrays.asList(
@@ -158,14 +152,6 @@ public class SpecConfig {
         return applyPluginCustomizations;
     }
     
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. The templateSources list serves as both 
-     *             source specification and precedence order, making this property redundant.
-     */
-    @Deprecated
-    public ListProperty<String> getTemplatePrecedence() {
-        return templatePrecedence;
-    }
     
     public ListProperty<String> getTemplateSources() {
         return templateSources;
@@ -175,21 +161,6 @@ public class SpecConfig {
         return debugTemplateResolution;
     }
     
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-templates" is in the templateSources list.
-     */
-    @Deprecated
-    public Property<Boolean> getUseLibraryTemplates() {
-        return useLibraryTemplates;
-    }
-    
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-customizations" is in the templateSources list.
-     */
-    @Deprecated
-    public Property<Boolean> getUseLibraryCustomizations() {
-        return useLibraryCustomizations;
-    }
     
     public Property<Boolean> getGenerateModelTests() {
         return generateModelTests;
@@ -260,14 +231,6 @@ public class SpecConfig {
         this.applyPluginCustomizations.set(value);
     }
     
-    /**
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. The templateSources list serves as both 
-     *             source specification and precedence order. Simply reorder the templateSources list to change precedence.
-     */
-    @Deprecated
-    public void templatePrecedence(java.util.List<String> precedence) {
-        this.templatePrecedence.set(precedence);
-    }
     
     @Option(option = "template-sources", description = "Ordered list of template sources for this spec")
     public void templateSources(java.util.List<String> sources) {
@@ -279,25 +242,6 @@ public class SpecConfig {
         this.debugTemplateResolution.set(value);
     }
     
-    /**
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-templates" 
-     *             in your templateSources list to enable library templates with better control over precedence.
-     */
-    @Deprecated
-    @Option(option = "use-library-templates", description = "Enable library template usage for this spec (deprecated: use templateSources instead)")
-    public void useLibraryTemplates(boolean value) {
-        this.useLibraryTemplates.set(value);
-    }
-    
-    /**
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-customizations" 
-     *             in your templateSources list to enable library customizations with better control over precedence.
-     */
-    @Deprecated
-    @Option(option = "use-library-customizations", description = "Enable library customization usage for this spec (deprecated: use templateSources instead)")
-    public void useLibraryCustomizations(boolean value) {
-        this.useLibraryCustomizations.set(value);
-    }
     
     @Option(option = "generate-model-tests", description = "Generate unit tests for model classes for this spec")
     public void generateModelTests(boolean value) {

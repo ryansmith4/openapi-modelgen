@@ -283,20 +283,16 @@ public class ConfigurationValidator implements Serializable {
      */
     public void validateLibraryConfiguration(Project project, ProjectLayout projectLayout, DefaultConfig defaults, 
                                            Map<String, SpecConfig> specs, List<String> errors) {
-        // Only validate if library features are enabled
+        // Only validate if library sources are included in templateSources
         boolean needsLibraryValidation = false;
-        if (defaults != null && defaults.getUseLibraryTemplates().isPresent() && defaults.getUseLibraryTemplates().get()) {
-            needsLibraryValidation = true;
+        if (defaults != null && defaults.getTemplateSources().isPresent()) {
+            java.util.List<String> templateSources = defaults.getTemplateSources().get();
+            needsLibraryValidation = templateSources.contains("library-templates") || 
+                                   templateSources.contains("library-customizations");
         }
-        if (defaults != null && defaults.getUseLibraryCustomizations().isPresent() && defaults.getUseLibraryCustomizations().get()) {
-            needsLibraryValidation = true;
-        }
-        
-        // Note: SpecConfig doesn't have library settings, they're only in DefaultConfig
-        // So we only need to check defaults for library configuration
         
         if (!needsLibraryValidation) {
-            return; // No library features enabled
+            return; // No library sources enabled in templateSources
         }
         
         // Validate library settings
@@ -309,8 +305,8 @@ public class ConfigurationValidator implements Serializable {
                 project.getConfigurations().getByName("openapiCustomizations");
             
             if (customizationsConfig.getFiles().isEmpty()) {
-                logger.info("Library features are enabled but no openapiCustomizations dependencies found");
-                return;
+                logger.debug("Library template sources are included in templateSources but no openapiCustomizations dependencies found - library sources will be skipped");
+                return; // Skip library validation gracefully
             }
             
             libraryFiles.addAll(customizationsConfig.getFiles());
@@ -427,32 +423,8 @@ public class ConfigurationValidator implements Serializable {
     public void validateLibrarySettings(DefaultConfig defaults, List<String> errors) {
         if (defaults == null) return;
         
-        boolean useLibraryTemplates = defaults.getUseLibraryTemplates().isPresent() && defaults.getUseLibraryTemplates().get();
-        boolean useLibraryCustomizations = defaults.getUseLibraryCustomizations().isPresent() && defaults.getUseLibraryCustomizations().get();
-        
-        if (useLibraryTemplates || useLibraryCustomizations) {
-            // Check both templateSources (preferred) and templatePrecedence (deprecated) for backward compatibility
-            List<String> sourcesOrPrecedence = null;
-            String configProperty = null;
-            
-            if (defaults.getTemplateSources().isPresent()) {
-                sourcesOrPrecedence = defaults.getTemplateSources().get();
-                configProperty = "templateSources";
-            } else if (defaults.getTemplatePrecedence().isPresent()) {
-                sourcesOrPrecedence = defaults.getTemplatePrecedence().get();
-                configProperty = "templatePrecedence";
-            }
-            
-            if (sourcesOrPrecedence != null) {
-                if (useLibraryTemplates && !sourcesOrPrecedence.contains("library-templates")) {
-                    errors.add("useLibraryTemplates is enabled but 'library-templates' is not in " + configProperty);
-                }
-                
-                if (useLibraryCustomizations && !sourcesOrPrecedence.contains("library-customizations")) {
-                    errors.add("useLibraryCustomizations is enabled but 'library-customizations' is not in " + configProperty);
-                }
-            }
-        }
+        // Library validation is now handled automatically by templateSources inclusion
+        // No additional validation needed since library sources are enabled by including them in templateSources
     }
     
     /**

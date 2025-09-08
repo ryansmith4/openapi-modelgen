@@ -24,7 +24,6 @@ import java.util.Map;
  *   <li><strong>validateSpec:</strong> Enable/disable OpenAPI specification validation (default: false)</li>
  *   <li><strong>applyPluginCustomizations:</strong> Enable/disable built-in plugin YAML customizations (default: true)</li>
  *   <li><strong>templateSources:</strong> <em>(Preferred)</em> Ordered list of template sources with auto-discovery (default: all sources)</li>
- *   <li><strong>templatePrecedence:</strong> <em>(Advanced)</em> Configurable template resolution order for fine-grained control</li>
  *   <li><strong>debugTemplateResolution:</strong> Enable debug logging for template source resolution (default: false)</li>
  *   <li><strong>templateVariables:</strong> Variables available in Mustache templates (supports nested expansion)</li>
  *   <li><strong>configOptions:</strong> OpenAPI Generator configuration options (pre-configured for Spring Boot 3 + Jakarta EE + Lombok)</li>
@@ -35,12 +34,6 @@ import java.util.Map;
  *   <li><strong>generateModelDocumentation:</strong> Enable/disable model documentation generation (default: false)</li>
  * </ul>
  * 
- * <h2>Migration from Deprecated Properties:</h2>
- * <ul>
- *   <li><strong>templatePrecedence:</strong> <em>Deprecated.</em> Use {@code templateSources} instead - it serves as both source list and precedence order</li>
- *   <li><strong>useLibraryTemplates:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-templates", "library-templates", "plugin-customizations", "openapi-generator"])} instead</li>
- *   <li><strong>useLibraryCustomizations:</strong> <em>Deprecated.</em> Use {@code templateSources(["user-customizations", "library-customizations", "plugin-customizations", "openapi-generator"])} instead</li>
- * </ul>
  * 
  * <h2>Example Usage:</h2>
  * <pre>{@code
@@ -86,14 +79,11 @@ public class DefaultConfig {
     private final Property<Boolean> generateModelDocumentation;
     private final Property<Boolean> validateSpec;
     private final Property<Boolean> applyPluginCustomizations;
-    private final ListProperty<String> templatePrecedence;
     private final ListProperty<String> templateSources;
     private final Property<Boolean> debugTemplateResolution;
     private final MapProperty<String, String> configOptions;
     private final MapProperty<String, String> globalProperties;
     private final MapProperty<String, String> templateVariables;
-    private final Property<Boolean> useLibraryTemplates;
-    private final Property<Boolean> useLibraryCustomizations;
     
     /**
      * Creates a new default configuration for the given project.
@@ -114,7 +104,6 @@ public class DefaultConfig {
         this.generateModelDocumentation = project.getObjects().property(Boolean.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
-        this.templatePrecedence = project.getObjects().listProperty(String.class);
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
         
@@ -130,8 +119,6 @@ public class DefaultConfig {
         this.configOptions = project.getObjects().mapProperty(String.class, String.class);
         this.globalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
-        this.useLibraryTemplates = project.getObjects().property(Boolean.class);
-        this.useLibraryCustomizations = project.getObjects().property(Boolean.class);
     }
     
     // Getter methods
@@ -187,14 +174,6 @@ public class DefaultConfig {
         return templateVariables;
     }
     
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. The templateSources list serves as both 
-     *             source specification and precedence order, making this property redundant.
-     */
-    @Deprecated
-    public ListProperty<String> getTemplatePrecedence() {
-        return templatePrecedence;
-    }
     
     /**
      * Gets the template sources list property.
@@ -223,21 +202,6 @@ public class DefaultConfig {
         return debugTemplateResolution;
     }
     
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-templates" is in the templateSources list.
-     */
-    @Deprecated
-    public Property<Boolean> getUseLibraryTemplates() {
-        return useLibraryTemplates;
-    }
-    
-    /**
-     * @deprecated Use {@link #getTemplateSources()} instead. Check if "library-customizations" is in the templateSources list.
-     */
-    @Deprecated
-    public Property<Boolean> getUseLibraryCustomizations() {
-        return useLibraryCustomizations;
-    }
     
     // Convenience setter methods for Gradle DSL
     @Option(option = "output-dir", description = "Directory where generated code will be written (relative to project root)")
@@ -318,29 +282,6 @@ public class DefaultConfig {
         this.templateVariables.set(variables);
     }
     
-    /**
-     * Sets the template precedence order for template resolution.
-     * 
-     * <p>Valid precedence values:</p>
-     * <ul>
-     *   <li>{@code user-templates} - Project-specific Mustache templates (highest precedence)</li>
-     *   <li>{@code user-customizations} - Project-specific YAML customizations</li>
-     *   <li>{@code plugin-customizations} - Built-in plugin YAML customizations</li>
-     *   <li>{@code openapi-generator} - OpenAPI Generator default templates (lowest precedence)</li>
-     * </ul>
-     * 
-     * <p>Default order: {@code ['user-templates', 'user-customizations', 'plugin-customizations', 'openapi-generator']}</p>
-     * 
-     * @param precedence ordered list of template sources from highest to lowest precedence
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. The templateSources list serves as both 
-     *             source specification and precedence order. Simply reorder the templateSources list to change precedence.
-     *             Example: {@code templateSources(["user-customizations", "user-templates", "plugin-customizations", "openapi-generator"])}
-     */
-    @Deprecated
-    @Option(option = "template-precedence", description = "Template resolution precedence order (deprecated: use templateSources instead)")
-    public void templatePrecedence(java.util.List<String> precedence) {
-        this.templatePrecedence.set(precedence);
-    }
     
     /**
      * Sets the template sources list for template resolution.
@@ -381,37 +322,4 @@ public class DefaultConfig {
         this.debugTemplateResolution.set(debug);
     }
     
-    /**
-     * Enables/disables the use of template libraries from the openapiCustomizations configuration.
-     * 
-     * <p>When enabled, templates from library JARs will be extracted and used according to
-     * the configured template precedence order.</p>
-     * 
-     * @param use {@code true} to enable library templates, {@code false} to disable
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-templates" 
-     *             in your templateSources list to enable library templates with better control over precedence.
-     *             Example: {@code templateSources(["user-templates", "library-templates", "plugin-customizations", "openapi-generator"])}
-     */
-    @Deprecated
-    @Option(option = "use-library-templates", description = "Enable templates from library dependencies (deprecated: use templateSources instead)")
-    public void useLibraryTemplates(Boolean use) {
-        this.useLibraryTemplates.set(use);
-    }
-    
-    /**
-     * Enables/disables the use of YAML customizations from template libraries.
-     * 
-     * <p>When enabled, YAML customization files from library JARs will be extracted and
-     * applied according to the configured precedence order.</p>
-     * 
-     * @param use {@code true} to enable library customizations, {@code false} to disable
-     * @deprecated Use {@link #templateSources(java.util.List)} instead. Include "library-customizations" 
-     *             in your templateSources list to enable library customizations with better control over precedence.
-     *             Example: {@code templateSources(["user-customizations", "library-customizations", "plugin-customizations", "openapi-generator"])}
-     */
-    @Deprecated
-    @Option(option = "use-library-customizations", description = "Enable YAML customizations from library dependencies (deprecated: use templateSources instead)")
-    public void useLibraryCustomizations(Boolean use) {
-        this.useLibraryCustomizations.set(use);
-    }
 }

@@ -83,7 +83,8 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
 
     @Test
     void testLibraryTemplateValidation() throws IOException {
-        // Create build.gradle with library usage but no precedence configuration
+        // Create build.gradle with library files but library sources not included in templateSources
+        // This should work fine (library files are ignored)
         try (FileWriter writer = new FileWriter(buildFile)) {
             writer.write("""
                 plugins {
@@ -102,14 +103,14 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        // Missing library-templates in templatePrecedence - should cause validation error
-                        templatePrecedence([
+                        // Library files exist but library sources not in templateSources - should work fine
+                        templateSources([
                             'user-templates',
                             'user-customizations',
                             'plugin-customizations',
                             'openapi-generator'
                         ])
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
@@ -128,15 +129,16 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
             writer.write("rootProject.name = 'test-library-validation'\n");
         }
 
-        // Run the build - should fail with validation error
+        // Run the build - should succeed (library files are ignored since not in templateSources)
         BuildResult result = createGradleRunner(testProjectDir)
-                .withArguments("generatePets", "--info", "--stacktrace")
-                .buildAndFail();
+                .withArguments("tasks", "--info")  // Use tasks to test configuration only
+                .build();
 
-        // Verify validation error is shown
+        // Verify build succeeded and library processing was skipped
         String output = result.getOutput();
-        assertTrue(output.contains("useLibraryTemplates is enabled but 'library-templates' is not in templatePrecedence"),
-                  "Should show library precedence validation error: " + output);
+        assertEquals(SUCCESS, result.task(":tasks").getOutcome());
+        assertFalse(output.contains("Processing 1 template library dependencies"),
+                   "Should not process libraries when not in templateSources: " + output);
     }
 
     @Test
@@ -160,8 +162,11 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates false
-                        useLibraryCustomizations false
+                        templateSources([
+                            'user-templates',
+                            'user-customizations',
+                            'openapi-generator'  // Exclude library sources
+                        ])
                         applyPluginCustomizations false  // Disable plugin customizations to avoid YAML parsing issues
                     }
                     specs {
@@ -293,15 +298,13 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        useLibraryCustomizations false
-                        applyPluginCustomizations false  // Disable plugin customizations to avoid YAML parsing issues
-                        templatePrecedence([
+                        templateSources([
                             'user-templates',
                             'library-templates',
                             'user-customizations',
                             'openapi-generator'  // Skip plugin-customizations
                         ])
+                        applyPluginCustomizations false  // Disable plugin customizations to avoid YAML parsing issues
                     }
                     specs {
                         pets {
@@ -439,7 +442,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
         // Create OpenAPI spec
         createPetStoreSpec(specFile);
         
-        // Create build.gradle with library features enabled but no dependencies
+        // Create build.gradle with library sources but no dependencies - should work gracefully
         try (FileWriter writer = new FileWriter(buildFile)) {
             writer.write("""
                 plugins {
@@ -453,13 +456,18 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 dependencies {
                     implementation 'org.openapitools:openapi-generator:7.10.0'
-                    // Missing openapiCustomizations dependencies
+                    // No openapiCustomizations dependencies - should be handled gracefully
                 }
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true  // Enabled but no dependencies configured
-                        useLibraryCustomizations true
+                        templateSources([
+                            'library-templates',  // No dependencies but should not error
+                            'library-customizations',
+                            'plugin-customizations',
+                            'openapi-generator'
+                        ])
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
@@ -476,17 +484,16 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
             writer.write("rootProject.name = 'test-library-config-validation'\n");
         }
 
-        // Run the build - should fail with configuration validation error
+        // Run the build - should succeed (library sources gracefully skipped)
         BuildResult result = createGradleRunner(testProjectDir)
-                .withArguments("generatePets", "--info", "--stacktrace")
-                .buildAndFail();
+                .withArguments("tasks", "--info")  // Use tasks to test configuration only
+                .build();
 
-        // Verify configuration validation error is shown
+        // Verify build succeeded and library processing was skipped
         String output = result.getOutput();
-        assertTrue(output.contains("useLibraryTemplates is enabled but 'library-templates' is not in templatePrecedence") ||
-                  output.contains("useLibraryCustomizations is enabled but 'library-customizations' is not in templatePrecedence") ||
-                  output.contains("Configuration validation failed"),
-                  "Should show template precedence validation error: " + output);
+        assertEquals(SUCCESS, result.task(":tasks").getOutcome());
+        assertFalse(output.contains("Processing 1 template library dependencies"),
+                   "Should not process libraries when no dependencies exist: " + output);
     }
 
     @Test
@@ -733,16 +740,14 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        useLibraryCustomizations true  // Enable YAML customizations
-                        applyPluginCustomizations false
-                        templatePrecedence([
+                        templateSources([
                             'user-templates',
                             'library-templates',
                             'library-customizations',  // Include library customizations
                             'user-customizations',
                             'openapi-generator'
                         ])
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
@@ -774,15 +779,13 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        useLibraryCustomizations true
-                        applyPluginCustomizations false
                         // Note: Uses default 'spring' generator but library only supports java
-                        templatePrecedence([
+                        templateSources([
                             'library-templates',
                             'library-customizations',
                             'openapi-generator'
                         ])
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
@@ -814,15 +817,13 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        useLibraryCustomizations true
-                        applyPluginCustomizations false
                         // Note: Uses default 'spring' generator (compatible with library)
-                        templatePrecedence([
+                        templateSources([
                             'library-templates',
                             'library-customizations',
                             'openapi-generator'
                         ])
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
@@ -854,11 +855,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 
                 openapiModelgen {
                     defaults {
-                        useLibraryTemplates true
-                        useLibraryCustomizations true
-                        applyPluginCustomizations false
-                        debugTemplateResolution true  // Enable debug logging
-                        templatePrecedence([
+                        templateSources([
                             'user-templates',           // Highest precedence
                             'user-customizations',      
                             'library-templates',        // Library templates
@@ -866,6 +863,8 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'plugin-customizations',    // Plugin customizations (disabled)
                             'openapi-generator'         // Lowest precedence
                         ])
+                        debugTemplateResolution true  // Enable debug logging
+                        applyPluginCustomizations false
                     }
                     specs {
                         pets {
