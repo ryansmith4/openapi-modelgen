@@ -166,6 +166,21 @@ public class ResolvedSpecConfig {
     }
     
     /**
+     * Gets the effective template precedence, preferring templateSources over templatePrecedence.
+     * This provides backward compatibility while encouraging use of the unified templateSources approach.
+     * 
+     * @return the effective precedence list (templateSources if available, otherwise templatePrecedence)
+     */
+    public List<String> getEffectiveTemplatePrecedence() {
+        // Use templateSources as precedence if templatePrecedence is the default (not explicitly set)
+        // This provides a smooth transition from templatePrecedence to templateSources
+        if (templateSources != null && !templateSources.isEmpty()) {
+            return templateSources;
+        }
+        return templatePrecedence != null ? templatePrecedence : List.of();
+    }
+    
+    /**
      * Gets the resolved template sources list for this specification.
      * 
      * @return the list of template sources in priority order, or null if not configured

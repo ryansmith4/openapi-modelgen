@@ -431,16 +431,25 @@ public class ConfigurationValidator implements Serializable {
         boolean useLibraryCustomizations = defaults.getUseLibraryCustomizations().isPresent() && defaults.getUseLibraryCustomizations().get();
         
         if (useLibraryTemplates || useLibraryCustomizations) {
-            // Validate template precedence includes library sources
-            if (defaults.getTemplatePrecedence().isPresent()) {
-                List<String> precedence = defaults.getTemplatePrecedence().get();
-                
-                if (useLibraryTemplates && !precedence.contains("library-templates")) {
-                    errors.add("useLibraryTemplates is enabled but 'library-templates' is not in templatePrecedence");
+            // Check both templateSources (preferred) and templatePrecedence (deprecated) for backward compatibility
+            List<String> sourcesOrPrecedence = null;
+            String configProperty = null;
+            
+            if (defaults.getTemplateSources().isPresent()) {
+                sourcesOrPrecedence = defaults.getTemplateSources().get();
+                configProperty = "templateSources";
+            } else if (defaults.getTemplatePrecedence().isPresent()) {
+                sourcesOrPrecedence = defaults.getTemplatePrecedence().get();
+                configProperty = "templatePrecedence";
+            }
+            
+            if (sourcesOrPrecedence != null) {
+                if (useLibraryTemplates && !sourcesOrPrecedence.contains("library-templates")) {
+                    errors.add("useLibraryTemplates is enabled but 'library-templates' is not in " + configProperty);
                 }
                 
-                if (useLibraryCustomizations && !precedence.contains("library-customizations")) {
-                    errors.add("useLibraryCustomizations is enabled but 'library-customizations' is not in templatePrecedence");
+                if (useLibraryCustomizations && !sourcesOrPrecedence.contains("library-customizations")) {
+                    errors.add("useLibraryCustomizations is enabled but 'library-customizations' is not in " + configProperty);
                 }
             }
         }
