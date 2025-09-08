@@ -1,0 +1,4 @@
+rootProject.name = 'test-app'
+
+// Include the plugin from the parent directory
+includeBuild '../plugin'

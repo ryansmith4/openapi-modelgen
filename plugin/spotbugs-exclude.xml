@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test classes from certain checks -->
+    <Match>
+        <Class name="~.*Test.*"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+    
+    <!-- Exclude generated code -->
+    <Match>
+        <Package name="~.*\.generated\..*"/>
+    </Match>
+    
+    <!-- Exclude specific false positives for Gradle plugin development -->
+    <Match>
+        <Class name="com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin"/>
+        <Method name="apply"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+    
+    <!-- Exclude serialization warnings for configuration cache compatible classes -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD"/>
+        <Or>
+            <Class name="~.*Action.*"/>
+            <Class name="~.*TemplateConfiguration"/>
+            <Class name="~.*ResolvedSpecConfig"/>
+        </Or>
+    </Match>
+    
+    <!-- Exclude warnings about static loggers in serializable classes (required for config cache) -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD_INNER_CLASS"/>
+    </Match>
+    
+    <!-- Exclude performance warnings for test utilities -->
+    <Match>
+        <Class name="~.*Test.*"/>
+        <Bug pattern="DM_STRING_CTOR"/>
+    </Match>
+    
+    <!-- Exclude warnings about method naming conventions in DSL classes -->
+    <Match>
+        <Or>
+            <Class name="com.guidedbyte.openapi.modelgen.DefaultConfig"/>
+            <Class name="com.guidedbyte.openapi.modelgen.SpecConfig"/>
+            <Class name="com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension"/>
+        </Or>
+        <Bug pattern="NM_METHOD_NAMING_CONVENTION"/>
+    </Match>
+</FindBugsFilter>

@@ -1,6 +1,4 @@
 rootProject.name = 'openapi-modelgen'
 
-include 'test-app'
-
-// Make the plugin available to the test-app
+//// Make the plugin available to the test-app
 includeBuild 'plugin'

@@ -1,0 +1,24 @@
+metadata:
+  name: "Enhanced Model Template"
+  description: "Adds custom model features and serialization"
+  version: "2.0.0"
+
+insertions:
+  - after: "{{#jackson}}"
+    content: |
+      import com.fasterxml.jackson.annotation.JsonInclude;
+    conditions:
+      templateNotContains: "import com.fasterxml.jackson.annotation.JsonInclude;"
+
+  - after: "{{#jackson}}"
+    content: |
+      import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+    conditions:
+      templateNotContains: "import com.fasterxml.jackson.annotation.JsonPropertyOrder;"
+  
+  # Add Schema import for swagger2AnnotationLibrary
+  - after: "{{#performBeanValidation}}\nimport org.hibernate.validator.constraints.*;\n{{/performBeanValidation}}"
+    content: |
+      {{#swagger2AnnotationLibrary}}
+      import io.swagger.v3.oas.annotations.media.Schema;
+      {{/swagger2AnnotationLibrary}}

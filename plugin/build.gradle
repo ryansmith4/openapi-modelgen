@@ -2,7 +2,11 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
     id 'java-gradle-plugin'
     id 'groovy'
+    id 'com.github.spotbugs' version '6.3.0'
 }
+
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
 
 repositories {
     mavenLocal()
@@ -17,9 +21,17 @@ dependencies {
     // Consumer projects must provide their own version (7.10.0+)
     compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.10.0'
     
+    // OpenAPI Generator core for CodegenConfig API - also compileOnly
+    compileOnly 'org.openapitools:openapi-generator:7.10.0'
+    
+    // YAML processing for template customizations
+    implementation 'org.yaml:snakeyaml:1.33'
+    implementation 'org.semver4j:semver4j:3.1.0'
+    
     // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime
     testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
     testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
+    testImplementation 'org.openapitools:openapi-generator:7.14.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.1.1'
     testImplementation gradleTestKit()
@@ -42,6 +54,50 @@ test {
     // Increase timeout for integration tests
     timeout = Duration.ofMinutes(5)
 }
+
+// SpotBugs configuration for code quality
+spotbugs {
+    toolVersion = '4.8.6'  // Use stable version that works with plugin
+    effort = com.github.spotbugs.snom.Effort.valueOf('MAX')
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('LOW')
+    ignoreFailures = true  // Don't fail build, just report issues
+    if (file("${projectDir}/spotbugs-exclude.xml").exists()) {
+        excludeFilter = file("${projectDir}/spotbugs-exclude.xml")
+    }
+}
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("${buildDir}/reports/spotbugs/main.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = true
+            outputLocation = file("${buildDir}/reports/spotbugs/main.xml")
+        }
+        sarif {
+            required = false
+        }
+    }
+}
+
+spotbugsTest {
+    reports {
+        html {
+            required = true
+            outputLocation = file("${buildDir}/reports/spotbugs/test.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+        xml {
+            required = false
+        }
+    }
+}
+
+// Make check task depend on SpotBugs
+check.dependsOn spotbugsMain
 
 // Generate plugin documentation automatically
 tasks.register('generatePluginDocs') {
@@ -258,7 +314,7 @@ gradlePlugin {
             implementationClass = 'com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin'
             displayName = 'OpenAPI Model Generator'
             description = file("src/main/resources/plugin-description.md").text
-            tags = ['openapi', 'code-generation', 'lombok', 'dto', 'models', 'java', 'spring']
+            tags = ['openapi', 'code-generation', 'lombok', 'dto', 'models', 'java', 'spring', 'templates', 'customization']
         }
     }
 }

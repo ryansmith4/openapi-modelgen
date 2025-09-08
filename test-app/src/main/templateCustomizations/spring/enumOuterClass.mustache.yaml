@@ -1,0 +1,8 @@
+insertions:
+  - before: "/**"
+    content: "// ENUM_OUTER_CLASS_TEST: This proves enumOuterClass.mustache is being used!\n"
+
+replacements:
+  - find: "\\{\\{\\{name\\}\\}\\}\\(\\{\\{\\{value\\}\\}\\}\\)\\{\\{\\^-last\\}\\},\\s*\\{\\{/-last\\}\\}\\{\\{#-last\\}\\};\\{\\{/-last\\}\\}"
+    replace: "{{{name}}}({{{value}}}){{^-last}}, {{/-last}}{{#-last}};{{/-last}}"
+    type: "regex"

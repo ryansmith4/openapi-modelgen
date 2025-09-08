@@ -11,6 +11,9 @@ test-app/build/generated-sources/
 # Plugin generated documentation
 plugin/docs/
 
+# Plugin development directory
+plugin/dev/
+
 # IDE files
 .idea/
 *.iml
@@ -69,6 +72,13 @@ test-debug-tmp/
 # Backup files
 *.bak
 *.backup
+
+# Node.js artifacts (from documentation tooling)
+node_modules/
+package*.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Plugin Portal credentials (should be in ~/.gradle/gradle.properties)
 gradle.publish.key

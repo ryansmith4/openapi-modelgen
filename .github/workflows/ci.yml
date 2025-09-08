@@ -29,9 +29,13 @@ jobs:
 
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v3
+        with:
+          allow-snapshots: false
 
       - name: Make gradlew executable
-        run: chmod +x ./gradlew
+        run: |
+          chmod +x ./gradlew
+          chmod +x ./test-app/gradlew
 
       - name: Run tests
         run: ./gradlew plugin:test --no-daemon --stacktrace
@@ -40,7 +44,24 @@ jobs:
         run: ./gradlew plugin:validatePlugin --no-daemon
 
       - name: Test integration with test-app
-        run: ./gradlew test-app:generateAllModels --no-daemon
+        run: |
+          cd test-app
+          ./gradlew generateAllModels --no-daemon
+          
+      - name: Verify generated code
+        run: |
+          # Check that models were generated correctly
+          ls -la test-app/build/generated/sources/openapi/src/main/java/com/guidedbyte/testapp/model/
+          # Verify Lombok annotations are present
+          grep -r "@lombok.Data" test-app/build/generated/sources/openapi/ || echo "Lombok annotations not found"
+          
+      - name: Test configuration cache compatibility
+        run: |
+          cd test-app
+          # Test configuration cache with clean build
+          ./gradlew clean generatePets --configuration-cache --no-daemon
+          # Test cache reuse (should be faster)
+          ./gradlew generatePets --configuration-cache --no-daemon
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -50,6 +71,7 @@ jobs:
           path: |
             plugin/build/reports/tests/
             plugin/build/test-results/
+            test-app/build/generated/sources/openapi/
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

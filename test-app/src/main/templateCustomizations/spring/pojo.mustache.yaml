@@ -1,0 +1,6 @@
+insertions:
+  - before: "{{#description}}"
+    content: |
+      /**
+       * USER CUSTOMIZATION: This class was generated with user-specific customizations
+       */

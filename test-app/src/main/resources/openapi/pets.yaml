@@ -9,6 +9,9 @@ info:
 
 components:
   schemas:
+    PetType:
+      type: string
+      enum: [DOG,CAT,MOUSE]
     Pet:
       type: object
       required:
@@ -119,4 +122,3 @@ components:
         status:
           type: string
           enum: [available, pending, sold]
-          example: available

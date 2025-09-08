@@ -71,7 +71,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("inputSpec"));
     }
 
@@ -103,7 +103,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("modelPackage"));
     }
 
@@ -138,7 +138,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("package") || result.getOutput().contains("invalid"));
     }
 
@@ -173,7 +173,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("reserved") || result.getOutput().contains("package"));
     }
 
@@ -202,6 +202,8 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks", "--all")
                 .build();
 
+        // Should succeed - empty specs are allowed (tasks will validate at execution time)
+        assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         // Should not create any generation tasks
         assertFalse(result.getOutput().contains("generateOpenApiDtosFor"));
         assertTrue(result.getOutput().contains("generateHelp"));
@@ -243,7 +245,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("Duplicate") || result.getOutput().contains("duplicate"));
     }
 
@@ -325,7 +327,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
                 .withArguments("tasks")
                 .buildAndFail();
 
-        assertTrue(result.getOutput().contains("configuration validation failed"));
+        assertTrue(result.getOutput().contains("Configuration validation failed"));
         assertTrue(result.getOutput().contains("outputDir") || result.getOutput().contains("output"));
     }
 

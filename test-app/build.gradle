@@ -1,39 +1,66 @@
 plugins {
+    id 'java'
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.openapi.generator' version '7.14.0'
-    id 'com.guidedbyte.openapi-modelgen' version '1.0.4'
+    id 'com.guidedbyte.openapi-modelgen'
+}
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
-    // OpenAPI/Swagger annotations
+    // OpenAPI/Swagger v3 annotations (includes @Schema)
     implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
     
     // JSR-305 annotations (for @Nullable, @Nonnull in generated code)
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
-    compileOnly("org.projectlombok:lombok:1.18.38")
-    annotationProcessor("org.projectlombok:lombok:1.18.38")
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    // Jackson for JSON processing
+    // Jakarta Bean Validation API (for @Valid, @NotNull, etc.)
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    
+    // Hibernate Validator (implementation of Jakarta Bean Validation)
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    
+    // Spring Nullable annotations
+    implementation 'org.springframework:spring-core:6.0.10'
+    
+    // Jakarta Annotations (for @Generated)
+    compileOnly 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+    // Jackson for JSON processing (usually included with Spring Boot Web)
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     
+    // OpenAPI Generator dependency for plugin  
+    implementation 'org.openapitools:openapi-generator:7.14.0'
+    
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    testCompileOnly("org.projectlombok:lombok:1.18.38")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
+    testCompileOnly 'org.projectlombok:lombok:1.18.38'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 }
 
 // Configure our custom plugin
 openapiModelgen {
     defaults {
-        templateDir "src/main/templates/custom" // Trigger use of plugin templates
+        templateDir "src/main/templates" // Use explicit user templates
+        templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
+        applyPluginCustomizations false // Disable plugin customizations to test user precedence
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
+        ])
+        validateSpec false
+        configOptions([
+            additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
         ])
     }
     specs {
@@ -55,7 +82,7 @@ openapiModelgen {
 sourceSets {
     main {
         java {
-            srcDirs += file("$buildDir/generated/sources/openapi/src/main/java")
+            srcDirs += file("${layout.buildDirectory.get()}/generated/sources/openapi/src/main/java")
         }
     }
 }

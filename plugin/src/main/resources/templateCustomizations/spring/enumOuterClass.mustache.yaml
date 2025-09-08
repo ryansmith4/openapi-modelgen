@@ -1,0 +1,26 @@
+# OpenAPI Template Customizer - Enum Outer Class Template Enhancement
+# Simple readable customizations for better enum formatting
+
+metadata:
+  name: "Enhanced Enum Outer Class Template"
+  description: "Formats enum values on separate lines for better readability"
+  version: "3.0.0"
+
+replacements:
+  # Make value field final
+  - find: "private {{{dataType}}} value;"
+    replace: "private final {{{dataType}}} value;"
+    
+  # Format enum values on separate lines (gson section)
+  # Replace inline enum values with multi-line format
+  - find: "{{{name}}}({{{value}}}){{^-last}}, {{/-last}}{{#-last}};{{/-last}}"
+    replace: "{{{name}}}({{{value}}}){{^-last}},\n  {{/-last}}{{#-last}};{{/-last}}"
+
+insertions:
+  # Add x-implements support for older generators
+  - after: "{{/datatypeWithEnum}}"
+    content: "{{#vendorExtensions.x-implements}}{{#-first}} implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}}"
+    conditions:
+      allOf:
+        - generatorVersion: "< 7.14.0"
+        - templateNotContains: "{{#vendorExtensions.x-implements}}"

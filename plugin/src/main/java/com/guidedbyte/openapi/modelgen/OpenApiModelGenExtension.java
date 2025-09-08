@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.services.LibraryTemplateExtractor;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.gradle.api.Action;
@@ -23,6 +24,9 @@ import java.util.Map;
  * <h2>Configuration Structure:</h2>
  * <pre>{@code
  * openapiModelgen {
+ *     // Global plugin settings
+ *     parallel true  // Enable parallel spec processing (default: true)
+ *     
  *     defaults {
  *         // Global defaults applied to all specs
  *         validateSpec true
@@ -53,6 +57,18 @@ public class OpenApiModelGenExtension {
     private final DefaultConfig defaults;
     private final Map<String, SpecConfig> specs = new HashMap<>();
     private final Project project;
+    
+    /**
+     * Whether to enable parallel processing of multiple specifications.
+     * Default is true for better performance on multi-core systems.
+     */
+    private boolean parallel = true;
+    
+    /**
+     * Library content extracted from template library dependencies.
+     * Set during plugin configuration phase for use by tasks.
+     */
+    private LibraryTemplateExtractor.LibraryExtractionResult libraryContent;
     
     /**
      * Creates a new OpenAPI Model Generator extension for the given project.
@@ -126,17 +142,21 @@ public class OpenApiModelGenExtension {
      * Container for OpenAPI specification configurations.
      * 
      * <p>This class provides the DSL for defining multiple OpenAPI specifications.
-     * Users can define specs using either predefined methods (pets, orders) or 
-     * dynamic method names via Groovy's methodMissing.</p>
+     * Users can define specs using dynamic method names via Groovy's methodMissing,
+     * allowing any specification name to be used.</p>
      * 
      * <p>Example usage:</p>
      * <pre>{@code
      * specs {
-     *     pets {          // Predefined method
+     *     pets {
      *         inputSpec "specs/pets.yaml"
      *         modelPackage "com.example.pets"
      *     }
-     *     myCustomApi {   // Dynamic method via methodMissing
+     *     orders {
+     *         inputSpec "specs/orders.yaml"
+     *         modelPackage "com.example.orders"
+     *     }
+     *     myCustomApi {
      *         inputSpec "specs/custom.yaml"
      *         modelPackage "com.example.custom"
      *     }
@@ -144,22 +164,6 @@ public class OpenApiModelGenExtension {
      * }</pre>
      */
     public class SpecsContainer {
-        
-        public void pets(@DelegatesTo(SpecConfig.class) Closure<?> closure) {
-            createSpec("pets", closure);
-        }
-        
-        public void orders(@DelegatesTo(SpecConfig.class) Closure<?> closure) {
-            createSpec("orders", closure);
-        }
-        
-        public void pets(Action<? super SpecConfig> action) {
-            createSpec("pets", action);
-        }
-        
-        public void orders(Action<? super SpecConfig> action) {
-            createSpec("orders", action);
-        }
         
         // Generic method for any spec name
         public Object methodMissing(String name, Object args) {
@@ -192,5 +196,55 @@ public class OpenApiModelGenExtension {
             action.execute(specConfig);
             specs.put(name, specConfig);
         }
+    }
+    
+    /**
+     * Returns whether parallel processing of multiple specifications is enabled.
+     * 
+     * @return true if parallel processing is enabled, false otherwise
+     */
+    public boolean isParallel() {
+        return parallel;
+    }
+    
+    /**
+     * Sets whether to enable parallel processing of multiple specifications.
+     * When enabled, multiple OpenAPI specifications will be processed concurrently
+     * for better performance on multi-core systems.
+     * 
+     * <p><strong>Thread Safety:</strong> The plugin ensures thread safety when parallel processing 
+     * is enabled by using proper synchronization mechanisms.</p>
+     * 
+     * @param parallel true to enable parallel processing, false to process sequentially
+     */
+    public void parallel(boolean parallel) {
+        this.parallel = parallel;
+    }
+    
+    /**
+     * Enables parallel processing of multiple specifications.
+     * Equivalent to {@code parallel(true)}.
+     */
+    public void parallel() {
+        this.parallel = true;
+    }
+    
+    /**
+     * Gets the extracted library content from template library dependencies.
+     * 
+     * @return the library content, or null if no libraries were processed
+     */
+    public LibraryTemplateExtractor.LibraryExtractionResult getLibraryContent() {
+        return libraryContent;
+    }
+    
+    /**
+     * Sets the extracted library content from template library dependencies.
+     * This is called internally by the plugin during configuration phase.
+     * 
+     * @param libraryContent the extracted templates and customizations from libraries
+     */
+    public void setLibraryContent(LibraryTemplateExtractor.LibraryExtractionResult libraryContent) {
+        this.libraryContent = libraryContent;
     }
 }

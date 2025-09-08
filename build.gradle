@@ -1,31 +1,9 @@
-plugins {
-    id 'java'
-}
+// Root project for OpenAPI Model Generator Plugin
+// This is a coordination build that includes the plugin development build
 
-allprojects {
-    group = 'com.guidedbyte'
-    version = '1.0.0-SNAPSHOT'
-    
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-}
+// Project metadata
+group = 'com.guidedbyte'
+version = '1.0.0-SNAPSHOT'
 
-subprojects {
-    apply plugin: 'java'
-    
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
-    }
-    
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
-    
-    tasks.withType(Test) {
-        useJUnitPlatform()
-    }
-}
+// Minimal root project - plugin development happens in included build
+// No tasks or dependencies needed at root level

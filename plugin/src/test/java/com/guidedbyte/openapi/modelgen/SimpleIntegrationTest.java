@@ -152,6 +152,7 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
                     pets {
                         inputSpec "${project.projectDir}/src/main/resources/openapi-spec/pets.yaml"
                         modelPackage "com.example.model.pets"
+                        outputDir "build/generated/sources/openapi"
                     }
                 }
             }

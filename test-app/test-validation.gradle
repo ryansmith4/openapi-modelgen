@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+    id 'com.guidedbyte.openapi-modelgen'
+}
+
+openapiModelgen {
+    defaults {
+        validateSpec false
+    }
+    specs {
+        badspec {
+            modelPackage "com.example.model.pets"
+            // inputSpec is missing - should cause validation error
+        }
+    }
+}

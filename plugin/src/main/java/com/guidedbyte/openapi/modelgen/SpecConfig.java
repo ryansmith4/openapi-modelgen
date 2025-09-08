@@ -24,8 +24,10 @@ import java.util.Map;
  * <ul>
  *   <li><strong>outputDir:</strong> Override output directory for this spec</li>
  *   <li><strong>templateDir:</strong> Override template directory for this spec</li>
+ *   <li><strong>templateCustomizationsDir:</strong> Override template customizations directory for this spec</li>
  *   <li><strong>modelNameSuffix:</strong> Override model name suffix for this spec</li>
  *   <li><strong>validateSpec:</strong> Override validation setting for this spec</li>
+ *   <li><strong>applyPluginCustomizations:</strong> Override plugin YAML customizations setting for this spec</li>
  *   <li><strong>generateModelTests:</strong> Override model test generation for this spec</li>
  *   <li><strong>generateApiTests:</strong> Override API test generation for this spec</li>
  *   <li><strong>generateApiDocumentation:</strong> Override API documentation generation for this spec</li>
@@ -63,7 +65,9 @@ public class SpecConfig {
     private final Property<String> modelNameSuffix;
     private final Property<String> outputDir;
     private final Property<String> templateDir;
+    private final Property<String> templateCustomizationsDir;
     private final Property<Boolean> validateSpec;
+    private final Property<Boolean> applyPluginCustomizations;
     private final Property<Boolean> generateModelTests;
     private final Property<Boolean> generateApiTests;
     private final Property<Boolean> generateApiDocumentation;
@@ -86,7 +90,9 @@ public class SpecConfig {
         this.modelNameSuffix = project.getObjects().property(String.class);
         this.outputDir = project.getObjects().property(String.class);
         this.templateDir = project.getObjects().property(String.class);
+        this.templateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
+        this.applyPluginCustomizations = project.getObjects().property(Boolean.class);
         this.generateModelTests = project.getObjects().property(Boolean.class);
         this.generateApiTests = project.getObjects().property(Boolean.class);
         this.generateApiDocumentation = project.getObjects().property(Boolean.class);
@@ -117,8 +123,16 @@ public class SpecConfig {
         return templateDir;
     }
     
+    public Property<String> getTemplateCustomizationsDir() {
+        return templateCustomizationsDir;
+    }
+    
     public Property<Boolean> getValidateSpec() {
         return validateSpec;
+    }
+    
+    public Property<Boolean> getApplyPluginCustomizations() {
+        return applyPluginCustomizations;
     }
     
     public Property<Boolean> getGenerateModelTests() {
@@ -175,9 +189,19 @@ public class SpecConfig {
         this.templateDir.set(value);
     }
     
+    @Option(option = "template-customizations-dir", description = "Directory containing YAML template customization files for this spec")
+    public void templateCustomizationsDir(String value) {
+        this.templateCustomizationsDir.set(value);
+    }
+    
     @Option(option = "validate-spec", description = "Enable/disable OpenAPI specification validation for this spec")
     public void validateSpec(boolean value) {
         this.validateSpec.set(value);
+    }
+    
+    @Option(option = "apply-plugin-customizations", description = "Apply built-in plugin YAML customizations for this spec")
+    public void applyPluginCustomizations(boolean value) {
+        this.applyPluginCustomizations.set(value);
     }
     
     @Option(option = "generate-model-tests", description = "Generate unit tests for model classes for this spec")

@@ -1,0 +1,27 @@
+# OpenAPI Template Customizer - Enum Template Enhancement
+# Simple readable customizations for better enum formatting
+
+metadata:
+  name: "Enhanced Enum Template"
+  description: "Formats enum values on separate lines for better readability"
+  version: "4.0.0"
+
+replacements:
+  # Make value field final
+  - find: "private {{{dataType}}} value;"
+    replace: "private final {{{dataType}}} value;"
+    
+  # Replace compact enum formatting with multi-line formatting
+  # This targets the line where enum values are defined without comma spaces
+  - find: ",{{/-last}}{{#-last}};{{/-last}}"
+    replace: ",\n  {{/-last}}{{#-last}};{{/-last}}"
+    
+insertions:
+  # Add x-implements support for older generators
+  - after: "{{/datatypeWithEnum}}"
+    content: "{{#vendorExtensions.x-implements}}{{#-first}} implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}}"
+    conditions:
+      allOf:
+        - generatorVersion: "< 7.14.0"
+        - templateNotContains: "{{#vendorExtensions.x-implements}}"
+
