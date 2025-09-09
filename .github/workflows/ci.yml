@@ -36,12 +36,17 @@ jobs:
         run: |
           chmod +x ./gradlew
           chmod +x ./test-app/gradlew
+          # Ensure proper line endings for Linux
+          sed -i 's/\r$//' ./test-app/gradlew
 
       - name: Run tests
         run: ./gradlew plugin:test --no-daemon --stacktrace
 
       - name: Validate plugin
         run: ./gradlew plugin:validatePlugin --no-daemon
+
+      - name: Publish plugin to local repository
+        run: ./gradlew plugin:publishToMavenLocal --no-daemon
 
       - name: Test integration with test-app
         run: |
