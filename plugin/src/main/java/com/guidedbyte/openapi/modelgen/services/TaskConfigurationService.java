@@ -49,15 +49,10 @@ public class TaskConfigurationService implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(TaskConfigurationService.class);
     
-    private final TemplateCacheManager templateCacheManager;
-    
     /**
-     * Creates a new TaskConfigurationService with dependencies.
-     * 
-     * @param templateCacheManager the cache manager for template operations and optimization
+     * Creates a new TaskConfigurationService.
      */
-    public TaskConfigurationService(TemplateCacheManager templateCacheManager) {
-        this.templateCacheManager = templateCacheManager;
+    public TaskConfigurationService() {
     }
     
     /**

@@ -31,15 +31,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class TaskConfigurationServiceTest {
 
     private TaskConfigurationService taskConfigurationService;
-    private TemplateCacheManager templateCacheManager;
     private Project project;
     private OpenApiModelGenExtension extension;
 
     @BeforeEach
     void setUp() {
-        // Use real TemplateCacheManager instead of mock to avoid Java 21 compatibility issues
-        templateCacheManager = new TemplateCacheManager();
-        taskConfigurationService = new TaskConfigurationService(templateCacheManager);
+        taskConfigurationService = new TaskConfigurationService();
         
         // Create a real project for testing task creation
         project = ProjectBuilder.builder().build();

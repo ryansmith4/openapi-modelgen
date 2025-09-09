@@ -95,7 +95,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     public OpenApiModelGenPlugin() {
         this.configurationValidator = new ConfigurationValidator();
         this.libraryProcessor = new LibraryProcessor();
-        this.taskConfigurationService = new TaskConfigurationService(new TemplateCacheManager());
+        this.taskConfigurationService = new TaskConfigurationService();
     }
     
     /**
