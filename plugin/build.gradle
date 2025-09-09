@@ -32,7 +32,7 @@ dependencies {
     testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
     testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
     testImplementation 'org.openapitools:openapi-generator:7.14.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
     testImplementation 'org.mockito:mockito-core:5.1.1'
     testImplementation gradleTestKit()
 }
