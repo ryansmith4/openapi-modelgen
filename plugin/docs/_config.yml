@@ -4,11 +4,12 @@ description: Comprehensive Gradle plugin for generating Java DTOs from OpenAPI s
 baseurl: "/openapi-modelgen"
 url: "https://ryansmith4.github.io"
 
-# Theme
-theme: minima
+# Theme - using remote theme for better GitHub Pages compatibility
+remote_theme: minima
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+  - jekyll-remote-theme
 
 # Navigation
 header_pages:

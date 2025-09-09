@@ -1,6 +1,6 @@
 ---
-layout: page
-title: OpenAPI Model Generator Plugin Documentation
+layout: home
+title: OpenAPI Model Generator Plugin
 ---
 
 A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI specifications with
