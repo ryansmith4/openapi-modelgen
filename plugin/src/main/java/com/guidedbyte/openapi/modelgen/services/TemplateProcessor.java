@@ -73,7 +73,15 @@ public class TemplateProcessor {
     public String applyReplacement(String template, Replacement replacement, EvaluationContext context,
                                  Map<String, String> partials) throws CustomizationException {
         
+        logger.debug("=== REPLACEMENT DEBUG ===");
+        logger.debug("Template length: {}", template.length());
+        logger.debug("Find pattern: '{}'", replacement.getFind());
+        logger.debug("Replace content: '{}'", replacement.getReplace());
+        logger.debug("Replacement type: '{}'", replacement.getType());
+        logger.debug("Has conditions: {}", replacement.getConditions() != null);
+        
         if (!shouldApplyCustomization(replacement.getConditions(), context)) {
+            logger.debug("CONDITIONS NOT MET - skipping replacement");
             // Try fallback if conditions not met
             if (replacement.getFallback() != null) {
                 logger.debug("Primary replacement conditions not met, trying fallback");
@@ -84,13 +92,49 @@ public class TemplateProcessor {
             }
         }
         
+        logger.debug("CONDITIONS MET - applying replacement");
         String replaceContent = expandPartials(replacement.getReplace(), partials);
+        logger.debug("Expanded replace content: '{}'", replaceContent);
         
-        if ("regex".equals(replacement.getType())) {
-            return patternMatcher.replaceWithRegex(template, replacement.getFind(), replaceContent);
-        } else {
-            return patternMatcher.replaceString(template, replacement.getFind(), replaceContent);
+        // Check if pattern exists in template
+        boolean patternFound = template.contains(replacement.getFind());
+        logger.debug("Pattern '{}' found in template: {}", replacement.getFind(), patternFound);
+        
+        if (patternFound) {
+            logger.debug("Template excerpt around first match: '{}'", 
+                getTemplateExcerpt(template, replacement.getFind(), 50));
         }
+        
+        String result;
+        if ("regex".equals(replacement.getType())) {
+            logger.debug("Applying REGEX replacement");
+            result = patternMatcher.replaceWithRegex(template, replacement.getFind(), replaceContent);
+        } else {
+            logger.debug("Applying STRING replacement");
+            result = patternMatcher.replaceString(template, replacement.getFind(), replaceContent);
+        }
+        
+        boolean wasModified = !template.equals(result);
+        logger.debug("Template was modified: {}", wasModified);
+        
+        if (wasModified) {
+            logger.debug("Template length changed from {} to {}", template.length(), result.length());
+        }
+        
+        logger.debug("=== END REPLACEMENT DEBUG ===");
+        return result;
+    }
+    
+    // Helper method to show template context around a pattern
+    private String getTemplateExcerpt(String template, String pattern, int contextLength) {
+        int index = template.indexOf(pattern);
+        if (index == -1) return "PATTERN NOT FOUND";
+        
+        int start = Math.max(0, index - contextLength);
+        int end = Math.min(template.length(), index + pattern.length() + contextLength);
+        
+        String excerpt = template.substring(start, end);
+        return excerpt.replace("\n", "\\n").replace("\r", "\\r");
     }
     
     /**

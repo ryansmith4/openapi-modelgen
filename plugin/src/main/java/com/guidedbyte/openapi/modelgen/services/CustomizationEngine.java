@@ -112,9 +112,18 @@ public class CustomizationEngine {
                 throw new CustomizationException("Empty or invalid YAML content in: " + sourceName);
             }
             
+            // CRITICAL: Validate that deserialized config matches original YAML structure
+            validateDeserializationCompleteness(yamlContent, config, sourceName);
+            
             // Validate the parsed configuration
             yamlValidator.validateCustomizationConfig(config, sourceName);
             
+            logger.info("=== PARSED CONFIG DEBUG for {} ===", sourceName);
+            logger.info("Parsed config: replacements={}, insertions={}, smartReplacements={}, smartInsertions={}", 
+                config.getReplacements() != null ? config.getReplacements().size() : "null",
+                config.getInsertions() != null ? config.getInsertions().size() : "null", 
+                config.getSmartReplacements() != null ? config.getSmartReplacements().size() : "null",
+                config.getSmartInsertions() != null ? config.getSmartInsertions().size() : "null");
             logger.debug("Successfully parsed and validated customization: {}", sourceName);
             return config;
             
@@ -230,9 +239,16 @@ public class CustomizationEngine {
             
             // 1. Apply replacements first (modify existing content)
             if (config.getReplacements() != null) {
+                logger.debug("=== PROCESSING {} REPLACEMENTS ===", config.getReplacements().size());
+                int replacementIndex = 0;
                 for (Replacement replacement : config.getReplacements()) {
+                    logger.debug("Processing replacement #{}: find='{}', replace='{}'", 
+                        replacementIndex++, replacement.getFind(), replacement.getReplace());
                     result = processor.applyReplacement(result, replacement, context, config.getPartials());
                 }
+                logger.debug("=== FINISHED PROCESSING REPLACEMENTS ===");
+            } else {
+                logger.debug("No replacements to process");
             }
             
             // 2. Apply smart replacements (version-agnostic modifications)
@@ -281,6 +297,109 @@ public class CustomizationEngine {
             DebugLogger.debug(logger, debugEnabled,
                 "CUSTOMIZATION DEBUG: Exception during customization: {}", e.getMessage());
             throw new CustomizationException("Failed to apply customizations: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Validates that the deserialized CustomizationConfig matches the original YAML structure.
+     * This catches silent deserialization failures where SnakeYAML successfully creates an object
+     * but fails to populate all expected fields from the YAML content.
+     * 
+     * @param yamlContent the original YAML content string
+     * @param config the deserialized configuration object
+     * @param sourceName the source file name for error reporting
+     * @throws CustomizationException if deserialization was incomplete or incorrect
+     */
+    private void validateDeserializationCompleteness(String yamlContent, CustomizationConfig config, String sourceName) throws CustomizationException {
+        try {
+            // Parse the raw YAML again to get the expected structure
+            Yaml basicYaml = new Yaml();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> rawYaml = (Map<String, Object>) basicYaml.load(yamlContent);
+            
+            if (rawYaml == null) {
+                return; // Empty YAML is handled elsewhere
+            }
+            
+            // Check replacements
+            if (rawYaml.containsKey("replacements")) {
+                Object rawReplacements = rawYaml.get("replacements");
+                if (rawReplacements instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> expectedReplacements = (List<Object>) rawReplacements;
+                    int expectedCount = expectedReplacements.size();
+                    int actualCount = config.getReplacements() != null ? config.getReplacements().size() : 0;
+                    
+                    if (expectedCount != actualCount) {
+                        throw new CustomizationException(String.format(
+                            "YAML deserialization failure in %s: Expected %d replacements from YAML but deserialized %d. " +
+                            "This indicates a SnakeYAML deserialization problem - check YAML syntax and CustomizationConfig class structure.",
+                            sourceName, expectedCount, actualCount));
+                    }
+                }
+            }
+            
+            // Check insertions  
+            if (rawYaml.containsKey("insertions")) {
+                Object rawInsertions = rawYaml.get("insertions");
+                if (rawInsertions instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> expectedInsertions = (List<Object>) rawInsertions;
+                    int expectedCount = expectedInsertions.size();
+                    int actualCount = config.getInsertions() != null ? config.getInsertions().size() : 0;
+                    
+                    if (expectedCount != actualCount) {
+                        throw new CustomizationException(String.format(
+                            "YAML deserialization failure in %s: Expected %d insertions from YAML but deserialized %d. " +
+                            "This indicates a SnakeYAML deserialization problem - check YAML syntax and CustomizationConfig class structure.",
+                            sourceName, expectedCount, actualCount));
+                    }
+                }
+            }
+            
+            // Check smart replacements
+            if (rawYaml.containsKey("smartReplacements")) {
+                Object rawSmartReplacements = rawYaml.get("smartReplacements");
+                if (rawSmartReplacements instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> expectedSmartReplacements = (List<Object>) rawSmartReplacements;
+                    int expectedCount = expectedSmartReplacements.size();
+                    int actualCount = config.getSmartReplacements() != null ? config.getSmartReplacements().size() : 0;
+                    
+                    if (expectedCount != actualCount) {
+                        throw new CustomizationException(String.format(
+                            "YAML deserialization failure in %s: Expected %d smartReplacements from YAML but deserialized %d. " +
+                            "This indicates a SnakeYAML deserialization problem - check YAML syntax and CustomizationConfig class structure.",
+                            sourceName, expectedCount, actualCount));
+                    }
+                }
+            }
+            
+            // Check smart insertions
+            if (rawYaml.containsKey("smartInsertions")) {
+                Object rawSmartInsertions = rawYaml.get("smartInsertions");
+                if (rawSmartInsertions instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> expectedSmartInsertions = (List<Object>) rawSmartInsertions;
+                    int expectedCount = expectedSmartInsertions.size();
+                    int actualCount = config.getSmartInsertions() != null ? config.getSmartInsertions().size() : 0;
+                    
+                    if (expectedCount != actualCount) {
+                        throw new CustomizationException(String.format(
+                            "YAML deserialization failure in %s: Expected %d smartInsertions from YAML but deserialized %d. " +
+                            "This indicates a SnakeYAML deserialization problem - check YAML syntax and CustomizationConfig class structure.",
+                            sourceName, expectedCount, actualCount));
+                    }
+                }
+            }
+            
+            logger.debug("Deserialization completeness validation passed for: {}", sourceName);
+            
+        } catch (Exception e) {
+            if (e instanceof CustomizationException) {
+                throw e;
+            }
+            throw new CustomizationException("Failed to validate YAML deserialization completeness for " + sourceName + ": " + e.getMessage(), e);
         }
     }
     
@@ -1144,6 +1263,11 @@ public class CustomizationEngine {
      */
     private void applyYamlCustomizationToFile(File templateFile, String yamlContent, TemplateConfiguration templateConfig) throws IOException {
         try {
+            logger.info("=== YAML CUSTOMIZATION FILE DEBUG ===");
+            logger.info("Template file: {}", templateFile.getName());
+            logger.info("YAML content length: {}", yamlContent.length());
+            logger.info("YAML content preview: '{}'", yamlContent.length() > 100 ? yamlContent.substring(0, 100) + "..." : yamlContent);
+            
             // Parse the YAML customization
             CustomizationConfig customizationConfig = parseCustomizationYaml(
                 new java.io.ByteArrayInputStream(yamlContent.getBytes(StandardCharsets.UTF_8)), templateFile.getName() + ".yaml");

@@ -4,3 +4,9 @@ insertions:
       /**
        * USER CUSTOMIZATION: This class was generated with user-specific customizations
        */
+replacements:
+  # Universal regex fix: Add newline before opening brace in class declaration
+  # Works with both OpenAPI Generator 7.10 and 7.14+ (universal across versions)
+  - find: "(public.*class.*)(\\{)"
+    replace: "$1\n$2"
+    type: "regex"
