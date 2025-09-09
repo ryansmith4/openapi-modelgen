@@ -4,13 +4,8 @@ name: Deploy Plugin Documentation
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'plugin/docs/**'
-      - '.github/workflows/docs.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'plugin/docs/**'
 
 # Allow one concurrent deployment
 concurrency:
