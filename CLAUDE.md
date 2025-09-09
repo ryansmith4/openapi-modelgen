@@ -122,6 +122,8 @@ openapi-modelgen/
 
 ## Build Commands
 
+**⚠️ CRITICAL: test-app is a STANDALONE project - ALWAYS use `cd test-app &&` prefix**
+
 - **Generate models**: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generatePets`
 - **Generate all**: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generateAllModels`
 - **Clean generated**: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generateClean`
@@ -129,6 +131,12 @@ openapi-modelgen/
 - **Test plugin**: `/c/gradle/gradle-8.5/bin/gradle plugin:test`
 - **Generate docs**: `/c/gradle/gradle-8.5/bin/gradle plugin:generatePluginDocs`
 - **Plugin help**: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generateHelp`
+
+### Project Structure Rules
+
+- **plugin/** - Main plugin project (use `/c/gradle/gradle-8.5/bin/gradle plugin:taskName`)
+- **test-app/** - **STANDALONE** project (NEVER use `test-app:taskName` - ALWAYS use `cd test-app &&`)
+- **Root project** - Composite build that includes plugin/ only (test-app is independent)
 
 ## Current Configuration
 
@@ -343,3 +351,13 @@ Use `markdownlint-cli` for validation:
 # Validate markdown files
 npx markdownlint README.md CLAUDE.md
 ```
+
+## ⚠️ CRITICAL COMMAND PATTERNS
+
+**NEVER run test-app tasks from root project - they will ALWAYS fail!**
+
+- ❌ WRONG: `/c/gradle/gradle-8.5/bin/gradle test-app:generatePets` 
+- ❌ WRONG: `/c/gradle/gradle-8.5/bin/gradle generatePets`
+- ✅ CORRECT: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generatePets`
+
+**test-app is a standalone project, not a subproject!**
