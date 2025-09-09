@@ -8,8 +8,8 @@ test-app/build/
 test-app/src/generated/
 test-app/build/generated-sources/
 
-# Plugin generated documentation
-plugin/docs/
+# Plugin generated documentation (removed - docs are source files for GitHub Pages)
+# plugin/docs/
 
 # Plugin development directory
 plugin/dev/
