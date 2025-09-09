@@ -3,9 +3,7 @@ insertions:
     content: "// YAML_CUSTOMIZATION_TEST: This proves YAML customizations are working!\n"
 
 replacements:
-  # Replace the entire enumVars block to fix spacing (gson section with @SerializedName)
-  - find: "            {{#enumVars}}\n    {{#enumDescription}}\n    /**\n     * {{.}}\n     */\n    {{/enumDescription}}\n    @SerializedName({{#isInteger}}\"{{/isInteger}}{{#isDouble}}\"{{/isDouble}}{{#isLong}}\"{{/isLong}}{{#isFloat}}\"{{/isFloat}}{{{value}}}{{#isInteger}}\"{{/isInteger}}{{#isDouble}}\"{{/isDouble}}{{#isLong}}\"{{/isLong}}{{#isFloat}}\"{{/isFloat}})\n    {{{name}}}({{{value}}}){{^-last}},\n    {{/-last}}{{#-last}};{{/-last}}\n            {{/enumVars}}"
-    replace: "  {{#enumVars}}{{#enumDescription}}\n  /**\n   * {{.}}\n   */\n  {{/enumDescription}}@SerializedName({{#isInteger}}\"{{/isInteger}}{{#isDouble}}\"{{/isDouble}}{{#isLong}}\"{{/isLong}}{{#isFloat}}\"{{/isFloat}}{{{value}}}{{#isInteger}}\"{{/isInteger}}{{#isDouble}}\"{{/isDouble}}{{#isLong}}\"{{/isLong}}{{#isFloat}}\"{{/isFloat}})\n  {{{name}}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}{{/enumVars}}"
-  # Replace the entire enumVars block to fix spacing (non-gson section)
-  - find: "            {{#enumVars}}\n    {{#enumDescription}}\n    /**\n     * {{.}}\n     */\n    {{/enumDescription}}\n    {{{name}}}({{{value}}}){{^-last}},\n    {{/-last}}{{#-last}};{{/-last}}\n            {{/enumVars}}"
-    replace: "  {{#enumVars}}{{#enumDescription}}\n  /**\n   * {{.}}\n   */\n  {{/enumDescription}}{{{name}}}({{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}{{/enumVars}}"
+  # Remove extra newlines between enum values (same approach as enumOuterClass)
+  - find: "\\{\\{\\{name\\}\\}\\}\\(\\{\\{\\{value\\}\\}\\}\\)\\{\\{\\^-last\\}\\},\\s*\\{\\{/-last\\}\\}\\{\\{#-last\\}\\};\\{\\{/-last\\}\\}"
+    replace: "{{{name}}}({{{value}}}){{^-last}}, {{/-last}}{{#-last}};{{/-last}}"
+    type: "regex"
