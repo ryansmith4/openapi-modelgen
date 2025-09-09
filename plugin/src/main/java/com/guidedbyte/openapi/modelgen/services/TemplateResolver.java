@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
@@ -210,7 +211,7 @@ public class TemplateResolver {
                     templateWorkDirectory, created);
                 
                 // Also create a marker file to help with Gradle input validation
-                File markerFile = new File(workDir, ".gradle-template-dir");
+                File markerFile = new File(workDir, PluginConstants.TEMPLATE_MARKER_FILE);
                 if (!markerFile.exists()) {
                     markerFile.createNewFile();
                     DebugLogger.debug(logger, debugEnabled, 

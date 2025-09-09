@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.*;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
@@ -118,7 +119,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         project.getPlugins().apply(OpenApiGeneratorPlugin.class);
         
         // Create the template library configuration
-        Configuration customizationsConfig = project.getConfigurations().create("openapiCustomizations", config -> {
+        Configuration customizationsConfig = project.getConfigurations().create(PluginConstants.LIBRARIES_CONFIG_NAME, config -> {
             config.setDescription("OpenAPI template and customization libraries");
             config.setCanBeConsumed(false);  // Not exposed to consumers
             config.setCanBeResolved(true);   // Can resolve dependencies

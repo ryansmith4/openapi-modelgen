@@ -4,6 +4,8 @@ import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.slf4j.Logger;
@@ -58,8 +60,8 @@ public class LibraryProcessor implements Serializable {
         DefaultConfig defaults = extension.getDefaults();
         if (defaults != null && defaults.getTemplateSources().isPresent()) {
             java.util.List<String> templateSources = defaults.getTemplateSources().get();
-            boolean hasLibrarySources = templateSources.contains("library-templates") || 
-                                       templateSources.contains("library-customizations");
+            boolean hasLibrarySources = templateSources.contains(TemplateSourceType.LIBRARY_TEMPLATES.toString()) || 
+                                       templateSources.contains(TemplateSourceType.LIBRARY_CUSTOMIZATIONS.toString());
             
             if (hasLibrarySources) {
                 logger.debug("Library sources enabled in templateSources: {}", templateSources);
@@ -245,7 +247,7 @@ public class LibraryProcessor implements Serializable {
         // Collect all generators used in specs
         Set<String> usedGenerators = new java.util.HashSet<>();
         for (SpecConfig spec : specs.values()) {
-            String generatorName = "spring"; // Default generator - specs don't override this currently
+            String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME; // Default generator - specs don't override this currently
             usedGenerators.add(generatorName);
         }
         

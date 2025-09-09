@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -129,14 +130,7 @@ public class DefaultConfig {
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
         
         // Set smart defaults for templateSources - all possible sources with auto-discovery
-        this.templateSources.convention(Arrays.asList(
-            "user-templates",           // Explicit .mustache files in templateDir
-            "user-customizations",      // YAML customizations in templateCustomizationsDir
-            "library-templates",        // Templates from JAR dependencies
-            "library-customizations",   // YAML customizations from JAR dependencies
-            "plugin-customizations",    // Built-in plugin YAML customizations
-            "openapi-generator"         // OpenAPI Generator default templates (always available)
-        ));
+        this.templateSources.convention(TemplateSourceType.getAllAsStrings());
         this.configOptions = project.getObjects().mapProperty(String.class, String.class);
         this.globalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);

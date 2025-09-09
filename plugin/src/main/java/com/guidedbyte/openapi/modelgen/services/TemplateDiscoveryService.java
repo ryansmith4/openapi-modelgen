@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class TemplateDiscoveryService {
      * This is a convenience method for tests and backward compatibility.
      */
     public String extractBaseTemplate(String templateName) {
-        return extractBaseTemplate(templateName, "spring");
+        return extractBaseTemplate(templateName, PluginConstants.DEFAULT_GENERATOR_NAME);
     }
     
     /**

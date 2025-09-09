@@ -3,6 +3,8 @@ package com.guidedbyte.openapi.modelgen.services;
 import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
@@ -293,8 +295,8 @@ public class ConfigurationValidator implements Serializable {
         boolean needsLibraryValidation = false;
         if (defaults != null && defaults.getTemplateSources().isPresent()) {
             java.util.List<String> templateSources = defaults.getTemplateSources().get();
-            needsLibraryValidation = templateSources.contains("library-templates") || 
-                                   templateSources.contains("library-customizations");
+            needsLibraryValidation = templateSources.contains(TemplateSourceType.LIBRARY_TEMPLATES.toString()) || 
+                                   templateSources.contains(TemplateSourceType.LIBRARY_CUSTOMIZATIONS.toString());
         }
         
         if (!needsLibraryValidation) {
@@ -389,7 +391,7 @@ public class ConfigurationValidator implements Serializable {
             // Collect all generators used in specs (default is "spring")
             // Note: SpecConfig doesn't have generatorName, so we use the default
             for (SpecConfig spec : specs.values()) {
-                String generatorName = "spring"; // Default generator - specs don't override this currently
+                String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME; // Default generator - specs don't override this currently
                 usedGenerators.add(generatorName);
             }
             

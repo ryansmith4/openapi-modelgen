@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -240,8 +242,8 @@ public class ResolvedSpecConfig {
         private final String specName;
         private String inputSpec;
         private String modelPackage;
-        private String generatorName = "spring";
-        private String outputDir = "build/generated/sources/openapi";
+        private String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME;
+        private String outputDir = "build/" + PluginConstants.GENERATED_DIR + "/" + PluginConstants.SOURCES_DIR + "/" + PluginConstants.OPENAPI_DIR;
         private String templateDir;
         private String templateCustomizationsDir;
         private String modelNamePrefix; // No default value
@@ -251,14 +253,7 @@ public class ResolvedSpecConfig {
         private boolean generateApiTests = false;
         private boolean generateApiDocumentation = false;
         private boolean generateModelDocumentation = false;
-        private List<String> templateSources = Arrays.asList(
-            "user-templates",
-            "user-customizations",
-            "library-templates",
-            "library-customizations",
-            "plugin-customizations",
-            "openapi-generator"
-        );
+        private List<String> templateSources = TemplateSourceType.getAllAsStrings();
         private boolean debugTemplateResolution = false;
         private Map<String, String> configOptions = new HashMap<>();
         private Map<String, String> globalProperties = new HashMap<>();

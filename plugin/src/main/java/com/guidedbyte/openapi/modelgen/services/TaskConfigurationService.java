@@ -8,6 +8,7 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.actions.ParallelExecutionLoggingAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplatePreparationAction;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
@@ -73,15 +74,15 @@ public class TaskConfigurationService implements Serializable {
         ProviderFactory providerFactory = project.getProviders();
         
         // Create setup task that ensures template directories exist
-        TaskProvider<Task> setupTemplatesTask = tasks.register("setupTemplateDirectories", task -> {
-            task.setDescription("Creates required template directories");
-            task.setGroup("openapi modelgen");
+        TaskProvider<Task> setupTemplatesTask = tasks.register(PluginConstants.TASK_SETUP_DIRS, task -> {
+            task.setDescription(PluginConstants.DESC_SETUP_DIRS);
+            task.setGroup(PluginConstants.TASK_GROUP);
             task.doLast(new TemplateDirectorySetupAction(extension.getSpecs(), extension.getDefaults(), projectLayout));
         });
         
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
-            String taskName = "generate" + capitalize(specName);
+            String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
             
             TaskProvider<GenerateTask> specTask = tasks.register(taskName, GenerateTask.class, task -> {
                 // Make sure template setup runs first
@@ -95,16 +96,16 @@ public class TaskConfigurationService implements Serializable {
         
         // Create aggregate task that runs all spec tasks
         if (!extension.getSpecs().isEmpty()) {
-            TaskProvider<Task> aggregateTask = tasks.register("generateAllModels", task -> {
-                task.setDescription("Generates models for all OpenAPI specifications");
-                task.setGroup("openapi modelgen");
+            TaskProvider<Task> aggregateTask = tasks.register(PluginConstants.TASK_ALL_MODELS, task -> {
+                task.setDescription(PluginConstants.DESC_ALL_MODELS);
+                task.setGroup(PluginConstants.TASK_GROUP);
                 
                 // Configure parallel execution based on user preference
                 configureParallelExecution(task, extension, tasks);
                 
                 // Make this task depend on all spec tasks
                 extension.getSpecs().keySet().forEach(specName -> {
-                    String specTaskName = "generate" + capitalize(specName);
+                    String specTaskName = PluginConstants.TASK_PREFIX + capitalize(specName);
                     task.dependsOn(specTaskName);
                 });
             });
@@ -163,8 +164,8 @@ public class TaskConfigurationService implements Serializable {
                                     ProviderFactory providerFactory) {
         
         // Set basic task properties
-        task.setDescription("Generate models for " + specName + " OpenAPI specification");
-        task.setGroup("openapi modelgen");
+        task.setDescription(PluginConstants.DESC_GENERATE_PREFIX + specName + PluginConstants.DESC_GENERATE_SUFFIX);
+        task.setGroup(PluginConstants.TASK_GROUP);
         
         // Apply spec configuration
         applySpecConfig(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory);
@@ -377,9 +378,9 @@ public class TaskConfigurationService implements Serializable {
      * @param projectLayout the project layout for path resolution
      */
     private void createCleanTask(TaskContainer tasks, OpenApiModelGenExtension extension, ProjectLayout projectLayout) {
-        tasks.register("generateClean", task -> {
-            task.setDescription("Removes all generated OpenAPI models and clears template caches");
-            task.setGroup("openapi modelgen");
+        tasks.register(PluginConstants.TASK_CLEAN, task -> {
+            task.setDescription(PluginConstants.DESC_CLEAN);
+            task.setGroup(PluginConstants.TASK_GROUP);
             task.doLast(t -> {
                 boolean anythingDeleted = false;
                 
@@ -404,7 +405,7 @@ public class TaskConfigurationService implements Serializable {
                 
                 // Clean template working directories
                 File templateWorkDir = projectLayout.getBuildDirectory()
-                    .dir("template-work").get().getAsFile();
+                    .dir(PluginConstants.TEMPLATE_WORK_DIR).get().getAsFile();
                 if (templateWorkDir.exists()) {
                     logger.info("Cleaning template working directory: {}", templateWorkDir.getAbsolutePath());
                     if (deleteRecursively(templateWorkDir)) {
@@ -466,9 +467,9 @@ public class TaskConfigurationService implements Serializable {
      * @param extension the plugin extension containing configuration
      */
     private void createHelpTask(TaskContainer tasks, OpenApiModelGenExtension extension) {
-        tasks.register("generateHelp", task -> {
-            task.setDescription("Shows usage information and examples for the OpenAPI Model Generator plugin");
-            task.setGroup("openapi modelgen");
+        tasks.register(PluginConstants.TASK_HELP, task -> {
+            task.setDescription(PluginConstants.DESC_HELP);
+            task.setGroup(PluginConstants.TASK_GROUP);
             task.doLast(t -> {
                 System.out.println("\n=== OpenAPI Model Generator Plugin ===\n");
                 System.out.println("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.\n");
@@ -478,7 +479,7 @@ public class TaskConfigurationService implements Serializable {
                 // Show actual configured spec tasks
                 if (extension.getSpecs() != null && !extension.getSpecs().isEmpty()) {
                     for (String specName : extension.getSpecs().keySet()) {
-                        String taskName = "generate" + capitalize(specName);
+                        String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
                         System.out.println("  " + taskName + "         - Generate models for " + specName + " specification");
                     }
                 } else {
