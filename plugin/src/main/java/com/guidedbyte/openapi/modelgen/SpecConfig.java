@@ -6,7 +6,6 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.options.Option;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**

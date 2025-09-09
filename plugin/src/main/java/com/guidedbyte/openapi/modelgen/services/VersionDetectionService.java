@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for detecting OpenAPI Generator version and template features.
- * 
+ * <p>
  * Provides version detection capabilities and template feature analysis
  * to enable version-aware customizations and compatibility checking.
  * 

@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @since 1.2.0
  */
 public class LibraryMetadata implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     
     private String name;

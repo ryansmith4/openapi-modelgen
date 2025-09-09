@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * Validates YAML customization configurations against the schema.
- * 
+ * <p>
  * Performs comprehensive validation including:
  * - Required field validation
  * - Schema structure validation

@@ -7,6 +7,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.jetbrains.annotations.NotNull;
 import org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +112,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * @param project the Gradle project to apply this plugin to
      */
     @Override
-    public void apply(Project project) {
+    public void apply(@NotNull Project project) {
         // Detect and ensure OpenAPI Generator plugin is available
         ensureOpenApiGeneratorAvailable(project);
         

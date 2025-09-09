@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Detects features and capabilities in OpenAPI Generator templates.
- * 
+ * <p>
  * Analyzes template content to determine what features are supported,
  * enabling version-agnostic customizations based on template capabilities.
  * 

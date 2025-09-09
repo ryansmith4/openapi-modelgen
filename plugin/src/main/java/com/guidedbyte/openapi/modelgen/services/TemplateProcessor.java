@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  * Processes templates by applying customizations through string-based operations.
- * 
+ * <p>
  * Handles all types of template modifications:
  * - Basic insertions (after/before/at patterns)
  * - Find/replace operations (string and regex)

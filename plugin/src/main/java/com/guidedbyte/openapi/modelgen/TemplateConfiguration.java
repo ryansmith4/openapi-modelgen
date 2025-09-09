@@ -1,11 +1,8 @@
 package com.guidedbyte.openapi.modelgen;
 
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Configuration-cache compatible container for template resolution information.
@@ -28,6 +25,7 @@ import java.util.Objects;
  * @since 1.0.0
  */
 public class TemplateConfiguration implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     
     private final String generatorName;

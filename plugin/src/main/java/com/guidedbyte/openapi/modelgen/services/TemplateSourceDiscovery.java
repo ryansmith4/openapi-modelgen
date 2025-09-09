@@ -2,7 +2,6 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
-import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -134,29 +131,16 @@ public class TemplateSourceDiscovery implements Serializable {
                                                       ResolvedSpecConfig resolvedConfig,
                                                       ProjectLayout projectLayout,
                                                       boolean hasLibraryDependencies) {
-        
-        switch (source) {
-            case "user-templates":
-                return checkUserTemplates(resolvedConfig, projectLayout);
-                
-            case "user-customizations":
-                return checkUserCustomizations(resolvedConfig, projectLayout);
-                
-            case "library-templates":
-                return checkLibraryTemplates(hasLibraryDependencies);
-                
-            case "library-customizations":
-                return checkLibraryCustomizations(hasLibraryDependencies);
-                
-            case "plugin-customizations":
-                return SourceAvailability.available("Built-in plugin customizations");
-                
-            case "openapi-generator":
-                return SourceAvailability.available("OpenAPI Generator defaults");
-                
-            default:
-                return SourceAvailability.unavailable("Unknown template source: " + source);
-        }
+
+        return switch (source) {
+            case "user-templates" -> checkUserTemplates(resolvedConfig, projectLayout);
+            case "user-customizations" -> checkUserCustomizations(resolvedConfig, projectLayout);
+            case "library-templates" -> checkLibraryTemplates(hasLibraryDependencies);
+            case "library-customizations" -> checkLibraryCustomizations(hasLibraryDependencies);
+            case "plugin-customizations" -> SourceAvailability.available("Built-in plugin customizations");
+            case "openapi-generator" -> SourceAvailability.available("OpenAPI Generator defaults");
+            default -> SourceAvailability.unavailable("Unknown template source: " + source);
+        };
     }
     
     /**

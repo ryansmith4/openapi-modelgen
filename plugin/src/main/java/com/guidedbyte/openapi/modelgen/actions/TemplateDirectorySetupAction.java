@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import java.util.Map;
  * This action creates necessary template directories without capturing non-serializable references.
  */
 public class TemplateDirectorySetupAction implements Action<Task>, Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(TemplateDirectorySetupAction.class);
     

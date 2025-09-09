@@ -5,6 +5,7 @@ import org.gradle.api.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -12,6 +13,7 @@ import java.io.Serializable;
  * This action logs parallel execution information without capturing non-serializable references.
  */
 public class ParallelExecutionLoggingAction implements Action<Task>, Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(ParallelExecutionLoggingAction.class);
     
