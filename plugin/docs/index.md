@@ -40,8 +40,8 @@ openapiModelgen {
 
 ### Core Documentation
 
-- **[Plugin Overview](README.html)** - Basic usage and configuration examples
-- **[Template Schema Reference](template-schema.html)** - Complete YAML customization schema
+- **[Plugin Overview](README)** - Basic usage and configuration examples
+- **[Template Schema Reference](template-schema)** - Complete YAML customization schema
 
 ### Advanced Topics
 
@@ -67,11 +67,11 @@ insertions:
       templateNotContains: "import com.fasterxml.jackson.annotation.JsonInclude;"
 ```
 
-**📘 [Complete Schema Reference](template-schema.html)** - Detailed documentation with examples and validation rules.
+**📘 [Complete Schema Reference](template-schema)** - Detailed documentation with examples and validation rules.
 
 ## Getting Help
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/guidedbyte/openapi-modelgen/issues)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/ryansmith4/openapi-modelgen/issues)
 - **Documentation**: Comprehensive guides and API reference
 - **Community**: Join discussions and get support
 

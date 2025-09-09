@@ -1,3 +1,8 @@
+---
+layout: page
+title: Plugin Overview
+---
+
 # OpenAPI Model Generator Plugin
 
 A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI specifications with enhanced features:
@@ -103,7 +108,7 @@ Template Customization:
 Place custom .mustache templates in your template directory to override plugin defaults. Template resolution
 follows precedence: user templates > plugin templates > OpenAPI generator defaults.
 
-For detailed documentation visit: [GitHub Repository](https://github.com/guidedbyte/openapi-modelgen)
+For detailed documentation visit: [GitHub Repository](https://github.com/ryansmith4/openapi-modelgen)
 
 ## Installation
 

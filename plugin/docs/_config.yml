@@ -13,15 +13,14 @@ plugins:
 # Navigation
 header_pages:
   - index.md
+  - README.md
   - getting-started.md
   - configuration-reference.md
   - template-customization-guide.md
+  - template-schema.md
   - examples.md
   - troubleshooting.md
   - faq.md
-  - README.md
-  - template-schema.md
-  - template-system.md
 
 # Markdown settings
 markdown: kramdown
