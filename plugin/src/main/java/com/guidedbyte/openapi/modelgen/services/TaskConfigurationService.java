@@ -133,7 +133,7 @@ public class TaskConfigurationService implements Serializable {
                                                               SpecConfig specConfig, String specName, 
                                                               Project project, ProjectLayout projectLayout) {
         // Create resolved config to get generator name and template variables
-        ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension.getDefaults(), specConfig).build();
+        ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
         
         // Use TemplateResolver to create proper template configuration
         TemplateResolver templateResolver = new TemplateResolver();
@@ -193,7 +193,7 @@ public class TaskConfigurationService implements Serializable {
                               ObjectFactory objectFactory, ProviderFactory providerFactory) {
         
         // Create resolved config to get proper generator name and other settings
-        ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension.getDefaults(), specConfig).build();
+        ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
         
         // Set required properties (keep inputSpec as original relative path)
         task.getInputSpec().set(resolvedConfig.getInputSpec());
@@ -390,7 +390,7 @@ public class TaskConfigurationService implements Serializable {
                     
                     // Resolve the output directory for this spec
                     ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(
-                        specName, extension.getDefaults(), specConfig).build();
+                        specName, extension, specConfig).build();
                     
                     File outputDir = new File(t.getProject().getProjectDir(), resolvedConfig.getOutputDir());
                     if (outputDir.exists()) {

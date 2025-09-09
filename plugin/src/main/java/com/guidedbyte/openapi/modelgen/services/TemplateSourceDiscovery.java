@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
+import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
@@ -80,17 +81,29 @@ public class TemplateSourceDiscovery implements Serializable {
                                                 ProjectLayout projectLayout,
                                                 boolean hasLibraryDependencies) {
         
+        boolean debugEnabled = resolvedConfig.isDebugTemplateResolution();
+        
         if (requestedSources == null || requestedSources.isEmpty()) {
-            logger.debug("No template sources requested, using all available sources");
+            DebugLogger.debug(logger, debugEnabled, 
+                "No template sources requested, using all available sources");
             requestedSources = ALL_TEMPLATE_SOURCES;
         }
+        
+        DebugLogger.debug(logger, debugEnabled, 
+            "Starting template source discovery for spec '{}' with requested sources: {}", 
+            resolvedConfig.getSpecName(), requestedSources);
         
         // Create discovery strategies for each source type
         Map<String, SourceAvailability> discoveryResults = new LinkedHashMap<>();
         
         for (String source : requestedSources) {
+            DebugLogger.debug(logger, debugEnabled, 
+                "Checking availability of source: {}", source);
             SourceAvailability availability = checkSourceAvailability(source, resolvedConfig, projectLayout, hasLibraryDependencies);
             discoveryResults.put(source, availability);
+            DebugLogger.debug(logger, debugEnabled, 
+                "Source '{}' availability: {} (reason: {})", 
+                source, availability.isAvailable(), availability.getReason());
         }
         
         // Filter to only available sources
@@ -99,8 +112,11 @@ public class TemplateSourceDiscovery implements Serializable {
             .map(Map.Entry::getKey)
             .collect(Collectors.toList());
         
+        DebugLogger.debug(logger, debugEnabled, 
+            "Template source discovery complete. Available sources: {}", availableSources);
+        
         // Log discovery results
-        logDiscoveryResults(resolvedConfig.getSpecName(), requestedSources, discoveryResults, availableSources);
+        logDiscoveryResults(resolvedConfig, requestedSources, discoveryResults, availableSources);
         
         return availableSources;
     }
@@ -226,25 +242,32 @@ public class TemplateSourceDiscovery implements Serializable {
     /**
      * Logs comprehensive discovery results for debugging.
      */
-    private void logDiscoveryResults(String specName, 
+    private void logDiscoveryResults(ResolvedSpecConfig resolvedConfig, 
                                    List<String> requestedSources, 
                                    Map<String, SourceAvailability> discoveryResults, 
                                    List<String> availableSources) {
         
-        logger.debug("Template source discovery for spec '{}': {} requested, {} available", 
+        boolean debugEnabled = resolvedConfig.isDebugTemplateResolution();
+        String specName = resolvedConfig.getSpecName();
+        
+        DebugLogger.debug(logger, debugEnabled,
+            "Template source discovery for spec '{}': {} requested, {} available", 
             specName, requestedSources.size(), availableSources.size());
         
-        if (logger.isDebugEnabled()) {
-            logger.debug("Requested template sources for '{}': {}", specName, requestedSources);
+        if (debugEnabled) {
+            DebugLogger.debug(logger, debugEnabled,
+                "Requested template sources for '{}': {}", specName, requestedSources);
             
             for (Map.Entry<String, SourceAvailability> entry : discoveryResults.entrySet()) {
                 String source = entry.getKey();
                 SourceAvailability availability = entry.getValue();
                 String status = availability.isAvailable() ? "✅" : "❌";
-                logger.debug("  - {}: {} ({})", source, status, availability.getReason());
+                DebugLogger.debug(logger, debugEnabled,
+                    "  - {}: {} ({})", source, status, availability.getReason());
             }
             
-            logger.debug("Effective template sources for '{}': {}", specName, availableSources);
+            DebugLogger.debug(logger, debugEnabled,
+                "Effective template sources for '{}': {}", specName, availableSources);
         }
         
         // Log warning if no sources are available

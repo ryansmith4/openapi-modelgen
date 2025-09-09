@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.actions;
 
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
+import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.slf4j.Logger;
@@ -30,7 +31,8 @@ public class TemplatePreparationAction implements Action<Task> {
     @Override
     public void execute(Task task) {
         if (!templateConfig.isTemplateProcessingEnabled()) {
-            logger.debug("Template processing disabled for generator '{}'", templateConfig.getGeneratorName());
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "Template processing disabled for generator '{}'", templateConfig.getGeneratorName());
             return;
         }
         
@@ -39,7 +41,8 @@ public class TemplatePreparationAction implements Action<Task> {
         } catch (Exception e) {
             logger.error("Failed to prepare template working directory for generator '{}': {}", 
                 templateConfig.getGeneratorName(), e.getMessage());
-            logger.debug("Template preparation error details", e);
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "Template preparation error details: {}", e.getMessage());
             throw new RuntimeException("Template preparation failed", e);
         }
     }
@@ -61,7 +64,8 @@ public class TemplatePreparationAction implements Action<Task> {
         
         // If no customizations, just create empty directory and return
         if (!templateConfig.hasAnyCustomizations()) {
-            logger.debug("No template customizations found for generator '{}'. Created empty template directory for Gradle validation.", 
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "No template customizations found for generator '{}'. Created empty template directory for Gradle validation.", 
                 templateConfig.getGeneratorName());
             return;
         }
@@ -73,7 +77,8 @@ public class TemplatePreparationAction implements Action<Task> {
         }
         
         // Clean and recreate working directory for customization processing
-        logger.debug("Working directory cache invalid, cleaning: {}", templateWorkDir.getAbsolutePath());
+        DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+            "Working directory cache invalid, cleaning: {}", templateWorkDir.getAbsolutePath());
         deleteDirectory(templateWorkDir);
         
         if (!templateWorkDir.mkdirs()) {
@@ -112,14 +117,16 @@ public class TemplatePreparationAction implements Action<Task> {
             boolean valid = cachedHash.equals(currentHash);
             
             if (!valid) {
-                logger.debug("Working directory cache invalid - hash mismatch (cached: {}, current: {})", 
+                DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                    "Working directory cache invalid - hash mismatch (cached: {}, current: {})", 
                     cachedHash.substring(0, Math.min(8, cachedHash.length())), 
                     currentHash.substring(0, Math.min(8, currentHash.length())));
             }
             
             return valid;
         } catch (IOException e) {
-            logger.debug("Failed to read working directory cache: {}", e.getMessage());
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "Failed to read working directory cache: {}", e.getMessage());
             return false;
         }
     }
@@ -129,9 +136,11 @@ public class TemplatePreparationAction implements Action<Task> {
             File cacheFile = new File(templateWorkDir, ".working-dir-cache");
             String hash = computeTemplateConfigurationHash();
             Files.writeString(cacheFile.toPath(), hash);
-            logger.debug("Updated working directory cache with hash: {}", hash.substring(0, Math.min(16, hash.length())));
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "Updated working directory cache with hash: {}", hash.substring(0, Math.min(16, hash.length())));
         } catch (IOException e) {
-            logger.debug("Failed to update working directory cache: {}", e.getMessage());
+            DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+                "Failed to update working directory cache: {}", e.getMessage());
         }
     }
     
@@ -150,12 +159,14 @@ public class TemplatePreparationAction implements Action<Task> {
             return;
         }
         
-        logger.debug("Copying user templates from: {}", userTemplateDir.getAbsolutePath());
+        DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+            "Copying user templates from: {}", userTemplateDir.getAbsolutePath());
         copyDirectory(userTemplateDir, templateWorkDir);
     }
     
     private void processTemplateCustomizations(File templateWorkDir) {
-        logger.debug("Processing template customizations for generator: {}", templateConfig.getGeneratorName());
+        DebugLogger.debug(logger, templateConfig.isDebugTemplateResolution(), 
+            "Processing template customizations for generator: {}", templateConfig.getGeneratorName());
         
         CustomizationEngine customizationEngine = new CustomizationEngine();
         customizationEngine.processTemplateCustomizations(templateConfig, templateWorkDir);

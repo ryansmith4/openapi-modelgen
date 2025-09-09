@@ -221,6 +221,19 @@ public class ResolvedSpecConfig {
     }
     
     /**
+     * Creates a new builder for ResolvedSpecConfig with extension-level debug flag support.
+     * The extension debug flag will override any debug settings from defaults or spec configs.
+     * 
+     * @param specName the name of the specification
+     * @param extension the plugin extension containing global settings
+     * @param specConfig the spec-specific configuration
+     * @return a new Builder instance
+     */
+    public static Builder builder(String specName, OpenApiModelGenExtension extension, SpecConfig specConfig) {
+        return new Builder(specName, extension, specConfig);
+    }
+    
+    /**
      * Builder for ResolvedSpecConfig that handles the configuration merging logic.
      */
     public static class Builder {
@@ -261,6 +274,20 @@ public class ResolvedSpecConfig {
             applyPluginDefaults();
             applyUserDefaults(userDefaults);
             applySpecConfig(specConfig);
+        }
+        
+        private Builder(String specName, OpenApiModelGenExtension extension, SpecConfig specConfig) {
+            this.specName = specName;
+            
+            // Apply configuration in order of precedence (lowest to highest)
+            applyPluginDefaults();
+            applyUserDefaults(extension.getDefaults());
+            applySpecConfig(specConfig);
+            
+            // Extension-level debug flag overrides all other debug settings
+            if (extension.isDebug()) {
+                this.debugTemplateResolution = true;
+            }
         }
         
         private String getPluginVersion() {

@@ -51,6 +51,8 @@ dependencies {
 
 // Configure our custom plugin
 openapiModelgen {
+    debug false  // Disable debug logging for template resolution
+    
     defaults {
         templateDir "src/main/templates" // Use explicit user templates
         templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations

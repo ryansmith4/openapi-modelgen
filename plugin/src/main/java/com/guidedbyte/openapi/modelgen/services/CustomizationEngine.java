@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
+import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -140,12 +141,18 @@ public class CustomizationEngine {
      * @throws CustomizationException if customization application fails
      */
     public String applyCustomizations(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
+        // Check if debug is enabled from context
+        boolean debugEnabled = context != null && context.getProjectProperties() != null 
+            && "true".equals(context.getProjectProperties().get("debugTemplateResolution"));
+        
         // Enhanced debug logging for troubleshooting
-        logger.info("=== CUSTOMIZATION ENGINE ENTRY ===");
-        logger.info("Template length: {}", baseTemplate != null ? baseTemplate.length() : "null");
-        logger.info("Config name: {}", config != null && config.getMetadata() != null ? config.getMetadata().getName() : "null");
-        logger.info("Config has replacements: {}", config != null && config.getReplacements() != null ? config.getReplacements().size() : 0);
-        logger.info("Template starts with: '{}'", baseTemplate != null && baseTemplate.length() > 50 ? baseTemplate.substring(0, 50).replace("\n", "\\n") : "null");
+        if (debugEnabled) {
+            logger.info("=== CUSTOMIZATION ENGINE ENTRY ===");
+            logger.info("Template length: {}", baseTemplate != null ? baseTemplate.length() : "null");
+            logger.info("Config name: {}", config != null && config.getMetadata() != null ? config.getMetadata().getName() : "null");
+            logger.info("Config has replacements: {}", config != null && config.getReplacements() != null ? config.getReplacements().size() : 0);
+            logger.info("Template starts with: '{}'", baseTemplate != null && baseTemplate.length() > 50 ? baseTemplate.substring(0, 50).replace("\n", "\\n") : "null");
+        }
         
         // Validate base template first (before caching logic)
         if (baseTemplate == null) {
@@ -157,7 +164,9 @@ public class CustomizationEngine {
         String cachedResult = customizationResultCache.get(cacheKey);
         
         if (cachedResult != null) {
-            logger.info("Using cached customization result (key: {})", cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...");
+            DebugLogger.debug(logger, debugEnabled,
+                "Using cached customization result (key: {})", 
+                cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...");
             return cachedResult;
         }
         
@@ -165,7 +174,8 @@ public class CustomizationEngine {
         String result = applyCustomizationsInternal(baseTemplate, config, context);
         customizationResultCache.put(cacheKey, result);
         
-        logger.debug("Cached customization result (key: {}, cache size: {})", 
+        DebugLogger.debug(logger, debugEnabled,
+            "Cached customization result (key: {}, cache size: {})", 
             cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...", customizationResultCache.size());
         
         return result;
@@ -181,25 +191,34 @@ public class CustomizationEngine {
      * @throws CustomizationException if customization application fails
      */
     private String applyCustomizationsInternal(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
+        // Check if debug is enabled from context
+        boolean debugEnabled = context != null && context.getProjectProperties() != null 
+            && "true".equals(context.getProjectProperties().get("debugTemplateResolution"));
+        
         if (baseTemplate == null) {
             throw new CustomizationException("Base template content cannot be null");
         }
         
-        logger.debug("Starting template customization, base template length: {}", baseTemplate.length());
+        DebugLogger.debug(logger, debugEnabled,
+            "Starting template customization, base template length: {}", baseTemplate.length());
         
         if (config == null) {
-            logger.info("CUSTOMIZATION DEBUG: No customization config provided, returning original template");
+            DebugLogger.debug(logger, debugEnabled,
+                "CUSTOMIZATION DEBUG: No customization config provided, returning original template");
             return baseTemplate;
         }
         
-        logger.info("CUSTOMIZATION DEBUG: Config metadata: {}", config.getMetadata());
-        logger.info("CUSTOMIZATION DEBUG: Number of insertions: {}", 
+        DebugLogger.debug(logger, debugEnabled,
+            "CUSTOMIZATION DEBUG: Config metadata: {}", config.getMetadata());
+        DebugLogger.debug(logger, debugEnabled,
+            "CUSTOMIZATION DEBUG: Number of insertions: {}", 
             config.getInsertions() != null ? config.getInsertions().size() : 0);
         
         // Check global conditions first
         ConditionEvaluator conditionEvaluator = new ConditionEvaluator();
         if (config.getConditions() != null && !conditionEvaluator.evaluate(config.getConditions(), context)) {
-            logger.info("CUSTOMIZATION DEBUG: Global conditions not met, skipping customization");
+            DebugLogger.debug(logger, debugEnabled,
+                "CUSTOMIZATION DEBUG: Global conditions not met, skipping customization");
             return baseTemplate;
         }
         
@@ -225,14 +244,17 @@ public class CustomizationEngine {
             
             // 3. Apply insertions (add new content)
             if (config.getInsertions() != null) {
-                logger.info("CUSTOMIZATION DEBUG: Processing {} insertions", config.getInsertions().size());
+                DebugLogger.debug(logger, debugEnabled,
+                    "CUSTOMIZATION DEBUG: Processing {} insertions", config.getInsertions().size());
                 for (int i = 0; i < config.getInsertions().size(); i++) {
                     Insertion insertion = config.getInsertions().get(i);
-                    logger.info("CUSTOMIZATION DEBUG: Processing insertion #{}: before='{}', content='{}'", 
+                    DebugLogger.debug(logger, debugEnabled,
+                        "CUSTOMIZATION DEBUG: Processing insertion #{}: before='{}', content='{}'", 
                         i, insertion.getBefore(), insertion.getContent());
                     String beforeResult = result;
                     result = processor.applyInsertion(result, insertion, context, config.getPartials());
-                    logger.info("CUSTOMIZATION DEBUG: Template changed: {}", !beforeResult.equals(result));
+                    DebugLogger.debug(logger, debugEnabled,
+                        "CUSTOMIZATION DEBUG: Template changed: {}", !beforeResult.equals(result));
                 }
             }
             
@@ -243,15 +265,21 @@ public class CustomizationEngine {
                 }
             }
             
-            logger.info("CUSTOMIZATION DEBUG: Final result length: {}", result.length());
-            logger.info("CUSTOMIZATION DEBUG: Final result first 200 chars: {}", 
+            DebugLogger.debug(logger, debugEnabled,
+                "CUSTOMIZATION DEBUG: Final result length: {}", result.length());
+            DebugLogger.debug(logger, debugEnabled,
+                "CUSTOMIZATION DEBUG: Final result first 200 chars: {}", 
                 result.length() > 200 ? result.substring(0, 200) + "..." : result);
-            logger.info("=== CUSTOMIZATION DEBUG: Finished template customization ===");
+            
+            if (debugEnabled) {
+                logger.info("=== CUSTOMIZATION DEBUG: Finished template customization ===");
+            }
             
             return result;
         
         } catch (Exception e) {
-            logger.info("CUSTOMIZATION DEBUG: Exception during customization: {}", e.getMessage());
+            DebugLogger.debug(logger, debugEnabled,
+                "CUSTOMIZATION DEBUG: Exception during customization: {}", e.getMessage());
             throw new CustomizationException("Failed to apply customizations: " + e.getMessage(), e);
         }
     }
