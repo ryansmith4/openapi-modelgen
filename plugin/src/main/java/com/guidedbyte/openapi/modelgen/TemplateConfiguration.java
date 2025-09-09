@@ -14,7 +14,7 @@ import java.util.*;
  *   <li>Template source availability flags (user templates, user customizations, plugin customizations)</li>
  *   <li>Directory paths for template work, user templates, and user customizations</li>
  *   <li>Template precedence configuration for resolution order</li>
- *   <li>Debug template resolution flag for troubleshooting</li>
+ *   <li>Debug flag for comprehensive plugin troubleshooting</li>
  *   <li>Template variables for Mustache template processing</li>
  * </ul>
  * 
@@ -38,7 +38,7 @@ public class TemplateConfiguration implements Serializable {
     private final Map<String, String> templateVariables;
     private final boolean templateProcessingEnabled;
     private final List<String> templateSources;
-    private final boolean debugTemplateResolution;
+    private final boolean debug;
     
     // Library template support
     private final boolean hasLibraryTemplates;
@@ -60,7 +60,7 @@ public class TemplateConfiguration implements Serializable {
         this.templateProcessingEnabled = builder.templateProcessingEnabled;
         this.templateSources = builder.templateSources != null ?
             Collections.unmodifiableList(builder.templateSources) : Collections.emptyList();
-        this.debugTemplateResolution = builder.debugTemplateResolution;
+        this.debug = builder.debug;
         
         // Library support
         this.hasLibraryTemplates = builder.hasLibraryTemplates;
@@ -87,7 +87,7 @@ public class TemplateConfiguration implements Serializable {
     public Map<String, String> getTemplateVariables() { return templateVariables; }
     public boolean isTemplateProcessingEnabled() { return templateProcessingEnabled; }
     public List<String> getTemplateSources() { return templateSources; }
-    public boolean isDebugTemplateResolution() { return debugTemplateResolution; }
+    public boolean isDebug() { return debug; }
     
     // Library template getters
     public boolean hasLibraryTemplates() { return hasLibraryTemplates; }
@@ -109,7 +109,7 @@ public class TemplateConfiguration implements Serializable {
                 hasUserCustomizations == that.hasUserCustomizations &&
                 hasPluginCustomizations == that.hasPluginCustomizations &&
                 templateProcessingEnabled == that.templateProcessingEnabled &&
-                debugTemplateResolution == that.debugTemplateResolution &&
+                debug == that.debug &&
                 Objects.equals(generatorName, that.generatorName) &&
                 Objects.equals(templateWorkDirectory, that.templateWorkDirectory) &&
                 Objects.equals(userTemplateDirectory, that.userTemplateDirectory) &&
@@ -123,7 +123,7 @@ public class TemplateConfiguration implements Serializable {
         return Objects.hash(generatorName, templateWorkDirectory, hasUserTemplates, hasUserCustomizations,
                 hasPluginCustomizations, userTemplateDirectory,
                 userCustomizationsDirectory, templateVariables, templateProcessingEnabled,
-                templateSources, debugTemplateResolution);
+                templateSources, debug);
     }
     
     @Override
@@ -149,7 +149,7 @@ public class TemplateConfiguration implements Serializable {
         private Map<String, String> templateVariables;
         private boolean templateProcessingEnabled = true;
         private List<String> templateSources;
-        private boolean debugTemplateResolution = false;
+        private boolean debug = false;
         
         // Library support
         private boolean hasLibraryTemplates = false;
@@ -208,8 +208,8 @@ public class TemplateConfiguration implements Serializable {
             return this;
         }
         
-        public Builder debugTemplateResolution(boolean debugTemplateResolution) {
-            this.debugTemplateResolution = debugTemplateResolution;
+        public Builder debug(boolean debug) {
+            this.debug = debug;
             return this;
         }
         

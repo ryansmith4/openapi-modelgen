@@ -214,7 +214,7 @@ This prevents template cross-contamination and allows each spec to have differen
 ```gradle
 openapiModelgen {
     defaults {
-        debugTemplateResolution true
+        debug true
     }
 }
 ```

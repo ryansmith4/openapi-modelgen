@@ -138,7 +138,7 @@ openapiModelgen {
             "openapi-generator"         // Generator defaults (lowest)
         ])
         
-        debugTemplateResolution true   // Show which library provides each template
+        debug true   // Enable comprehensive debug logging
     }
 }
 ```
@@ -205,7 +205,7 @@ Enable debug logging to see conflict resolution in action:
 ```gradle
 openapiModelgen {
     defaults {
-        debugTemplateResolution true
+        debug true
     }
 }
 ```
@@ -466,7 +466,7 @@ pojo.mustache (user customized, base from generator)
 5. **Library consolidation**: Use fewer, well-organized libraries rather than many small ones
 
 ### Debugging Multi-Source Issues
-1. **Enable debug template resolution**: Use `debugTemplateResolution true` to see source resolution
+1. **Enable debug logging**: Use `debug true` to see detailed source resolution information
 2. **Check working directory**: Inspect `build/template-work/{generator}-{specName}/` for final template resolution
 3. **Verify .orig files**: Ensure original templates match expectations from correct sources
 4. **Library inspection**: Check `~/.gradle/caches/openapi-modelgen/` for library template cache

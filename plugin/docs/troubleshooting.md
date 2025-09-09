@@ -324,7 +324,7 @@ openapiModelgen {
    ```gradle
    openapiModelgen {
        defaults {
-           debugTemplateResolution true    # Show template source resolution
+           debug true    # Enable comprehensive debug logging
        }
    }
    ```
@@ -613,17 +613,67 @@ java {
 
 ## Getting Help
 
-### Enable Comprehensive Logging
+### Enable Comprehensive Debug Logging
+
+The plugin provides detailed debug logging to help troubleshoot template resolution, customization processing, and configuration issues.
+
+#### Enable Plugin Debug Logging
+
+**Option 1: Configuration (Recommended)**
+```gradle
+openapiModelgen {
+    debug true  // Enable comprehensive plugin debug logging
+    
+    defaults {
+        // Your other settings...
+    }
+}
+```
+
+**Option 2: Command Line**
+```bash
+# Enable plugin debug for single build
+./gradlew generateAllModels -Pdebug=true --info
+
+# Enable plugin debug with full Gradle debug
+./gradlew generateAllModels -Pdebug=true --debug --stacktrace
+```
+
+#### Debug Output Examples
+
+**Template Resolution Debug:**
+```
+=== Template Resolution Debug for 'spring' ===
+Configured template sources: [user-templates, user-customizations, openapi-generator]
+Available template sources: [user-customizations, openapi-generator]
+✅ user-customizations: C:\project\src\main\templateCustomizations
+✅ openapi-generator: OpenAPI Generator default templates (fallback)
+=== End Template Resolution Debug ===
+```
+
+**Template Processing Debug:**
+```
+=== CUSTOMIZATION ENGINE ENTRY ===
+Template length: 2547
+Config name: pojo.mustache
+Config has replacements: 2
+Template starts with: '{{>licenseInfo}}{{#models}}{{#model}}'
+```
+
+#### Common Debug Commands
 
 ```bash
-# Full debug output
-./gradlew generateAllModels --debug --stacktrace > debug.log 2>&1
+# Full debug output to file
+./gradlew generateAllModels -Pdebug=true --debug --stacktrace > debug.log 2>&1
 
 # Template-specific debugging
-./gradlew generateAllModels --info | grep -i template
+./gradlew generateAllModels -Pdebug=true --info | grep -E "(Template|template|TEMPLATE)"
 
 # Configuration validation details
 ./gradlew generateAllModels --dry-run --info
+
+# Watch template customization processing
+./gradlew generateAllModels -Pdebug=true --info | grep -E "(CUSTOMIZATION|Applying.*customization)"
 ```
 
 ### Useful Debug Information

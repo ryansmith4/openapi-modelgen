@@ -45,13 +45,28 @@ public class TemplateDiscoveryService {
             return null;
         }
         
+        logger.debug("=== TEMPLATE EXTRACTION START ===");
+        logger.debug("Template: '{}', Generator: '{}'", templateName, generatorName);
+        
         try {
-            logger.debug("Extracting base template '{}' for generator '{}'", templateName, generatorName);
-            return extractor.extractTemplate(templateName, generatorName);
+            String templateContent = extractor.extractTemplate(templateName, generatorName);
+            
+            if (templateContent != null) {
+                logger.debug("Successfully extracted template '{}' ({} characters)", 
+                    templateName, templateContent.length());
+                logger.debug("Template first 100 chars: {}", 
+                    templateContent.length() > 100 ? templateContent.substring(0, 100).replace("\n", "\\n") + "..." : templateContent.replace("\n", "\\n"));
+            } else {
+                logger.debug("Template '{}' not found or empty for generator '{}'", templateName, generatorName);
+            }
+            
+            logger.debug("=== TEMPLATE EXTRACTION COMPLETE ===");
+            return templateContent;
             
         } catch (Exception e) {
             logger.warn("Failed to extract base template '{}': {}", templateName, e.getMessage());
-            logger.debug("Template extraction error details", e);
+            logger.debug("Template extraction error details for '{}'", templateName, e);
+            logger.debug("=== TEMPLATE EXTRACTION FAILED ===");
             return null;
         }
     }

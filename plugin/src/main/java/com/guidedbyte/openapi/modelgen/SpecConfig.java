@@ -83,7 +83,7 @@ public class SpecConfig {
     private final Property<String> templateCustomizationsDir;
     private final Property<Boolean> validateSpec;
     private final ListProperty<String> templateSources;
-    private final Property<Boolean> debugTemplateResolution;
+    private final Property<Boolean> debug;
     private final Property<Boolean> generateModelTests;
     private final Property<Boolean> generateApiTests;
     private final Property<Boolean> generateApiDocumentation;
@@ -113,7 +113,7 @@ public class SpecConfig {
         this.templateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
-        this.debugTemplateResolution = project.getObjects().property(Boolean.class);
+        this.debug = project.getObjects().property(Boolean.class);
         
         // No default convention for templateSources - let specs inherit from defaults
         // or explicitly override as needed
@@ -167,8 +167,8 @@ public class SpecConfig {
         return templateSources;
     }
     
-    public Property<Boolean> getDebugTemplateResolution() {
-        return debugTemplateResolution;
+    public Property<Boolean> getDebug() {
+        return debug;
     }
     
     
@@ -258,9 +258,9 @@ public class SpecConfig {
         this.templateSources.set(sources);
     }
     
-    @Option(option = "debug-template-resolution", description = "Enable debug logging for template resolution for this spec")
-    public void debugTemplateResolution(boolean value) {
-        this.debugTemplateResolution.set(value);
+    @Option(option = "debug", description = "Enable comprehensive debug logging for this spec")
+    public void debug(boolean value) {
+        this.debug.set(value);
     }
     
     

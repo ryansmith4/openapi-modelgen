@@ -108,7 +108,7 @@ templatePrecedence = [                            // Template resolution priorit
     "plugin-customizations",                      // Built-in plugin YAML customizations
     "openapi-generator"                          // OpenAPI Generator defaults (lowest)
 ]
-debugTemplateResolution = false                   // Show template source debug info
+debug = false                                      // Enable comprehensive debug logging throughout the plugin
 ```
 
 ### OpenAPI Generator Options
@@ -538,7 +538,7 @@ Enable debug logging to see library processing:
 ```gradle
 openapiModelgen {
     defaults {
-        debugTemplateResolution true
+        debug true
     }
 }
 ```

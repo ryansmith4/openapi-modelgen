@@ -217,7 +217,7 @@ Full-featured template customization with YAML modifications:
 openapiModelgen {
     defaults {
         templateCustomizationsDir "src/main/resources/template-customizations"
-        debugTemplateResolution true  // Show which templates are used
+        debug true  // Enable comprehensive debug logging
         
         templateVariables([
             companyName: "Tech Innovations Inc.",
@@ -490,7 +490,7 @@ openapiModelgen {
             'openapi-generator'         // OpenAPI Generator defaults (lowest)
         ])
         
-        debugTemplateResolution true   // Show which library provides each template
+        debug true   // Enable comprehensive debug logging
     }
     
     specs {

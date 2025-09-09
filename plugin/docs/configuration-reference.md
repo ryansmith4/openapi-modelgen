@@ -76,7 +76,7 @@ openapiModelgen {
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `templateSources` | List\<String\> | `["user-templates", "user-customizations", "library-templates", "library-customizations", "plugin-customizations", "openapi-generator"]` | Template resolution order |
-| `debugTemplateResolution` | Boolean | `false` | Show debug info about template source selection |
+| `debug` | Boolean | `false` | Enable comprehensive debug logging throughout the plugin |
 
 ```gradle
 openapiModelgen {
@@ -89,7 +89,7 @@ openapiModelgen {
             "plugin-customizations",
             "openapi-generator"
         ])
-        debugTemplateResolution true
+        debug true
     }
 }
 ```
@@ -237,7 +237,7 @@ All configuration options support command-line overrides using `@Option` annotat
 ./gradlew generateMyApi -PvalidateSpec=true
 
 # Debug template resolution
-./gradlew generateAllModels -PdebugTemplateResolution=true
+./gradlew generateAllModels -Pdebug=true
 
 # Override model package
 ./gradlew generateUsersApi -PmodelPackage=com.custom.model
@@ -301,6 +301,93 @@ openapiModelgen {
 }
 ```
 
+## Debug Logging Configuration
+
+The plugin provides comprehensive debug logging to help troubleshoot template resolution, customization processing, and configuration issues.
+
+### Enable Debug Logging
+
+**Global Debug (applies to all specs):**
+```gradle
+openapiModelgen {
+    debug true  // Enable comprehensive debug logging
+    
+    defaults {
+        // Your default settings...
+    }
+    
+    specs {
+        // Your spec configurations...
+    }
+}
+```
+
+**Per-Spec Debug:**
+```gradle
+openapiModelgen {
+    defaults {
+        debug false  // Debug disabled by default
+    }
+    
+    specs {
+        problemSpec {
+            inputSpec "problem-spec.yaml"
+            modelPackage "com.example.problem"
+            debug true  // Enable debug only for this spec
+        }
+        
+        workingSpec {
+            inputSpec "working-spec.yaml"
+            modelPackage "com.example.working"
+            // Uses default debug setting (false)
+        }
+    }
+}
+```
+
+**Command Line Override:**
+```bash
+# Enable debug for single build
+./gradlew generateAllModels -Pdebug=true --info
+
+# Enable debug for specific task
+./gradlew generateProblemSpec -Pdebug=true --info
+```
+
+### Debug Output Information
+
+When debug logging is enabled, you'll see detailed information about:
+
+- **Template Resolution**: Which template sources are available and used
+- **Template Extraction**: Base template discovery and content processing
+- **Customization Processing**: YAML customization application steps
+- **Configuration Validation**: Detailed validation results and error diagnosis
+- **Cache Operations**: Cache hits, misses, and invalidation events
+- **Performance Metrics**: Template processing timing and statistics
+
+### Debug Output Examples
+
+**Template Resolution:**
+```
+=== Template Resolution Debug for 'spring' ===
+Configured template sources: [user-templates, user-customizations, plugin-customizations, openapi-generator]
+Available template sources: [user-customizations, plugin-customizations, openapi-generator]
+✅ user-customizations: C:\project\src\main\templateCustomizations
+✅ plugin-customizations: built-in YAML customizations
+✅ openapi-generator: OpenAPI Generator default templates (fallback)
+=== End Template Resolution Debug ===
+```
+
+**Template Processing:**
+```
+=== CUSTOMIZATION ENGINE ENTRY ===
+Template length: 2547
+Config name: pojo.mustache
+Config has replacements: 2
+Template starts with: '{{>licenseInfo}}{{#models}}{{#model}}'
+=== CUSTOMIZATION DEBUG: Finished template customization ===
+```
+
 ## Complete Configuration Example
 
 ```gradle
@@ -332,7 +419,7 @@ openapiModelgen {
             "plugin-customizations",
             "openapi-generator"
         ])
-        debugTemplateResolution false
+        debug false
         
         // Template variables
         templateVariables([

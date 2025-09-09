@@ -85,7 +85,15 @@ public class TemplateResolver {
             Map<String, String> templateVariables,
             LibraryTemplateExtractor.LibraryExtractionResult libraryContent) {
         
-        boolean debugEnabled = resolvedConfig.isDebugTemplateResolution();
+        boolean debugEnabled = resolvedConfig.isDebug();
+        
+        DebugLogger.debug(logger, debugEnabled,
+            "=== TEMPLATE RESOLUTION START ===");
+        DebugLogger.debug(logger, debugEnabled,
+            "Generator: {}, Spec: {}", generatorName, resolvedConfig.getSpecName());
+        DebugLogger.debug(logger, debugEnabled,
+            "Template dir: {}, Customizations dir: {}", 
+            resolvedConfig.getTemplateDir(), resolvedConfig.getTemplateCustomizationsDir());
         
         // Get configured template sources (with fallback to defaults)
         List<String> configuredTemplateSources = resolvedConfig.getTemplateSources();
@@ -155,7 +163,7 @@ public class TemplateResolver {
             generatorName, configuredTemplateSources, availableTemplateSources);
         
         // Enhanced debug logging for template resolution
-        if (resolvedConfig.isDebugTemplateResolution()) {
+        if (resolvedConfig.isDebug()) {
             logger.info("=== Template Resolution Debug for '{}' ===", generatorName);
             logger.info("Configured template sources: {}", configuredTemplateSources);
             logger.info("Available template sources: {}", availableTemplateSources);
@@ -279,11 +287,35 @@ public class TemplateResolver {
             .templateVariables(templateVariables != null ? Map.copyOf(templateVariables) : Map.of())
             .templateProcessingEnabled(templateProcessingEnabled)
             .templateSources(resolvedConfig.getTemplateSources())
-            .debugTemplateResolution(resolvedConfig.isDebugTemplateResolution())
+            .debug(resolvedConfig.isDebug())
             .build();
         
         DebugLogger.debug(logger, debugEnabled, 
             "TemplateConfiguration created successfully for generator '{}'", generatorName);
+        
+        if (debugEnabled) {
+            logger.info("=== TEMPLATE RESOLUTION COMPLETE ===");
+            logger.info("Final configuration for generator '{}', spec '{}'", generatorName, resolvedConfig.getSpecName());
+            logger.info("Template processing enabled: {}", templateProcessingEnabled);
+            logger.info("Template work directory: {}", templateWorkDirectory);
+            if (hasUserTemplates) {
+                logger.info("✅ User templates: {}", resolvedUserTemplateDir);
+            }
+            if (hasUserCustomizations) {
+                logger.info("✅ User customizations: {}", resolvedUserCustomizationsDir);
+            }
+            if (hasLibraryTemplates) {
+                logger.info("✅ Library templates: {} templates", generatorLibraryTemplates.size());
+            }
+            if (hasLibraryCustomizations) {
+                logger.info("✅ Library customizations: {} files", generatorLibraryCustomizations.size());
+            }
+            if (hasPluginCustomizations) {
+                logger.info("✅ Plugin customizations: enabled");
+            }
+            logger.info("Template variables: {}", templateVariables != null ? templateVariables.keySet() : "none");
+            logger.info("=== END TEMPLATE RESOLUTION ===");
+        }
         
         return templateConfig;
     }

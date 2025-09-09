@@ -54,7 +54,7 @@ import java.util.stream.Stream;
  *             "plugin-customizations",   // Built-in plugin customizations
  *             "openapi-generator"        // OpenAPI Generator defaults (lowest)
  *         ])
- *         debugTemplateResolution true   // Show template source debug info
+ *         debug true   // Enable comprehensive debug logging
  *         
  *         templateVariables([
  *             copyright: "Copyright © {{currentYear}} {{companyName}}",

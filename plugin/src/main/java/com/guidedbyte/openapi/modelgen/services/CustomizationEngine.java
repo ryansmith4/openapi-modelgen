@@ -143,7 +143,7 @@ public class CustomizationEngine {
     public String applyCustomizations(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
         // Check if debug is enabled from context
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && "true".equals(context.getProjectProperties().get("debugTemplateResolution"));
+            && "true".equals(context.getProjectProperties().get("debug"));
         
         // Enhanced debug logging for troubleshooting
         if (debugEnabled) {
@@ -193,7 +193,7 @@ public class CustomizationEngine {
     private String applyCustomizationsInternal(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
         // Check if debug is enabled from context
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && "true".equals(context.getProjectProperties().get("debugTemplateResolution"));
+            && "true".equals(context.getProjectProperties().get("debug"));
         
         if (baseTemplate == null) {
             throw new CustomizationException("Base template content cannot be null");
@@ -1166,7 +1166,7 @@ public class CustomizationEngine {
         projectProps.put("hasUserCustomizations", String.valueOf(templateConfig.hasUserCustomizations()));
         projectProps.put("hasPluginCustomizations", String.valueOf(templateConfig.hasPluginCustomizations()));
         projectProps.put("applyPluginCustomizations", String.valueOf(templateConfig.hasPluginCustomizations()));
-        projectProps.put("debugTemplateResolution", String.valueOf(templateConfig.isDebugTemplateResolution()));
+        projectProps.put("debug", String.valueOf(templateConfig.isDebug()));
         
         return EvaluationContext.builder()
             .generatorVersion(generatorVersion)

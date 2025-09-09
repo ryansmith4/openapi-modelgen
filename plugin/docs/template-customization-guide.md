@@ -374,7 +374,7 @@ publishing {
 ```gradle
 openapiModelgen {
     defaults {
-        debugTemplateResolution true
+        debug true
     }
 }
 ```

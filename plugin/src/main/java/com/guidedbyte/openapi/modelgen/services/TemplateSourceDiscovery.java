@@ -78,7 +78,7 @@ public class TemplateSourceDiscovery implements Serializable {
                                                 ProjectLayout projectLayout,
                                                 boolean hasLibraryDependencies) {
         
-        boolean debugEnabled = resolvedConfig.isDebugTemplateResolution();
+        boolean debugEnabled = resolvedConfig.isDebug();
         
         if (requestedSources == null || requestedSources.isEmpty()) {
             DebugLogger.debug(logger, debugEnabled, 
@@ -231,7 +231,7 @@ public class TemplateSourceDiscovery implements Serializable {
                                    Map<String, SourceAvailability> discoveryResults, 
                                    List<String> availableSources) {
         
-        boolean debugEnabled = resolvedConfig.isDebugTemplateResolution();
+        boolean debugEnabled = resolvedConfig.isDebug();
         String specName = resolvedConfig.getSpecName();
         
         DebugLogger.debug(logger, debugEnabled,

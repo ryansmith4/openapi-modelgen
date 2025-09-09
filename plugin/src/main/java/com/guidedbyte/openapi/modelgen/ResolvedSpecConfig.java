@@ -21,7 +21,7 @@ import java.util.Map;
  * 
  * <p>This class is configuration-cache compatible and contains all resolved values including:</p>
  * <ul>
- *   <li>Template resolution configuration (templateSources, debugTemplateResolution)</li>
+ *   <li>Template resolution configuration (templateSources, debug)</li>
  *   <li>Generation control flags (validateSpec, generateTests, generateDocs)</li>
  *   <li>Template customization settings (applyPluginCustomizations)</li>
  *   <li>OpenAPI Generator options and template variables</li>
@@ -58,7 +58,7 @@ public class ResolvedSpecConfig {
     
     // Template resolution configuration
     private final List<String> templateSources;
-    private final boolean debugTemplateResolution;
+    private final boolean debug;
     
     // OpenAPI Generator configuration
     private final Map<String, String> configOptions;
@@ -84,7 +84,7 @@ public class ResolvedSpecConfig {
         this.generateApiDocumentation = builder.generateApiDocumentation;
         this.generateModelDocumentation = builder.generateModelDocumentation;
         this.templateSources = builder.templateSources;
-        this.debugTemplateResolution = builder.debugTemplateResolution;
+        this.debug = builder.debug;
         this.configOptions = new HashMap<>(builder.configOptions);
         this.globalProperties = new HashMap<>(builder.globalProperties);
         this.templateVariables = new HashMap<>(builder.templateVariables);
@@ -205,8 +205,8 @@ public class ResolvedSpecConfig {
         return templateSources;
     }
     
-    public boolean isDebugTemplateResolution() {
-        return debugTemplateResolution;
+    public boolean isDebug() {
+        return debug;
     }
     
     
@@ -254,7 +254,7 @@ public class ResolvedSpecConfig {
         private boolean generateApiDocumentation = false;
         private boolean generateModelDocumentation = false;
         private List<String> templateSources = TemplateSourceType.getAllAsStrings();
-        private boolean debugTemplateResolution = false;
+        private boolean debug = false;
         private Map<String, String> configOptions = new HashMap<>();
         private Map<String, String> globalProperties = new HashMap<>();
         private Map<String, String> templateVariables = new HashMap<>();
@@ -281,7 +281,7 @@ public class ResolvedSpecConfig {
             
             // Extension-level debug flag overrides all other debug settings
             if (extension.isDebug()) {
-                this.debugTemplateResolution = true;
+                this.debug = true;
             }
         }
         
@@ -388,8 +388,8 @@ public class ResolvedSpecConfig {
             if (defaults.getTemplateSources().isPresent()) {
                 this.templateSources = defaults.getTemplateSources().get();
             }
-            if (defaults.getDebugTemplateResolution().isPresent()) {
-                this.debugTemplateResolution = defaults.getDebugTemplateResolution().get();
+            if (defaults.getDebug().isPresent()) {
+                this.debug = defaults.getDebug().get();
             }
         }
         
@@ -440,8 +440,8 @@ public class ResolvedSpecConfig {
             if (spec.getTemplateSources().isPresent() && !spec.getTemplateSources().get().isEmpty()) {
                 this.templateSources = spec.getTemplateSources().get();
             }
-            if (spec.getDebugTemplateResolution().isPresent()) {
-                this.debugTemplateResolution = spec.getDebugTemplateResolution().get();
+            if (spec.getDebug().isPresent()) {
+                this.debug = spec.getDebug().get();
             }
             if (spec.getConfigOptions().isPresent()) {
                 this.configOptions.putAll(spec.getConfigOptions().get());
