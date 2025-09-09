@@ -38,6 +38,7 @@ import java.util.Map;
  *   <li><strong>importMappings:</strong> Additional or override import mappings (merged with defaults)</li>
  *   <li><strong>typeMappings:</strong> Additional or override type mappings (merged with defaults)</li>
  *   <li><strong>additionalProperties:</strong> Additional or override OpenAPI Generator properties (merged with defaults)</li>
+ *   <li><strong>saveOriginalTemplates:</strong> Override default setting for saving original templates to orig/ subdirectory</li>
  * </ul>
  * 
  * <h2>Example Usage:</h2>
@@ -94,6 +95,7 @@ public class SpecConfig {
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
     private final MapProperty<String, String> additionalProperties;
+    private final Property<Boolean> saveOriginalTemplates;
     
     /**
      * Creates a new specification configuration for the given project.
@@ -128,6 +130,8 @@ public class SpecConfig {
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
+        this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
+        // No default convention - inherits from DefaultConfig
     }
     
     // Getter methods
@@ -210,6 +214,10 @@ public class SpecConfig {
     
     public MapProperty<String, String> getAdditionalProperties() {
         return additionalProperties;
+    }
+    
+    public Property<Boolean> getSaveOriginalTemplates() {
+        return saveOriginalTemplates;
     }
     
     // Convenience setter methods for Gradle DSL
@@ -336,5 +344,19 @@ public class SpecConfig {
      */
     public void additionalProperties(Map<String, String> properties) {
         this.additionalProperties.set(properties);
+    }
+    
+    /**
+     * Saves original OpenAPI Generator templates to a subdirectory for reference.
+     * 
+     * <p>When enabled, extracts and preserves the original OpenAPI Generator templates
+     * to {@code build/template-work/{generator}-{specName}/orig/} before applying any
+     * customizations. This overrides the default setting for this specific spec.</p>
+     * 
+     * @param saveOriginalTemplates {@code true} to save original templates before customization
+     */
+    @Option(option = "save-original-templates", description = "Save original OpenAPI Generator templates to orig/ subdirectory for this spec")
+    public void saveOriginalTemplates(Boolean saveOriginalTemplates) {
+        this.saveOriginalTemplates.set(saveOriginalTemplates);
     }
 }

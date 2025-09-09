@@ -60,6 +60,7 @@ openapiModelgen {
 | `generateApiTests` | Boolean | `false` | Generate unit tests for APIs |
 | `generateApiDocumentation` | Boolean | `false` | Generate API documentation |
 | `generateModelDocumentation` | Boolean | `false` | Generate model documentation |
+| `saveOriginalTemplates` | Boolean | `false` | Save original OpenAPI Generator templates to orig/ subdirectory for debugging |
 
 ```gradle
 openapiModelgen {
@@ -67,6 +68,7 @@ openapiModelgen {
         validateSpec true
         generateModelTests true
         generateModelDocumentation true
+        saveOriginalTemplates true  // Save originals for debugging
     }
 }
 ```

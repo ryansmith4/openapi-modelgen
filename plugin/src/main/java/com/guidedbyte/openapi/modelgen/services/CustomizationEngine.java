@@ -866,9 +866,26 @@ public class CustomizationEngine {
     
     /**
      * Extracts base templates that need customization from OpenAPI Generator.
+     * When saveOriginalTemplates is enabled, extracts ALL available templates for user review.
      */
     private void extractRequiredBaseTemplates(TemplateConfiguration templateConfig, File templateWorkDir) throws IOException {
         logger.debug("Extracting required base templates for customization");
+        
+        TemplateDiscoveryService discoveryService = new TemplateDiscoveryService();
+        
+        // If saveOriginalTemplates is enabled, extract all available templates first
+        if (templateConfig.isSaveOriginalTemplates()) {
+            logger.debug("Extracting ALL templates to orig/ directory for user review");
+            File origDir = new File(templateWorkDir, "orig");
+            int extractedCount = discoveryService.extractAllTemplates(templateConfig.getGeneratorName(), origDir);
+            
+            if (extractedCount > 0) {
+                logger.info("Extracted {} OpenAPI Generator templates for review in: {}", 
+                    extractedCount, origDir.getAbsolutePath());
+            } else {
+                logger.debug("No templates were extracted using OpenAPI Generator's built-in extraction mechanism");
+            }
+        }
         
         // Collect all templates that need extraction based on available customizations
         Set<String> templatesToExtract = new java.util.HashSet<>();
@@ -888,9 +905,7 @@ public class CustomizationEngine {
             addTemplatesFromUserCustomizations(templateConfig, templatesToExtract);
         }
         
-        // Extract the identified templates
-        TemplateDiscoveryService discoveryService = new TemplateDiscoveryService();
-        
+        // Extract the identified templates for customization processing
         for (String templateName : templatesToExtract) {
             extractBaseTemplate(discoveryService, templateName, templateConfig, templateWorkDir);
         }
@@ -999,6 +1014,16 @@ public class CustomizationEngine {
         // Use the actual generator name from the configuration instead of hard-coding "spring"
         String baseTemplateContent = discoveryService.extractBaseTemplate(templateName, templateConfig.getGeneratorName());
         if (baseTemplateContent != null) {
+            // Save to orig/ subdirectory if configured
+            if (templateConfig.isSaveOriginalTemplates()) {
+                File origDir = new File(templateWorkDir, "orig");
+                File origTemplateFile = new File(origDir, templateName);
+                Files.createDirectories(origTemplateFile.getParentFile().toPath());
+                Files.writeString(origTemplateFile.toPath(), baseTemplateContent);
+                logger.debug("Saved original template to: {}", origTemplateFile.getAbsolutePath());
+            }
+            
+            // Save to working directory for customization
             File templateFile = new File(templateWorkDir, templateName);
             Files.createDirectories(templateFile.getParentFile().toPath());
             Files.writeString(templateFile.toPath(), baseTemplateContent);

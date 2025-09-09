@@ -288,6 +288,7 @@ public class TemplateResolver {
             .templateProcessingEnabled(templateProcessingEnabled)
             .templateSources(resolvedConfig.getTemplateSources())
             .debug(resolvedConfig.isDebug())
+            .saveOriginalTemplates(resolvedConfig.isSaveOriginalTemplates())
             .build();
         
         DebugLogger.debug(logger, debugEnabled, 

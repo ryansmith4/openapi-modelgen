@@ -71,4 +71,48 @@ public class TemplateDiscoveryService {
         }
     }
     
+    /**
+     * Extracts all available templates for a generator to the specified directory.
+     * This is used when saveOriginalTemplates is enabled to save all OpenAPI Generator
+     * templates for user review and customization planning.
+     * 
+     * @param generatorName the OpenAPI generator name (e.g., "spring")
+     * @param targetDirectory the directory to save all templates to (typically orig/ subdirectory)
+     * @return the number of templates successfully extracted
+     */
+    public int extractAllTemplates(String generatorName, java.io.File targetDirectory) {
+        if (generatorName == null || generatorName.trim().isEmpty()) {
+            logger.warn("Generator name cannot be null or empty");
+            return 0;
+        }
+        
+        if (targetDirectory == null) {
+            logger.warn("Target directory cannot be null");
+            return 0;
+        }
+        
+        logger.debug("=== ALL TEMPLATES EXTRACTION START ===");
+        logger.debug("Generator: '{}', Target: '{}'", generatorName, targetDirectory.getAbsolutePath());
+        
+        try {
+            int extractedCount = extractor.extractAllTemplates(generatorName, targetDirectory);
+            
+            if (extractedCount > 0) {
+                logger.info("Successfully extracted {} templates for generator '{}' to: {}", 
+                    extractedCount, generatorName, targetDirectory.getAbsolutePath());
+            } else {
+                logger.debug("No templates extracted for generator '{}'", generatorName);
+            }
+            
+            logger.debug("=== ALL TEMPLATES EXTRACTION COMPLETE ===");
+            return extractedCount;
+            
+        } catch (Exception e) {
+            logger.warn("Failed to extract all templates for generator '{}': {}", generatorName, e.getMessage());
+            logger.debug("All templates extraction error details for '{}'", generatorName, e);
+            logger.debug("=== ALL TEMPLATES EXTRACTION FAILED ===");
+            return 0;
+        }
+    }
+    
 }

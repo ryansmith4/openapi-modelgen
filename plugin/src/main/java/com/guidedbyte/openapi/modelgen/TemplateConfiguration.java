@@ -39,6 +39,7 @@ public class TemplateConfiguration implements Serializable {
     private final boolean templateProcessingEnabled;
     private final List<String> templateSources;
     private final boolean debug;
+    private final boolean saveOriginalTemplates;
     
     // Library template support
     private final boolean hasLibraryTemplates;
@@ -61,6 +62,7 @@ public class TemplateConfiguration implements Serializable {
         this.templateSources = builder.templateSources != null ?
             Collections.unmodifiableList(builder.templateSources) : Collections.emptyList();
         this.debug = builder.debug;
+        this.saveOriginalTemplates = builder.saveOriginalTemplates;
         
         // Library support
         this.hasLibraryTemplates = builder.hasLibraryTemplates;
@@ -88,6 +90,7 @@ public class TemplateConfiguration implements Serializable {
     public boolean isTemplateProcessingEnabled() { return templateProcessingEnabled; }
     public List<String> getTemplateSources() { return templateSources; }
     public boolean isDebug() { return debug; }
+    public boolean isSaveOriginalTemplates() { return saveOriginalTemplates; }
     
     // Library template getters
     public boolean hasLibraryTemplates() { return hasLibraryTemplates; }
@@ -110,6 +113,7 @@ public class TemplateConfiguration implements Serializable {
                 hasPluginCustomizations == that.hasPluginCustomizations &&
                 templateProcessingEnabled == that.templateProcessingEnabled &&
                 debug == that.debug &&
+                saveOriginalTemplates == that.saveOriginalTemplates &&
                 Objects.equals(generatorName, that.generatorName) &&
                 Objects.equals(templateWorkDirectory, that.templateWorkDirectory) &&
                 Objects.equals(userTemplateDirectory, that.userTemplateDirectory) &&
@@ -123,7 +127,7 @@ public class TemplateConfiguration implements Serializable {
         return Objects.hash(generatorName, templateWorkDirectory, hasUserTemplates, hasUserCustomizations,
                 hasPluginCustomizations, userTemplateDirectory,
                 userCustomizationsDirectory, templateVariables, templateProcessingEnabled,
-                templateSources, debug);
+                templateSources, debug, saveOriginalTemplates);
     }
     
     @Override
@@ -150,6 +154,7 @@ public class TemplateConfiguration implements Serializable {
         private boolean templateProcessingEnabled = true;
         private List<String> templateSources;
         private boolean debug = false;
+        private boolean saveOriginalTemplates = false;
         
         // Library support
         private boolean hasLibraryTemplates = false;
@@ -210,6 +215,11 @@ public class TemplateConfiguration implements Serializable {
         
         public Builder debug(boolean debug) {
             this.debug = debug;
+            return this;
+        }
+        
+        public Builder saveOriginalTemplates(boolean saveOriginalTemplates) {
+            this.saveOriginalTemplates = saveOriginalTemplates;
             return this;
         }
         

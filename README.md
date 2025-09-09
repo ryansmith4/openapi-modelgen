@@ -97,6 +97,7 @@ generateModelTests = false                        // Generate model unit tests
 generateApiTests = false                          // Generate API unit tests
 generateApiDocumentation = false                  // Generate API documentation
 generateModelDocumentation = false                // Generate model documentation
+saveOriginalTemplates = false                     // Save original OpenAPI Generator templates to orig/ subdirectory
 ```
 
 ### Template Resolution
@@ -211,6 +212,7 @@ openapiModelgen {
         validateSpec true
         parallel true                       // Enable thread-safe parallel processing (default: true)
         applyPluginCustomizations true      // Enable built-in YAML customizations
+        saveOriginalTemplates false         // Save original templates to orig/ subdirectory for debugging
         
         // Lombok integration
         configOptions([
@@ -341,6 +343,10 @@ The plugin uses a sophisticated orchestration system to combine templates from m
   - Has all YAML customizations applied (plugin, user, library)
   - **Each spec gets its own isolated directory to prevent cross-contamination**
   - **This is the actual directory passed to OpenAPI Generator**
+- **`build/template-work/{generator}-{specName}/orig/`**: Original templates before customization (when `saveOriginalTemplates: true`)
+  - Contains unmodified OpenAPI Generator templates
+  - Useful for debugging customizations and understanding what's being modified
+  - Only created when `saveOriginalTemplates` is enabled
 
 #### Key Point
 The `templateDir` and `templateCustomizationsDir` are **source directories** - they provide inputs to the template orchestration process. The actual code generation uses the fully processed `build/template-work/{generator}-{specName}` directories, ensuring clean separation between your source files and build outputs, with each spec isolated in its own template directory.
@@ -914,6 +920,37 @@ All mapping properties follow the same merge pattern:
 # See which templates are being used
 ./gradlew generatePets --debug | grep "template"
 ```
+
+#### Debugging with Original Templates
+
+Enable `saveOriginalTemplates` to compare original vs. customized templates:
+
+```gradle
+openapiModelgen {
+    defaults {
+        saveOriginalTemplates true  // Save originals to orig/ subdirectory
+    }
+}
+```
+
+After generation, compare templates:
+```bash
+# View original template
+cat build/template-work/spring-pets/orig/pojo.mustache
+
+# View customized template
+cat build/template-work/spring-pets/pojo.mustache
+
+# Compare side-by-side
+diff build/template-work/spring-pets/orig/pojo.mustache \
+     build/template-work/spring-pets/pojo.mustache
+```
+
+This is particularly useful for:
+- Understanding what customizations are being applied
+- Creating new custom templates based on originals
+- Debugging why certain patterns aren't matching
+- Learning the OpenAPI Generator template structure
 
 ## Dependencies & Version Management
 

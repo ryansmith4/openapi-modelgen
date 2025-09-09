@@ -372,6 +372,18 @@ public class TaskConfigurationService implements Serializable {
      * @param projectLayout the project layout for path resolution
      */
     private void createCleanTask(TaskContainer tasks, OpenApiModelGenExtension extension, ProjectLayout projectLayout) {
+        // Extract serializable data at configuration time
+        Map<String, String> specOutputDirs = new HashMap<>();
+        for (Map.Entry<String, SpecConfig> entry : extension.getSpecs().entrySet()) {
+            String specName = entry.getKey();
+            SpecConfig specConfig = entry.getValue();
+            
+            // Resolve the output directory for this spec at configuration time
+            ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(
+                specName, extension, specConfig).build();
+            specOutputDirs.put(specName, resolvedConfig.getOutputDir());
+        }
+        
         tasks.register(PluginConstants.TASK_CLEAN, task -> {
             task.setDescription(PluginConstants.DESC_CLEAN);
             task.setGroup(PluginConstants.TASK_GROUP);
@@ -379,15 +391,11 @@ public class TaskConfigurationService implements Serializable {
                 boolean anythingDeleted = false;
                 
                 // Clean generated output directories for each spec
-                for (Map.Entry<String, SpecConfig> entry : extension.getSpecs().entrySet()) {
+                for (Map.Entry<String, String> entry : specOutputDirs.entrySet()) {
                     String specName = entry.getKey();
-                    SpecConfig specConfig = entry.getValue();
+                    String outputDirPath = entry.getValue();
                     
-                    // Resolve the output directory for this spec
-                    ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(
-                        specName, extension, specConfig).build();
-                    
-                    File outputDir = new File(t.getProject().getProjectDir(), resolvedConfig.getOutputDir());
+                    File outputDir = projectLayout.getProjectDirectory().file(outputDirPath).getAsFile();
                     if (outputDir.exists()) {
                         logger.info("Cleaning generated models for '{}' from: {}", specName, outputDir.getAbsolutePath());
                         if (deleteRecursively(outputDir)) {

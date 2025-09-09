@@ -59,6 +59,7 @@ public class ResolvedSpecConfig {
     // Template resolution configuration
     private final List<String> templateSources;
     private final boolean debug;
+    private final boolean saveOriginalTemplates;
     
     // OpenAPI Generator configuration
     private final Map<String, String> configOptions;
@@ -85,6 +86,7 @@ public class ResolvedSpecConfig {
         this.generateModelDocumentation = builder.generateModelDocumentation;
         this.templateSources = builder.templateSources;
         this.debug = builder.debug;
+        this.saveOriginalTemplates = builder.saveOriginalTemplates;
         this.configOptions = new HashMap<>(builder.configOptions);
         this.globalProperties = new HashMap<>(builder.globalProperties);
         this.templateVariables = new HashMap<>(builder.templateVariables);
@@ -209,6 +211,10 @@ public class ResolvedSpecConfig {
         return debug;
     }
     
+    public boolean isSaveOriginalTemplates() {
+        return saveOriginalTemplates;
+    }
+    
     
     /**
      * Creates a new builder for ResolvedSpecConfig.
@@ -255,6 +261,7 @@ public class ResolvedSpecConfig {
         private boolean generateModelDocumentation = false;
         private List<String> templateSources = TemplateSourceType.getAllAsStrings();
         private boolean debug = false;
+        private boolean saveOriginalTemplates = false;
         private Map<String, String> configOptions = new HashMap<>();
         private Map<String, String> globalProperties = new HashMap<>();
         private Map<String, String> templateVariables = new HashMap<>();
@@ -391,6 +398,9 @@ public class ResolvedSpecConfig {
             if (defaults.getDebug().isPresent()) {
                 this.debug = defaults.getDebug().get();
             }
+            if (defaults.getSaveOriginalTemplates().isPresent()) {
+                this.saveOriginalTemplates = defaults.getSaveOriginalTemplates().get();
+            }
         }
         
         private void applySpecConfig(SpecConfig spec) {
@@ -442,6 +452,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getDebug().isPresent()) {
                 this.debug = spec.getDebug().get();
+            }
+            if (spec.getSaveOriginalTemplates().isPresent()) {
+                this.saveOriginalTemplates = spec.getSaveOriginalTemplates().get();
             }
             if (spec.getConfigOptions().isPresent()) {
                 this.configOptions.putAll(spec.getConfigOptions().get());

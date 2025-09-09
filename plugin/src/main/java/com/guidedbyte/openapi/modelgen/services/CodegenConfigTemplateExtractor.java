@@ -132,6 +132,38 @@ public class CodegenConfigTemplateExtractor {
     }
     
     /**
+     * Extracts all available templates for a generator to the specified directory.
+     * Uses OpenAPI Generator's template extraction mechanism.
+     * 
+     * @param generatorName the OpenAPI generator name (e.g., "spring")
+     * @param targetDirectory the directory to save all templates to
+     * @return the number of templates successfully extracted
+     */
+    public int extractAllTemplates(String generatorName, File targetDirectory) {
+        logger.debug("Extracting all templates for generator '{}' to: {}", generatorName, targetDirectory.getAbsolutePath());
+        
+        try {
+            // Create target directory if it doesn't exist
+            Files.createDirectories(targetDirectory.toPath());
+            
+            // Use the OpenApiTemplateExtractor to extract all templates
+            OpenApiTemplateExtractor.extractTemplates(generatorName, targetDirectory.getAbsolutePath(), null);
+            
+            // Count the extracted files
+            File[] extractedFiles = targetDirectory.listFiles((dir, name) -> name.endsWith(".mustache"));
+            int extracted = extractedFiles != null ? extractedFiles.length : 0;
+            
+            logger.info("Successfully extracted {} templates using OpenApiTemplateExtractor", extracted);
+            return extracted;
+            
+        } catch (Exception e) {
+            logger.warn("Failed to extract all templates using OpenApiTemplateExtractor: {}", e.getMessage());
+            return 0;
+        }
+    }
+    
+    
+    /**
      * Saves a template to a file in the working directory.
      * 
      * @param templateName the name of the template file

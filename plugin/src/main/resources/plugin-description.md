@@ -16,6 +16,7 @@ Key Features:
 • Partial template override approach - customize only what you need
 • Incremental build support with selective template processing
 • Generator directory organization with enforced subdirectory structure
+• Original template preservation for debugging with saveOriginalTemplates flag
 • Configuration validation with detailed error reporting
 • Command-line parameter overrides for all options
 
@@ -33,6 +34,7 @@ plugins {
 openapiModelgen {
     defaults {
         parallel true  // Enable thread-safe parallel processing (default: true)
+        saveOriginalTemplates false  // Save original templates for debugging (default: false)
     }
     specs {
         myApi {

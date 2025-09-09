@@ -35,6 +35,7 @@ import java.util.Map;
  *   <li><strong>importMappings:</strong> Map type names to fully qualified import statements (merged with spec-level mappings)</li>
  *   <li><strong>typeMappings:</strong> Map OpenAPI types to Java types (merged with spec-level mappings)</li>
  *   <li><strong>additionalProperties:</strong> Additional properties passed to OpenAPI Generator (merged with spec-level properties)</li>
+ *   <li><strong>saveOriginalTemplates:</strong> Save original OpenAPI Generator templates to orig/ subdirectory (default: false)</li>
  * </ul>
  * 
  * 
@@ -105,6 +106,7 @@ public class DefaultConfig {
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
     private final MapProperty<String, String> additionalProperties;
+    private final Property<Boolean> saveOriginalTemplates;
     
     /**
      * Creates a new default configuration for the given project.
@@ -136,6 +138,8 @@ public class DefaultConfig {
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
+        this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
+        this.saveOriginalTemplates.convention(false);  // Default to false to avoid clutter
     }
     
     // Getter methods
@@ -201,6 +205,10 @@ public class DefaultConfig {
     
     public MapProperty<String, String> getAdditionalProperties() {
         return additionalProperties;
+    }
+    
+    public Property<Boolean> getSaveOriginalTemplates() {
+        return saveOriginalTemplates;
     }
     
     
@@ -409,6 +417,27 @@ public class DefaultConfig {
     @Option(option = "debug", description = "Enable comprehensive debug logging throughout the plugin")
     public void debug(Boolean debug) {
         this.debug.set(debug);
+    }
+    
+    /**
+     * Saves original OpenAPI Generator templates to a subdirectory for reference.
+     * 
+     * <p>When enabled, extracts and preserves the original OpenAPI Generator templates
+     * to {@code build/template-work/{generator}-{specName}/orig/} before applying any
+     * customizations. This is useful for:</p>
+     * <ul>
+     *   <li>Debugging template customizations and understanding what's being modified</li>
+     *   <li>Creating new custom templates based on the originals</li>
+     *   <li>Comparing customized templates with their original versions</li>
+     * </ul>
+     * 
+     * <p>Default is {@code false} to avoid cluttering the work directory.</p>
+     * 
+     * @param saveOriginalTemplates {@code true} to save original templates before customization
+     */
+    @Option(option = "save-original-templates", description = "Save original OpenAPI Generator templates to orig/ subdirectory for reference")
+    public void saveOriginalTemplates(Boolean saveOriginalTemplates) {
+        this.saveOriginalTemplates.set(saveOriginalTemplates);
     }
     
 }
