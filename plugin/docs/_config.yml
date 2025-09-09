@@ -2,7 +2,7 @@
 title: OpenAPI Model Generator Plugin
 description: Comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications
 baseurl: "/openapi-modelgen"
-url: "https://guidedbyte.github.io"
+url: "https://ryansmith4.github.io"
 
 # Theme
 theme: minima

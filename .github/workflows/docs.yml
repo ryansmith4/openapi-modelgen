@@ -39,11 +39,6 @@ jobs:
       - name: Install dependencies
         run: |
           cd plugin/docs
-          echo "source 'https://rubygems.org'" > Gemfile
-          echo "gem 'jekyll', '~> 4.3'" >> Gemfile
-          echo "gem 'jekyll-feed', '~> 0.12'" >> Gemfile
-          echo "gem 'jekyll-sitemap', '~> 1.4'" >> Gemfile
-          echo "gem 'minima', '~> 2.5'" >> Gemfile
           bundle install
           
       - name: Build with Jekyll
