@@ -207,7 +207,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
         
         // Verify template cache structure (may be in plugin-templates or template-work)
         File templateCacheDir = new File(testProjectDir, "build/plugin-templates/spring");
-        File templateWorkDir = new File(testProjectDir, "build/template-work/spring");
+        File templateWorkDir = new File(testProjectDir, "build/template-work/spring-minimal");
         assertTrue(templateCacheDir.exists() || templateWorkDir.exists(), 
             "Either plugin-templates or template-work should exist");
         

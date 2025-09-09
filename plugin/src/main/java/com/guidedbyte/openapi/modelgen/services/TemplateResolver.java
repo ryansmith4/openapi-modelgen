@@ -192,11 +192,12 @@ public class TemplateResolver {
             hasLibraryTemplates, hasLibraryCustomizations, hasPluginCustomizations);
         
         if (templateProcessingEnabled) {
+            String specName = resolvedConfig.getSpecName();
             templateWorkDirectory = projectLayout.getBuildDirectory()
-                .dir("template-work/" + generatorName).get().getAsFile().getAbsolutePath();
+                .dir("template-work/" + generatorName + "-" + specName).get().getAsFile().getAbsolutePath();
             DebugLogger.debug(logger, debugEnabled, 
-                "Template processing enabled for generator '{}', work directory: {}", 
-                generatorName, templateWorkDirectory);
+                "Template processing enabled for generator '{}', spec '{}', work directory: {}", 
+                generatorName, specName, templateWorkDirectory);
             
             // Create the directory immediately during configuration time to avoid Gradle validation issues
             // We create this aggressively since Gradle will validate it exists during task graph building

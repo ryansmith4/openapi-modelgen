@@ -335,14 +335,15 @@ The plugin uses a sophisticated orchestration system to combine templates from m
 - **`templateCustomizationsDir`**: Your YAML customizations (e.g., `src/main/templateCustomizations/{generator}/*.mustache.yaml`)
 
 #### Build Directory (Orchestration)
-- **`build/template-work/{generator}`**: The orchestrated template directory used by OpenAPI Generator
+- **`build/template-work/{generator}-{specName}`**: The orchestrated template directory used by OpenAPI Generator
   - Contains user templates (copied from `templateDir`)
   - Contains extracted OpenAPI Generator templates (only those being customized)
   - Has all YAML customizations applied (plugin, user, library)
+  - **Each spec gets its own isolated directory to prevent cross-contamination**
   - **This is the actual directory passed to OpenAPI Generator**
 
 #### Key Point
-The `templateDir` and `templateCustomizationsDir` are **source directories** - they provide inputs to the template orchestration process. The actual code generation uses the fully processed `build/template-work/{generator}` directory, ensuring clean separation between your source files and build outputs.
+The `templateDir` and `templateCustomizationsDir` are **source directories** - they provide inputs to the template orchestration process. The actual code generation uses the fully processed `build/template-work/{generator}-{specName}` directories, ensuring clean separation between your source files and build outputs, with each spec isolated in its own template directory.
 
 ### Template Precedence Hierarchy
 

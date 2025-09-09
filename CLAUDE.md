@@ -229,7 +229,7 @@ The plugin orchestrates templates from multiple sources with clear precedence hi
 3. **Plugin YAML customizations** - Built-in customizations (can be disabled)
 4. **OpenAPI Generator defaults** - Base templates extracted as needed
 
-All processing happens in a **template working directory** (`build/template-work/`) that serves as the single source of truth for OpenAPI Generator execution. Templates are cached and only rebuilt when inputs change.
+All processing happens in **spec-specific template working directories** (`build/template-work/{generator}-{specName}/`) that serve as the single source of truth for OpenAPI Generator execution. Each spec gets its own isolated template directory to prevent cross-contamination. Templates are cached and only rebuilt when inputs change.
 
 ## DSL Syntax Requirements
 
@@ -326,7 +326,7 @@ The plugin works correctly, but there are known bugs in the underlying OpenAPI G
 - **Test suite**: `plugin/src/test/java/com/guidedbyte/openapi/modelgen/`
 - **Example app**: `test-app/build.gradle` (configuration), `test-app/src/main/resources/openapi/` (specs)
 - **Generated output**: `test-app/build/generated-sources/openapi/`
-- **Template working dir**: `test-app/build/template-work/spring/`
+- **Template working dir**: `test-app/build/template-work/{generator}-{specName}/` (e.g., `spring-pets`, `spring-orders`)
 - **Global cache**: `~/.gradle/caches/openapi-modelgen/`
 
 ## Documentation Standards

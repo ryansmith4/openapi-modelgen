@@ -228,7 +228,7 @@ public class TaskConfigurationService implements Serializable {
         
         // ALWAYS use the template working directory if it exists (it contains the orchestrated templates)
         File templateWorkDir = new File(projectLayout.getBuildDirectory()
-            .dir("template-work/" + resolvedConfig.getGeneratorName()).get().getAsFile().getAbsolutePath());
+            .dir("template-work/" + resolvedConfig.getGeneratorName() + "-" + resolvedConfig.getSpecName()).get().getAsFile().getAbsolutePath());
         
         if (templateWorkDir.exists() && templateWorkDir.isDirectory()) {
             // This is the correct behavior - use the orchestrated template directory
