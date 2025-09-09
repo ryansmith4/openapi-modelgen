@@ -58,12 +58,12 @@ openapiModelgen {
         templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
         modelNamePrefix "Api" // Add prefix to test the new feature
         saveOriginalTemplates true // Disable saving original templates
-        templateSources([
-            'user-templates',           // Use explicit user templates first
-            'user-customizations',      // Then user YAML customizations
-            // Exclude 'plugin-customizations' to test user precedence
-            'openapi-generator'         // Fallback to OpenAPI Generator defaults
-        ])
+//        templateSources([
+//            'user-templates',           // Use explicit user templates first
+//            'user-customizations',      // Then user YAML customizations
+//            // Exclude 'plugin-customizations' to test user precedence
+//            'openapi-generator'         // Fallback to OpenAPI Generator defaults
+//        ])
         
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
@@ -86,11 +86,12 @@ openapiModelgen {
             'library': 'spring-boot',
             'beanValidations': 'true',
             'performBeanValidation': 'true',
-            'useSpringBoot3': 'true'
+            'useSpringBoot3': 'true',
+            'jackson': 'true'
         ])
         validateSpec false
         configOptions([
-            additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
+            additionalModelTypeAnnotations: "@jakarta.validation.Valid" // User controls annotations, no plugin defaults
         ])
     }
     specs {
@@ -114,7 +115,8 @@ openapiModelgen {
             // ])
             additionalProperties([
                 'reactive': 'false',            // Override reactive setting for orders
-                'enablePostProcessFile': 'true' // Orders-specific additional property
+                'enablePostProcessFile': 'true', // Orders-specific additional property
+                'jackson': 'true'
             ])
         }
     }

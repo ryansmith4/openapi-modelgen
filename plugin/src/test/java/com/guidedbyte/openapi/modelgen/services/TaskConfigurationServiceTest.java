@@ -183,11 +183,9 @@ class TaskConfigurationServiceTest {
         assertEquals("java8", task.getConfigOptions().get().get("dateLibrary"));
         assertEquals("true", task.getConfigOptions().get().get("serializableModel"));
         
-        // Verify Lombok annotations are configured
-        String lombokAnnotations = task.getConfigOptions().get().get("additionalModelTypeAnnotations");
-        assertNotNull(lombokAnnotations);
-        assertTrue(lombokAnnotations.contains("@lombok.Data"));
-        assertTrue(lombokAnnotations.contains("@lombok.experimental.SuperBuilder"));
+        // Verify no hardcoded additionalModelTypeAnnotations - plugin should not provide fallback configuration
+        String additionalAnnotations = task.getConfigOptions().get().get("additionalModelTypeAnnotations");
+        assertNull(additionalAnnotations, "Plugin should not provide hardcoded additionalModelTypeAnnotations");
     }
 
     @Test

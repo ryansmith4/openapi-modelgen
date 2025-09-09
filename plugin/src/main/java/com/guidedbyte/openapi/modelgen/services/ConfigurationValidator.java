@@ -229,12 +229,15 @@ public class ConfigurationValidator implements Serializable {
     public void validateConfigOptions(Map<String, String> configOptions, String context, List<String> errors) {
         if (configOptions == null) return;
         
-        // Check for null or empty values
+        // Check for null or empty values (except for additionalModelTypeAnnotations which can be empty)
         for (Map.Entry<String, String> entry : configOptions.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             if (value == null || value.trim().isEmpty()) {
-                errors.add(String.format("%s.configOptions['%s'] cannot be null or empty", context, key));
+                // Allow additionalModelTypeAnnotations to be empty - users may not want any additional annotations
+                if (!"additionalModelTypeAnnotations".equals(key)) {
+                    errors.add(String.format("%s.configOptions['%s'] cannot be null or empty", context, key));
+                }
             }
         }
         

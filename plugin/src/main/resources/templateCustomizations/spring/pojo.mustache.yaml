@@ -1,0 +1,13 @@
+# OpenAPI Template Customizer - POJO Template Enhancement
+# Demonstrates version-aware customizations for POJO generation
+
+metadata:
+  name: "Enhanced POJO Template"
+  description: "Adds header variable and grouped JSON constants"
+  version: "2.0.1"
+insertions:
+  - before: "{{#description}}"
+    content: |
+      {{#header}} * {{header}}
+      *
+      {{/header}}

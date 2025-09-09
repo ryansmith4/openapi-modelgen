@@ -531,9 +531,6 @@ public class TaskConfigurationService implements Serializable {
         task.getConfigOptions().put("skipDefaults", "true");
         task.getConfigOptions().put("generateConstructorPropertiesAnnotation", "false");
         
-        // Default Lombok annotations
-        task.getConfigOptions().put("additionalModelTypeAnnotations", 
-            "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor");
         
         // Global properties - let OpenAPI Generator use its defaults
     }
