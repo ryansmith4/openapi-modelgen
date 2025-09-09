@@ -1,0 +1,566 @@
+---
+layout: page
+title: Template Customization Guide
+permalink: /template-customization-guide/
+---
+
+# Template Customization Guide
+
+This guide provides practical guidance for customizing OpenAPI Generator templates to match your project's needs.
+
+## When to Use Template Customization
+
+### Use YAML Customizations When
+
+- Adding imports or annotations to existing templates
+- Inserting small code blocks or comments  
+- Making conditional modifications based on OpenAPI Generator versions
+- Customizing spacing, formatting, or minor template adjustments
+- Sharing customizations across teams via template libraries
+
+### Use Explicit Templates When
+
+- Completely restructuring the generated code format
+- Major changes that affect template logic flow
+- Creating entirely new template structures
+- Complex conditional rendering that can't be expressed via YAML insertions
+
+## Quick Start
+
+### 1. Directory Setup
+
+Create the directory structure for your customizations:
+
+```text
+src/main/resources/
+└── template-customizations/
+    └── spring/                          # Generator-specific directory
+        ├── pojo.mustache.yaml          # Model class customizations
+        ├── model.mustache.yaml         # Model wrapper customizations  
+        └── enumClass.mustache.yaml     # Enum class customizations
+```
+
+### 2. Basic YAML Customization
+
+Start with a simple insertion:
+
+```yaml
+# src/main/resources/template-customizations/spring/pojo.mustache.yaml
+metadata:
+  name: "Enhanced Model Template"
+  description: "Adds custom header and validation imports"
+
+insertions:
+  - before: "{{#description}}"
+    content: |
+      /**
+       * Generated model class
+       * Created: {{currentYear}}
+       */
+      
+  - after: "{{#jackson}}"
+    content: |
+      import jakarta.validation.constraints.*;
+    conditions:
+      templateNotContains: "import jakarta.validation.constraints.*;"
+```
+
+### 3. Configure the Plugin
+
+Enable template customizations in your build configuration:
+
+```gradle
+openapiModelgen {
+    defaults {
+        templateCustomizationsDir "src/main/resources/template-customizations"
+    }
+    specs {
+        api {
+            inputSpec "src/main/resources/openapi/api.yaml"
+            modelPackage "com.example.model"
+        }
+    }
+}
+```
+
+### 4. Generate and Verify
+
+```bash
+./gradlew generateApi
+```
+
+Check the generated code in `build/generated/sources/openapi/src/main/java/` to see your customizations applied.
+
+## Common Customization Patterns
+
+### Adding Custom Imports
+
+Add imports conditionally to avoid duplicates:
+
+```yaml
+insertions:
+  - after: "{{#jackson}}"
+    content: |
+      import com.fasterxml.jackson.annotation.JsonInclude;
+      import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+    conditions:
+      templateNotContains: "import com.fasterxml.jackson.annotation.JsonInclude;"
+
+  - after: "{{#useBeanValidation}}"
+    content: |
+      import jakarta.validation.Valid;
+      import jakarta.validation.constraints.NotNull;
+    conditions:
+      templateNotContains: "import jakarta.validation.Valid;"
+```
+
+### Custom Class-Level Annotations
+
+```yaml
+insertions:
+  - after: "{{#additionalModelTypeAnnotations}}"
+    content: |
+      @JsonIgnoreProperties(ignoreUnknown = true)
+      @JsonInclude(JsonInclude.Include.NON_NULL)
+    conditions:
+      templateContains: "{{#jackson}}"
+```
+
+### Adding Custom Fields
+
+```yaml
+insertions:
+  - after: "public class {{classname}}"
+    content: |
+      
+      /**
+       * Audit fields
+       */
+      @JsonIgnore
+      private Instant createdAt;
+      
+      @JsonIgnore  
+      private Instant updatedAt;
+```
+
+### Custom Method Implementations
+
+```yaml
+insertions:
+  - after: "{{#equals}}"
+    content: |
+      
+      /**
+       * Custom validation method
+       */
+      public boolean isValid() {
+          // Add your validation logic here
+          return true;
+      }
+      
+      /**
+       * Audit timestamp setter
+       */
+      public void touch() {
+          this.updatedAt = Instant.now();
+          if (this.createdAt == null) {
+              this.createdAt = Instant.now();
+          }
+      }
+```
+
+## Advanced Customization Techniques
+
+### Conditional Customizations
+
+Apply customizations based on conditions:
+
+```yaml
+insertions:
+  - after: "{{#serializableModel}}"
+    content: |
+      @java.io.Serial
+    conditions:
+      generatorVersion: ">=7.11.0"  # Only for newer versions
+      
+  - before: "{{#description}}"
+    content: |
+      @Deprecated
+      @SuppressWarnings("removal")
+    conditions:
+      templateContains: "{{#deprecated}}"
+```
+
+### Complex Template Variables
+
+Use nested template variables for dynamic content:
+
+```gradle
+openapiModelgen {
+    defaults {
+        templateVariables([
+            companyName: "Acme Corporation",
+            currentYear: "2025", 
+            copyright: "Copyright © {{currentYear}} {{companyName}}",
+            customHeader: "{{copyright}}\\nGenerated by OpenAPI Model Generator"
+        ])
+    }
+}
+```
+
+```yaml
+insertions:
+  - before: "{{#description}}"
+    content: |
+      /**
+       * {{customHeader}}
+       * 
+       * Model: {{classname}}
+       * Package: {{package}}
+       */
+```
+
+### Multiple Insertion Points
+
+Apply multiple customizations to the same template:
+
+```yaml
+insertions:
+  # Add custom header
+  - at: "start"
+    content: |
+      /*
+       * {{copyright}}
+       * This file was generated automatically. Do not edit.
+       */
+      
+  # Add custom imports after Jackson
+  - after: "{{#jackson}}"
+    content: |
+      import com.company.validation.CustomValidator;
+      
+  # Add custom field before class definition ends
+  - before: "{{#equals}}"
+    content: |
+      
+      @JsonIgnore
+      private CustomValidator validator = new CustomValidator();
+      
+  # Add custom method at end
+  - at: "end"
+    content: |
+      
+      /**
+       * Custom validation using company validator
+       */
+      public boolean validate() {
+          return validator.isValid(this);
+      }
+```
+
+### Template Replacements
+
+Replace existing content instead of just inserting:
+
+```yaml
+replacements:
+  # Replace default @Generated annotation
+  - pattern: "@Generated(value = \"org.openapitools.codegen.languages.SpringCodegen\""
+    replacement: "@Generated(value = \"com.company.openapi.generator\", date = \"{{currentYear}}\""
+    
+  # Enhance toString method
+  - pattern: "public String toString() {"
+    replacement: |
+      /**
+       * Enhanced toString with null safety
+       */
+      @Override
+      public String toString() {
+```
+
+## Working with Template Libraries
+
+### Using External Template Libraries
+
+Add template library dependencies:
+
+```gradle
+dependencies {
+    openapiCustomizations 'com.company:api-templates:2.1.0'
+    openapiCustomizations 'com.company:validation-templates:1.0.0'
+}
+
+openapiModelgen {
+    defaults {
+        useLibraryTemplates true
+        useLibraryCustomizations true
+        templatePrecedence([
+            'user-templates',
+            'user-customizations',
+            'library-templates',
+            'library-customizations', 
+            'plugin-customizations',
+            'openapi-generator'
+        ])
+    }
+}
+```
+
+### Creating Your Own Template Library
+
+1. **Create library structure:**
+
+```text
+my-templates-lib/
+├── src/main/resources/
+│   ├── META-INF/
+│   │   ├── openapi-library.yaml              # Library metadata
+│   │   ├── openapi-templates/                # Explicit templates
+│   │   │   └── spring/
+│   │   │       └── customModel.mustache
+│   │   └── openapi-customizations/           # YAML customizations
+│   │       └── spring/
+│   │           ├── pojo.mustache.yaml
+│   │           └── model.mustache.yaml
+│   └── build.gradle
+```
+
+2. **Add library metadata:**
+
+```yaml
+# src/main/resources/META-INF/openapi-library.yaml
+name: "company-api-templates"
+version: "2.1.0"
+description: "Company standard API templates with validation and audit support"
+author: "Platform Team"
+homepage: "https://github.com/company/api-templates"
+
+supportedGenerators:
+  - "spring"
+  - "java"
+
+minOpenApiGeneratorVersion: "7.11.0"
+minPluginVersion: "1.2.0"
+
+features:
+  customValidation: true
+  lombokSupport: true
+  auditFields: true
+  springBootIntegration: "3.x"
+```
+
+3. **Build and publish:**
+
+```gradle
+// my-templates-lib/build.gradle
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+```
+
+## Debugging Template Customizations
+
+### Enable Debug Logging
+
+```gradle
+openapiModelgen {
+    defaults {
+        debugTemplateResolution true
+    }
+}
+```
+
+```bash
+# Generate with debug information
+./gradlew generateApi --info
+```
+
+### Common Debug Output
+
+```text
+INFO: Processing template customizations from: src/main/resources/template-customizations/spring
+DEBUG: Template 'pojo.mustache' resolved from: user-customizations
+DEBUG: Applied 3 insertions and 1 replacement to pojo.mustache
+DEBUG: Template 'model.mustache' resolved from: openapi-generator (no customizations)
+```
+
+### Validate Template Working Directory
+
+Check the working directory to see processed templates:
+
+```text
+build/template-work/spring-{specName}/    # Each spec has its own directory
+├── .working-dir-cache          # Cache metadata
+├── pojo.mustache              # Processed template with customizations
+├── model.mustache             # Base template (no customizations)
+└── enumClass.mustache         # Base template (no customizations)
+```
+
+### Common Issues and Solutions
+
+#### Issue: Customizations Not Applied
+
+**Symptoms:**
+- YAML customizations are ignored
+- Generated code doesn't contain expected modifications
+
+**Causes & Solutions:**
+
+1. **Explicit template exists:**
+   ```text
+   ❌ Problem: You have both explicit template AND YAML customizations
+   src/main/resources/openapi-templates/spring/pojo.mustache
+   src/main/resources/template-customizations/spring/pojo.mustache.yaml
+   
+   ✅ Solution: Remove explicit template to allow YAML customizations
+   ```
+
+2. **Wrong generator directory:**
+   ```text
+   ❌ Problem: Templates in wrong directory
+   src/main/resources/template-customizations/pojo.mustache.yaml
+   
+   ✅ Solution: Use generator-specific directory
+   src/main/resources/template-customizations/spring/pojo.mustache.yaml
+   ```
+
+3. **Pattern not found:**
+   ```yaml
+   ❌ Problem: Insertion pattern doesn't exist in base template
+   insertions:
+     - after: "{{#nonExistentPattern}}"
+   
+   ✅ Solution: Check base template for correct pattern
+   insertions:
+     - after: "{{#description}}"
+   ```
+
+#### Issue: YAML Parsing Errors
+
+**Symptoms:**
+- Build fails with YAML parsing errors
+- "Invalid YAML structure" messages
+
+**Common YAML Issues:**
+
+```yaml
+❌ Incorrect indentation
+insertions:
+- after: "pattern"
+content: |
+  Some content
+
+✅ Correct indentation  
+insertions:
+  - after: "pattern"
+    content: |
+      Some content
+
+❌ Missing quotes in conditions
+conditions:
+  templateContains: {{#description}}
+
+✅ Proper quoting
+conditions:
+  templateContains: "{{#description}}"
+```
+
+#### Issue: Whitespace Problems
+
+**Problem:** Generated code has incorrect indentation
+
+**Solutions:**
+
+```yaml
+# Use explicit indentation indicators
+insertions:
+  - after: "{{#serializableModel}}"
+    content: |2
+        @java.io.Serial    # Preserves exactly 2 spaces
+
+# Use quoted strings for precise control
+insertions:
+  - after: "{{#serializableModel}}"
+    content: "    @java.io.Serial\n"    # Exactly 4 spaces + newline
+
+# Use folded scalars for long text
+insertions:
+  - before: "{{#description}}"
+    content: >
+      This long comment will be folded into a single line
+      but paragraph structure is preserved.
+```
+
+## Performance Considerations
+
+### Template Processing Performance
+
+- **YAML customizations are faster** than explicit templates (no full template replacement)
+- **Conditional insertions** are processed at generation time, not configuration time
+- **Template caching** eliminates redundant processing across multiple specifications
+- **Working directory caching** speeds up repeat builds when templates haven't changed
+
+### Optimization Tips
+
+1. **Use specific patterns** for insertions to minimize processing time:
+   ```yaml
+   ✅ Specific pattern (faster)
+   insertions:
+     - after: "import {{#jackson}}"
+   
+   ❌ Broad pattern (slower)  
+   insertions:
+     - after: "import"
+   ```
+
+2. **Group related customizations** in single files rather than multiple files
+
+3. **Use conditions effectively** to avoid unnecessary processing:
+   ```yaml
+   ✅ Conditional insertion
+   insertions:
+     - after: "{{#jackson}}"
+       content: "import com.fasterxml.jackson.annotation.JsonInclude;"
+       conditions:
+         templateNotContains: "JsonInclude"
+   ```
+
+## Best Practices Summary
+
+### Template Organization
+
+1. **Use generator-specific directories** (`spring/`, `java/`, etc.)
+2. **Group related customizations** by functionality
+3. **Name files descriptively** (`validation.mustache.yaml`, `audit-fields.mustache.yaml`)
+
+### YAML Structure
+
+1. **Add metadata** for documentation and maintenance
+2. **Use conditions** to ensure compatibility across OpenAPI Generator versions  
+3. **Test patterns** against actual base templates
+4. **Handle whitespace explicitly** using YAML block scalar indicators
+
+### Development Workflow
+
+1. **Start small** with single insertions
+2. **Test incrementally** after each customization
+3. **Use debug logging** to understand template resolution
+4. **Version control** customization files alongside code
+
+### Team Collaboration
+
+1. **Document customizations** with clear metadata
+2. **Create template libraries** for shared patterns
+3. **Establish naming conventions** for customization files
+4. **Review template changes** through code review process
+
+This guide covers the most common template customization scenarios. For the complete technical reference, see the [Template Schema Reference](template-schema.md).

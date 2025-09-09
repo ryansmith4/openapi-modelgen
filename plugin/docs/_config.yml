@@ -1,0 +1,60 @@
+# GitHub Pages configuration for OpenAPI Model Generator Plugin documentation
+title: OpenAPI Model Generator Plugin
+description: Comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications
+baseurl: "/openapi-modelgen"
+url: "https://guidedbyte.github.io"
+
+# Theme
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Navigation
+header_pages:
+  - index.md
+  - getting-started.md
+  - configuration-reference.md
+  - template-customization-guide.md
+  - examples.md
+  - troubleshooting.md
+  - faq.md
+  - README.md
+  - template-schema.md
+  - template-system.md
+
+# Markdown settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+  - scope:
+      path: "_docs"
+      type: "docs"
+    values:
+      layout: "page"
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
