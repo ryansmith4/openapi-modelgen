@@ -50,8 +50,8 @@ jobs:
 
       - name: Test integration with test-app
         run: |
-          cd test-app
-          ./gradlew generateAllModels --no-daemon
+          # Use root project gradle to run test-app tasks
+          ./gradlew -p test-app generateAllModels --no-daemon
           
       - name: Verify generated code
         run: |
@@ -62,11 +62,10 @@ jobs:
           
       - name: Test configuration cache compatibility
         run: |
-          cd test-app
-          # Test configuration cache with clean build
-          ./gradlew clean generatePets --configuration-cache --no-daemon
+          # Test configuration cache with clean build using root gradle
+          ./gradlew -p test-app clean generatePets --configuration-cache --no-daemon
           # Test cache reuse (should be faster)
-          ./gradlew generatePets --configuration-cache --no-daemon
+          ./gradlew -p test-app generatePets --configuration-cache --no-daemon
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
