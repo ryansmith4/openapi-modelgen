@@ -19,19 +19,19 @@ dependencies {
     
     // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled
     // Consumer projects must provide their own version (7.10.0+)
-    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.10.0'
+    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.15.0'
     
     // OpenAPI Generator core for CodegenConfig API - also compileOnly
-    compileOnly 'org.openapitools:openapi-generator:7.10.0'
+    compileOnly 'org.openapitools:openapi-generator:7.15.0'
     
     // YAML processing for template customizations
     implementation 'org.yaml:snakeyaml:1.33'
     implementation 'org.semver4j:semver4j:3.1.0'
     
     // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime
-    testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
-    testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
-    testImplementation 'org.openapitools:openapi-generator:7.14.0'
+    testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.15.0'
+    testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.15.0'
+    testImplementation 'org.openapitools:openapi-generator:7.15.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.1.1'
     testImplementation gradleTestKit()
