@@ -1,5 +1,5 @@
 insertions:
-  - before: "{{#description}}"
+  - before: "  private static final long serialVersionUID = 1L;"
     content: |
       /**
        * USER CUSTOMIZATION: This class was generated with user-specific customizations

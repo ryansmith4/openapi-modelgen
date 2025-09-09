@@ -116,15 +116,8 @@ public class SpecConfig {
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debugTemplateResolution = project.getObjects().property(Boolean.class);
         
-        // Set smart defaults for templateSources - same as DefaultConfig
-        this.templateSources.convention(Arrays.asList(
-            "user-templates",
-            "user-customizations",
-            "library-templates",
-            "library-customizations",
-            "plugin-customizations",
-            "openapi-generator"
-        ));
+        // No default convention for templateSources - let specs inherit from defaults
+        // or explicitly override as needed
         
         this.generateModelTests = project.getObjects().property(Boolean.class);
         this.generateApiTests = project.getObjects().property(Boolean.class);

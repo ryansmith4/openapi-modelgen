@@ -588,12 +588,13 @@ public class CustomizationEngine {
      * @param templateWorkDir the working directory for templates
      */
     public void processTemplateCustomizations(TemplateConfiguration templateConfig, File templateWorkDir) {
-        boolean hasAnyCustomizations = templateConfig.hasUserCustomizations() || 
-                                       templateConfig.hasPluginCustomizations() ||
-                                       templateConfig.hasLibraryCustomizations();
+        // Check if we have any customizations to process based on the configured template sources
+        List<String> templateSources = templateConfig.getTemplateSources();
+        boolean hasAnyRelevantCustomizations = hasCustomizationsForTemplateSources(templateConfig, templateSources);
         
-        if (!hasAnyCustomizations) {
-            logger.debug("No template customizations to process for generator: {}", templateConfig.getGeneratorName());
+        if (!hasAnyRelevantCustomizations) {
+            logger.debug("No relevant template customizations to process for generator: {} (templateSources: {})", 
+                templateConfig.getGeneratorName(), templateSources);
             return;
         }
         
@@ -624,19 +625,21 @@ public class CustomizationEngine {
      * @param templateWorkDir the working directory for templates
      */
     private void applyCustomizationsInPrecedenceOrder(TemplateConfiguration templateConfig, File templateWorkDir) {
-        List<String> precedence = templateConfig.getTemplatePrecedence();
-        if (precedence.isEmpty()) {
+        List<String> templateSources = templateConfig.getTemplateSources();
+        logger.info("TEMPLATE SOURCES DEBUG: received templateSources = {}, isEmpty = {}", templateSources, templateSources.isEmpty());
+        if (templateSources.isEmpty()) {
             // Fallback to legacy approach if no precedence is configured
+            logger.info("TEMPLATE SOURCES DEBUG: Falling back to legacy order because templateSources is empty");
             applyCustomizationsLegacyOrder(templateConfig, templateWorkDir);
             return;
         }
         
-        logger.debug("Applying customizations in precedence order: {}", precedence);
+        logger.debug("Applying customizations in template source order: {}", templateSources);
         
-        // Apply customizations in reverse precedence order (lowest precedence first)
+        // Apply customizations in reverse order (lowest precedence first)
         // This ensures that higher precedence sources override lower precedence ones
-        for (int i = precedence.size() - 1; i >= 0; i--) {
-            String source = precedence.get(i);
+        for (int i = templateSources.size() - 1; i >= 0; i--) {
+            String source = templateSources.get(i);
             
             switch (source) {
                 case "openapi-generator":
@@ -1190,6 +1193,65 @@ public class CustomizationEngine {
         String fallbackVersion = "7.11.0";
         logger.debug("Using fallback OpenAPI Generator version: {}", fallbackVersion);
         return fallbackVersion;
+    }
+
+    /**
+     * Checks if any relevant customizations exist based on the configured template sources.
+     * This method only returns true if customizations exist for template sources that are included
+     * in the templateSources configuration.
+     * 
+     * @param templateConfig the template configuration with availability flags
+     * @param templateSources the configured template sources to check
+     * @return true if there are customizations for any of the configured template sources
+     */
+    private boolean hasCustomizationsForTemplateSources(TemplateConfiguration templateConfig, List<String> templateSources) {
+        if (templateSources == null || templateSources.isEmpty()) {
+            return false;
+        }
+        
+        for (String source : templateSources) {
+            switch (source) {
+                case "user-customizations":
+                    if (templateConfig.hasUserCustomizations()) {
+                        return true;
+                    }
+                    break;
+                    
+                case "plugin-customizations":
+                    if (templateConfig.hasPluginCustomizations()) {
+                        return true;
+                    }
+                    break;
+                    
+                case "library-customizations":
+                    if (templateConfig.hasLibraryCustomizations()) {
+                        return true;
+                    }
+                    break;
+                    
+                case "user-templates":
+                    if (templateConfig.hasUserTemplates()) {
+                        return true;
+                    }
+                    break;
+                    
+                case "library-templates":
+                    if (templateConfig.hasLibraryTemplates()) {
+                        return true;
+                    }
+                    break;
+                    
+                case "openapi-generator":
+                    // Base OpenAPI generator doesn't need customization processing
+                    break;
+                    
+                default:
+                    logger.debug("Unknown template source in configuration: {}", source);
+                    break;
+            }
+        }
+        
+        return false;
     }
 
     /**

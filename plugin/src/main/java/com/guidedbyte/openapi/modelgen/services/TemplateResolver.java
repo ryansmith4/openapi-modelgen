@@ -86,9 +86,12 @@ public class TemplateResolver {
         
         // Get configured template sources (with fallback to defaults)
         List<String> configuredTemplateSources = resolvedConfig.getTemplateSources();
+        logger.info("TEMPLATE RESOLVER DEBUG: resolvedConfig.getTemplateSources() = {}", configuredTemplateSources);
         if (configuredTemplateSources == null || configuredTemplateSources.isEmpty()) {
             configuredTemplateSources = TemplateSourceDiscovery.ALL_TEMPLATE_SOURCES;
-            logger.debug("No template sources configured for '{}', using all available sources", generatorName);
+            logger.info("TEMPLATE RESOLVER DEBUG: No template sources configured for '{}', using all available sources: {}", generatorName, configuredTemplateSources);
+        } else {
+            logger.info("TEMPLATE RESOLVER DEBUG: Using configured template sources for '{}': {}", generatorName, configuredTemplateSources);
         }
         
         // Auto-discover which sources are actually available
@@ -216,7 +219,7 @@ public class TemplateResolver {
             .libraryCustomizations(generatorLibraryCustomizations)
             .templateVariables(templateVariables != null ? Map.copyOf(templateVariables) : Map.of())
             .templateProcessingEnabled(templateProcessingEnabled)
-            .templatePrecedence(resolvedConfig.getTemplateSources())
+            .templateSources(resolvedConfig.getTemplateSources())
             .debugTemplateResolution(resolvedConfig.isDebugTemplateResolution())
             .build();
     }

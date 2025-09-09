@@ -188,14 +188,13 @@ public class TemplateSourceDiscovery implements Serializable {
             return SourceAvailability.unavailable("Customizations path is not a directory: " + customizationsDir);
         }
         
-        // Check for .yaml files
-        File[] yamlFiles = customizationsDirFile.listFiles((dir, name) -> 
-            name.endsWith(".yaml") || name.endsWith(".yml"));
-        if (yamlFiles == null || yamlFiles.length == 0) {
+        // Check for .yaml files in any subdirectory (generator-specific structure)
+        boolean hasYamlFiles = findYamlFilesRecursively(customizationsDirFile);
+        if (!hasYamlFiles) {
             return SourceAvailability.unavailable("No .yaml files found in: " + customizationsDir);
         }
         
-        return SourceAvailability.available("Found " + yamlFiles.length + " customization(s) in: " + customizationsDir);
+        return SourceAvailability.available("Found customization files in: " + customizationsDir);
     }
     
     /**
@@ -285,5 +284,35 @@ public class TemplateSourceDiscovery implements Serializable {
         public String getReason() {
             return reason;
         }
+    }
+    
+    /**
+     * Recursively searches for .yaml files in the given directory and subdirectories.
+     * 
+     * @param directory the directory to search
+     * @return true if any .yaml files are found, false otherwise
+     */
+    private boolean findYamlFilesRecursively(File directory) {
+        if (!directory.isDirectory()) {
+            return false;
+        }
+        
+        File[] files = directory.listFiles();
+        if (files == null) {
+            return false;
+        }
+        
+        for (File file : files) {
+            if (file.isFile() && (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml"))) {
+                return true; // Found a YAML file
+            } else if (file.isDirectory()) {
+                // Recursively search subdirectories
+                if (findYamlFilesRecursively(file)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false; // No YAML files found
     }
 }

@@ -311,7 +311,9 @@ public class ResolvedSpecConfig {
         }
         
         private void applyUserDefaults(DefaultConfig defaults) {
-            if (defaults == null) return;
+            if (defaults == null) {
+                return;
+            }
             
             if (defaults.getOutputDir().isPresent()) {
                 this.outputDir = defaults.getOutputDir().get();
@@ -370,7 +372,9 @@ public class ResolvedSpecConfig {
         }
         
         private void applySpecConfig(SpecConfig spec) {
-            if (spec == null) return;
+            if (spec == null) {
+                return;
+            }
             
             // Required fields
             if (spec.getInputSpec().isPresent()) {
@@ -411,7 +415,7 @@ public class ResolvedSpecConfig {
             if (spec.getGenerateModelDocumentation().isPresent()) {
                 this.generateModelDocumentation = spec.getGenerateModelDocumentation().get();
             }
-            if (spec.getTemplateSources().isPresent()) {
+            if (spec.getTemplateSources().isPresent() && !spec.getTemplateSources().get().isEmpty()) {
                 this.templateSources = spec.getTemplateSources().get();
             }
             if (spec.getDebugTemplateResolution().isPresent()) {

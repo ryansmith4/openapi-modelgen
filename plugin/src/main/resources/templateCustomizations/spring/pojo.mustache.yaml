@@ -10,7 +10,7 @@ insertions:
     content: |
       {{#header}} * {{header}}
       *
-      {{/header}} * {{^header}}{{/header}}
+      {{/header}}
   - before: "{{#serializableModel}}"
     content: |2
       {{#gson}}

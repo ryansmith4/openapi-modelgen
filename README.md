@@ -1057,6 +1057,42 @@ version. This design prevents dependency conflicts and enables compatibility wit
 - **Configuration validation**: Check error messages for missing specs or invalid packages
 - **Template precedence issues**: Remember that explicit templates override ALL customizations
 
+#### Known OpenAPI Generator Limitations
+
+The plugin itself works correctly, but there are known bugs in the underlying OpenAPI Generator that affect certain configuration combinations:
+
+**Issue: Type/Import Mappings with Model Name Prefixes/Suffixes**
+
+- **Affected Versions**: OpenAPI Generator 5.4.0+ (including 7.x series)
+- **Problem**: When using `modelNamePrefix` or `modelNameSuffix` together with `typeMappings` and `importMappings`, the prefix/suffix gets incorrectly applied to the type mapping targets, causing the import mappings to fail
+- **Symptoms**: 
+  - Instead of `java.time.LocalDate`, you get `ApiLocalDate` or `LocalDateDto` wrapper models
+  - Import statements show package-local models instead of configured external types
+- **Upstream Issues**: 
+  - [OpenAPITools/openapi-generator#19043](https://github.com/OpenAPITools/openapi-generator/issues/19043)
+  - [OpenAPITools/openapi-generator#11478](https://github.com/OpenAPITools/openapi-generator/issues/11478)
+- **Workarounds**:
+  1. **Choose one or the other**: Use either prefixes/suffixes OR type mappings, but not both
+  2. **Use schemaMappings**: Replace `importMappings` with `schemaMappings` where possible
+  3. **Redundant configuration**: Define mappings for both original and prefixed types
+
+Example affected configuration:
+```gradle
+openapiModelgen {
+    defaults {
+        modelNamePrefix "Api"                    // This causes the issue
+        typeMappings([
+            'string+date': 'LocalDate'           // Gets incorrectly prefixed to ApiLocalDate
+        ])
+        importMappings([
+            'LocalDate': 'java.time.LocalDate'   // Fails to match ApiLocalDate
+        ])
+    }
+}
+```
+
+This limitation will be resolved when the upstream OpenAPI Generator bugs are fixed.
+
 #### Debug Options
 
 ```bash

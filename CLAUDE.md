@@ -296,6 +296,19 @@ This design enables:
 - **Performance**: Leverage multi-level caching and parallel processing for large projects
 - **Testing**: Use ProjectBuilder for unit tests, TestKit for integration scenarios
 
+## Known OpenAPI Generator Limitations
+
+The plugin works correctly, but there are known bugs in the underlying OpenAPI Generator:
+
+**Type/Import Mappings with Model Prefixes/Suffixes**
+- **Affected Versions**: OpenAPI Generator 5.4.0+ (including 7.x series)
+- **Issue**: `modelNamePrefix`/`modelNameSuffix` gets incorrectly applied to `typeMappings` targets, causing `importMappings` to fail
+- **Symptoms**: Generated wrapper models like `ApiLocalDate` instead of `java.time.LocalDate`
+- **Upstream Issues**: 
+  - [OpenAPITools/openapi-generator#19043](https://github.com/OpenAPITools/openapi-generator/issues/19043)
+  - [OpenAPITools/openapi-generator#11478](https://github.com/OpenAPITools/openapi-generator/issues/11478)
+- **Workarounds**: Use either prefixes/suffixes OR type mappings, not both
+
 ## Essential File Locations
 
 - **Main plugin**: `plugin/src/main/java/com/guidedbyte/openapi/modelgen/OpenApiModelGenPlugin.java`

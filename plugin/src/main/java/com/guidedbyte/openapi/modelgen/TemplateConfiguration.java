@@ -39,7 +39,7 @@ public class TemplateConfiguration implements Serializable {
     private final String userCustomizationsDirectory;
     private final Map<String, String> templateVariables;
     private final boolean templateProcessingEnabled;
-    private final List<String> templatePrecedence;
+    private final List<String> templateSources;
     private final boolean debugTemplateResolution;
     
     // Library template support
@@ -60,8 +60,8 @@ public class TemplateConfiguration implements Serializable {
         this.templateVariables = builder.templateVariables != null ? 
             Collections.unmodifiableMap(new HashMap<>(builder.templateVariables)) : Collections.emptyMap();
         this.templateProcessingEnabled = builder.templateProcessingEnabled;
-        this.templatePrecedence = builder.templatePrecedence != null ?
-            Collections.unmodifiableList(builder.templatePrecedence) : Collections.emptyList();
+        this.templateSources = builder.templateSources != null ?
+            Collections.unmodifiableList(builder.templateSources) : Collections.emptyList();
         this.debugTemplateResolution = builder.debugTemplateResolution;
         
         // Library support
@@ -88,7 +88,7 @@ public class TemplateConfiguration implements Serializable {
     public String getUserCustomizationsDirectory() { return userCustomizationsDirectory; }
     public Map<String, String> getTemplateVariables() { return templateVariables; }
     public boolean isTemplateProcessingEnabled() { return templateProcessingEnabled; }
-    public List<String> getTemplatePrecedence() { return templatePrecedence; }
+    public List<String> getTemplateSources() { return templateSources; }
     public boolean isDebugTemplateResolution() { return debugTemplateResolution; }
     
     // Library template getters
@@ -117,7 +117,7 @@ public class TemplateConfiguration implements Serializable {
                 Objects.equals(userTemplateDirectory, that.userTemplateDirectory) &&
                 Objects.equals(userCustomizationsDirectory, that.userCustomizationsDirectory) &&
                 Objects.equals(templateVariables, that.templateVariables) &&
-                Objects.equals(templatePrecedence, that.templatePrecedence);
+                Objects.equals(templateSources, that.templateSources);
     }
     
     @Override
@@ -125,7 +125,7 @@ public class TemplateConfiguration implements Serializable {
         return Objects.hash(generatorName, templateWorkDirectory, hasUserTemplates, hasUserCustomizations,
                 hasPluginCustomizations, userTemplateDirectory,
                 userCustomizationsDirectory, templateVariables, templateProcessingEnabled,
-                templatePrecedence, debugTemplateResolution);
+                templateSources, debugTemplateResolution);
     }
     
     @Override
@@ -150,7 +150,7 @@ public class TemplateConfiguration implements Serializable {
         private String userCustomizationsDirectory;
         private Map<String, String> templateVariables;
         private boolean templateProcessingEnabled = true;
-        private List<String> templatePrecedence;
+        private List<String> templateSources;
         private boolean debugTemplateResolution = false;
         
         // Library support
@@ -205,8 +205,8 @@ public class TemplateConfiguration implements Serializable {
             return this;
         }
         
-        public Builder templatePrecedence(List<String> templatePrecedence) {
-            this.templatePrecedence = templatePrecedence;
+        public Builder templateSources(List<String> templateSources) {
+            this.templateSources = templateSources;
             return this;
         }
         

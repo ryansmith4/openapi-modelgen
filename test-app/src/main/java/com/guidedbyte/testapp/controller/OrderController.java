@@ -1,9 +1,9 @@
 package com.guidedbyte.testapp.controller;
 
-import com.guidedbyte.testapp.model.orders.OrderEntity;
-import com.guidedbyte.testapp.model.orders.OrderItemEntity;
-import com.guidedbyte.testapp.model.orders.AddressEntity;
-import com.guidedbyte.testapp.model.orders.PaymentInfoEntity;
+import com.guidedbyte.testapp.model.orders.CustomOrderEntity;
+import com.guidedbyte.testapp.model.orders.CustomOrderItemEntity;
+import com.guidedbyte.testapp.model.orders.CustomAddressEntity;
+import com.guidedbyte.testapp.model.orders.CustomPaymentInfoEntity;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,41 +18,41 @@ import java.util.List;
 public class OrderController {
     
     @GetMapping("/{id}")
-    public ResponseEntity<OrderEntity> getOrder(@PathVariable Long id) {
+    public ResponseEntity<CustomOrderEntity> getOrder(@PathVariable Long id) {
         // Create sample order using generated DTOs (with Entity suffix)
-        AddressEntity shippingAddress = AddressEntity.builder()
+        CustomAddressEntity shippingAddress = CustomAddressEntity.builder()
             .street("123 Main St")
             .apartment("Apt 4B")
             .city("Springfield")
             .state("IL")
             .postalCode("62704")
-            .country(AddressEntity.CountryEnum.US)
+            .country(CustomAddressEntity.CountryEnum.US)
             .build();
         
         List<String> customizations = new ArrayList<>();
         customizations.add("red collar");
         customizations.add("name tag: Max");
         
-        OrderItemEntity item = OrderItemEntity.builder()
+        CustomOrderItemEntity item = CustomOrderItemEntity.builder()
             .petId(123L)
             .quantity(2)
             .unitPrice(BigDecimal.valueOf(149.99))
             .customizations(customizations)
                 .build();
         
-        List<OrderItemEntity> items = new ArrayList<>();
+        List<CustomOrderItemEntity> items = new ArrayList<>();
         items.add(item);
         
-        OrderEntity order = OrderEntity.builder()
+        CustomOrderEntity order = CustomOrderEntity.builder()
             .id(id)
             .customerId(123L)
             .items(items)
-            .status(OrderEntity.StatusEnum.PLACED)
+            .status(CustomOrderEntity.StatusEnum.PLACED)
             .orderDate(OffsetDateTime.now())
             .shippingAddress(shippingAddress)
             .billingAddress(shippingAddress)
             .totalAmount(BigDecimal.valueOf(299.99))
-            .currency(OrderEntity.CurrencyEnum.USD)
+            .currency(CustomOrderEntity.CurrencyEnum.USD)
             .discountCode("SAVE10")
             .notes("Please deliver to the back door")
                 .build();
@@ -61,18 +61,18 @@ public class OrderController {
     }
     
     @PostMapping
-    public ResponseEntity<OrderEntity> createOrder(@Valid @RequestBody OrderEntity order) {
+    public ResponseEntity<CustomOrderEntity> createOrder(@Valid @RequestBody CustomOrderEntity order) {
         // In a real app, this would save to database
         order.id(System.currentTimeMillis())
              .orderDate(OffsetDateTime.now())
-             .status(OrderEntity.StatusEnum.PLACED);
+             .status(CustomOrderEntity.StatusEnum.PLACED);
         return ResponseEntity.ok(order);
     }
     
     @GetMapping("/{id}/payment")
-    public ResponseEntity<PaymentInfoEntity> getPaymentInfo(@PathVariable Long id) {
-        PaymentInfoEntity payment = new PaymentInfoEntity()
-            .method(PaymentInfoEntity.MethodEnum.CREDIT_CARD)
+    public ResponseEntity<CustomPaymentInfoEntity> getPaymentInfo(@PathVariable Long id) {
+        CustomPaymentInfoEntity payment = new CustomPaymentInfoEntity()
+            .method(CustomPaymentInfoEntity.MethodEnum.CREDIT_CARD)
             .amount(BigDecimal.valueOf(299.99))
             .transactionId("txn_123456789")
             .processedAt(OffsetDateTime.now());

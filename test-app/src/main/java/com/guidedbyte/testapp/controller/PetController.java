@@ -1,9 +1,9 @@
 package com.guidedbyte.testapp.controller;
 
-import com.guidedbyte.testapp.model.pets.PetDto;
-import com.guidedbyte.testapp.model.pets.CategoryDto;
-import com.guidedbyte.testapp.model.pets.TagDto;
-import com.guidedbyte.testapp.model.pets.PetSummaryDto;
+import com.guidedbyte.testapp.model.pets.ApiPetDto;
+import com.guidedbyte.testapp.model.pets.ApiCategoryDto;
+import com.guidedbyte.testapp.model.pets.ApiTagDto;
+import com.guidedbyte.testapp.model.pets.ApiPetSummaryDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,28 +18,28 @@ import java.util.List;
 public class PetController {
     
     @GetMapping("/{id}")
-    public ResponseEntity<PetDto> getPet(@PathVariable Long id) {
+    public ResponseEntity<ApiPetDto> getPet(@PathVariable Long id) {
         // Create a sample pet using generated DTOs
-        CategoryDto category = new CategoryDto()
+        ApiCategoryDto category = new ApiCategoryDto()
             .id(1L)
             .name("Dogs");
         
-        TagDto tag = new TagDto()
+        ApiTagDto tag = new ApiTagDto()
             .id(10L)
             .name("friendly")
             .color("#FF5733");
         
-        List<TagDto> tags = new ArrayList<>();
+        List<ApiTagDto> tags = new ArrayList<>();
         tags.add(tag);
         
         List<URI> photoUrls = new ArrayList<>();
         photoUrls.add( URI.create( "https://example.com/photo1.jpg" ) );
         
-        PetDto pet = new PetDto()
+        ApiPetDto pet = new ApiPetDto()
             .id(id)
             .name("Fluffy")
             .category(category)
-            .status(PetDto.StatusEnum.AVAILABLE)
+            .status(ApiPetDto.StatusEnum.AVAILABLE)
             .tags(tags)
             .photoUrls(photoUrls)
             .birthDate(LocalDate.of(2020, 1, 15))
@@ -49,20 +49,20 @@ public class PetController {
     }
     
     @PostMapping
-    public ResponseEntity<PetDto> createPet(@Valid @RequestBody PetDto pet) {
+    public ResponseEntity<ApiPetDto> createPet(@Valid @RequestBody ApiPetDto pet) {
         // In a real app, this would save to database
         pet.id(System.currentTimeMillis());
         return ResponseEntity.ok(pet);
     }
     
     @GetMapping("/summary")
-    public ResponseEntity<List<PetSummaryDto>> getPetSummaries() {
-        List<PetSummaryDto> summaries = new ArrayList<>();
+    public ResponseEntity<List<ApiPetSummaryDto>> getPetSummaries() {
+        List<ApiPetSummaryDto> summaries = new ArrayList<>();
         
-        PetSummaryDto summary = new PetSummaryDto()
+        ApiPetSummaryDto summary = new ApiPetSummaryDto()
             .id(1L)
             .name("Fluffy")
-            .status(PetSummaryDto.StatusEnum.AVAILABLE);
+            .status(ApiPetSummaryDto.StatusEnum.AVAILABLE);
         
         summaries.add(summary);
         
