@@ -38,6 +38,7 @@ import java.util.Map;
  *   <li><strong>importMappings:</strong> Additional or override import mappings (merged with defaults)</li>
  *   <li><strong>typeMappings:</strong> Additional or override type mappings (merged with defaults)</li>
  *   <li><strong>additionalProperties:</strong> Additional or override OpenAPI Generator properties (merged with defaults)</li>
+ *   <li><strong>openapiNormalizer:</strong> Additional or override OpenAPI normalizer rules (merged with defaults)</li>
  *   <li><strong>saveOriginalTemplates:</strong> Override default setting for saving original templates to orig/ subdirectory</li>
  * </ul>
  * 
@@ -65,6 +66,9 @@ import java.util.Map;
  *         additionalProperties([
  *             'library': 'spring-cloud',  // Override default library
  *             'reactive': 'true'          // Legacy-specific additional property
+ *         ])
+ *         openapiNormalizer([
+ *             'KEEP_ONLY_FIRST_TAG_IN_OPERATION': 'true'  // Legacy-specific normalizer rule
  *         ])
  *     }
  * }
@@ -95,6 +99,7 @@ public class SpecConfig {
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
     private final MapProperty<String, String> additionalProperties;
+    private final MapProperty<String, String> openapiNormalizer;
     private final Property<Boolean> saveOriginalTemplates;
     
     /**
@@ -130,6 +135,7 @@ public class SpecConfig {
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
+        this.openapiNormalizer = project.getObjects().mapProperty(String.class, String.class);
         this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
         // No default convention - inherits from DefaultConfig
     }
@@ -214,6 +220,10 @@ public class SpecConfig {
     
     public MapProperty<String, String> getAdditionalProperties() {
         return additionalProperties;
+    }
+    
+    public MapProperty<String, String> getOpenapiNormalizer() {
+        return openapiNormalizer;
     }
     
     public Property<Boolean> getSaveOriginalTemplates() {
@@ -344,6 +354,16 @@ public class SpecConfig {
      */
     public void additionalProperties(Map<String, String> properties) {
         this.additionalProperties.set(properties);
+    }
+    
+    /**
+     * Sets OpenAPI normalizer rules for this specification.
+     * These are merged with default normalizer rules, with spec taking precedence.
+     * 
+     * @param rules map of normalizer rules and their values for this spec
+     */
+    public void openapiNormalizer(Map<String, String> rules) {
+        this.openapiNormalizer.set(rules);
     }
     
     /**

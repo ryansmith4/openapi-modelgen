@@ -89,6 +89,12 @@ openapiModelgen {
             'useSpringBoot3': 'true',
             'jackson': 'true'
         ])
+        // OpenAPI Normalizer rules to transform specifications before generation
+        // openapiNormalizer([
+        //     'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',  // Simplify allOf schemas
+        //     'SIMPLIFY_ONEOF_ANYOF': 'true',                 // Simplify oneOf/anyOf schemas
+        //     'KEEP_ONLY_FIRST_TAG_IN_OPERATION': 'true'      // Keep only first tag per operation
+        // ])
         validateSpec false
         configOptions([
             additionalModelTypeAnnotations: "@jakarta.validation.Valid" // User controls annotations, no plugin defaults
@@ -118,6 +124,11 @@ openapiModelgen {
                 'enablePostProcessFile': 'true', // Orders-specific additional property
                 'jackson': 'true'
             ])
+            // Spec-specific normalizer rules (override/extend defaults)
+            // openapiNormalizer([
+            //     'SIMPLIFY_ONEOF_ANYOF': 'false',            // Override default setting
+            //     'SET_TAGS_FOR_ALL_OPERATIONS': 'orders'     // Orders-specific rule
+            // ])
         }
     }
 }

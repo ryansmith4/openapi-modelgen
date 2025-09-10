@@ -69,6 +69,10 @@ openapiModelgen {
         ])
         importMappings(['UUID': 'java.util.UUID'])
         typeMappings(['string+uuid': 'UUID'])
+        openapiNormalizer([
+            'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',
+            'SIMPLIFY_ONEOF_ANYOF': 'true'
+        ])
     }
     specs {
         pets { inputSpec "specs/pets.yaml" }

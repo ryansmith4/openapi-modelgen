@@ -25,7 +25,7 @@ import java.util.Map;
  *   <li>Generation control flags (validateSpec, generateTests, generateDocs)</li>
  *   <li>Template customization settings (applyPluginCustomizations)</li>
  *   <li>OpenAPI Generator options and template variables</li>
- *   <li>Type and import mappings (importMappings, typeMappings, additionalProperties)</li>
+ *   <li>Type and import mappings (importMappings, typeMappings, additionalProperties, openapiNormalizer)</li>
  * </ul>
  * 
  * <p>This class simplifies method signatures throughout the plugin by providing
@@ -68,6 +68,7 @@ public class ResolvedSpecConfig {
     private final Map<String, String> importMappings;
     private final Map<String, String> typeMappings;
     private final Map<String, String> additionalProperties;
+    private final Map<String, String> openapiNormalizer;
     
     private ResolvedSpecConfig(Builder builder) {
         this.specName = builder.specName;
@@ -93,6 +94,7 @@ public class ResolvedSpecConfig {
         this.importMappings = new HashMap<>(builder.importMappings);
         this.typeMappings = new HashMap<>(builder.typeMappings);
         this.additionalProperties = new HashMap<>(builder.additionalProperties);
+        this.openapiNormalizer = new HashMap<>(builder.openapiNormalizer);
     }
     
     // Getters
@@ -197,6 +199,15 @@ public class ResolvedSpecConfig {
         return new HashMap<>(additionalProperties);
     }
     
+    /**
+     * Gets the resolved OpenAPI normalizer rules for this specification.
+     * 
+     * @return merged map of normalizer rules (defaults + spec overrides)
+     */
+    public Map<String, String> getOpenapiNormalizer() {
+        return new HashMap<>(openapiNormalizer);
+    }
+    
     
     /**
      * Gets the resolved template sources list for this specification.
@@ -268,6 +279,7 @@ public class ResolvedSpecConfig {
         private Map<String, String> importMappings = new HashMap<>();
         private Map<String, String> typeMappings = new HashMap<>();
         private Map<String, String> additionalProperties = new HashMap<>();
+        private Map<String, String> openapiNormalizer = new HashMap<>();
         
         private Builder(String specName, DefaultConfig userDefaults, SpecConfig specConfig) {
             this.specName = specName;
@@ -392,6 +404,9 @@ public class ResolvedSpecConfig {
             if (defaults.getAdditionalProperties().isPresent()) {
                 this.additionalProperties.putAll(defaults.getAdditionalProperties().get());
             }
+            if (defaults.getOpenapiNormalizer().isPresent()) {
+                this.openapiNormalizer.putAll(defaults.getOpenapiNormalizer().get());
+            }
             if (defaults.getTemplateSources().isPresent()) {
                 this.templateSources = defaults.getTemplateSources().get();
             }
@@ -473,6 +488,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getAdditionalProperties().isPresent()) {
                 this.additionalProperties.putAll(spec.getAdditionalProperties().get());
+            }
+            if (spec.getOpenapiNormalizer().isPresent()) {
+                this.openapiNormalizer.putAll(spec.getOpenapiNormalizer().get());
             }
         }
         

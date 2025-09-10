@@ -307,6 +307,15 @@ public class TaskConfigurationService implements Serializable {
             logger.debug("Configured {} additional properties for spec: {}", additionalProperties.size(), specName);
         }
         
+        // Apply OpenAPI normalizer rules from resolved config
+        Map<String, String> openapiNormalizer = resolvedConfig.getOpenapiNormalizer();
+        if (!openapiNormalizer.isEmpty()) {
+            for (Map.Entry<String, String> entry : openapiNormalizer.entrySet()) {
+                task.getOpenapiNormalizer().put(entry.getKey(), entry.getValue());
+            }
+            logger.debug("Configured {} OpenAPI normalizer rules for spec: {}", openapiNormalizer.size(), specName);
+        }
+        
         // Configure template variables from resolved configuration
         Map<String, String> templateVariables = resolvedConfig.getTemplateVariables();
         if (!templateVariables.isEmpty()) {

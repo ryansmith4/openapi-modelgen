@@ -179,6 +179,95 @@ Default template variables (automatically available):
 | `generatedBy` | `"OpenAPI Model Generator Plugin"` | Generator identification |
 | `pluginVersion` | Plugin version | Current plugin version |
 
+### OpenAPI Generator Mappings
+
+Configure type mappings, import mappings, additional properties, and normalizer rules.
+
+#### Import Mappings
+
+Map type names to fully qualified import statements:
+
+```gradle
+openapiModelgen {
+    defaults {
+        importMappings([
+            'UUID': 'java.util.UUID',
+            'LocalDate': 'java.time.LocalDate',
+            'BigDecimal': 'java.math.BigDecimal'
+        ])
+    }
+}
+```
+
+#### Type Mappings
+
+Map OpenAPI types to Java types (supports format-specific mappings):
+
+```gradle
+openapiModelgen {
+    defaults {
+        typeMappings([
+            'string+uuid': 'UUID',           // string format=uuid -> UUID
+            'string+date': 'LocalDate',      // string format=date -> LocalDate
+            'string+date-time': 'LocalDateTime',
+            'integer+int64': 'Long'
+        ])
+    }
+}
+```
+
+#### Additional Properties
+
+Pass generator-specific configuration options:
+
+```gradle
+openapiModelgen {
+    defaults {
+        additionalProperties([
+            'library': 'spring-boot',        // Use Spring Boot library
+            'beanValidations': 'true',       // Enable bean validation
+            'useSpringBoot3': 'true',        // Use Spring Boot 3 features
+            'reactive': 'false',             // Disable reactive features
+            'serializableModel': 'true'      // Make models serializable
+        ])
+    }
+}
+```
+
+#### OpenAPI Normalizer Rules
+
+Transform and normalize OpenAPI specifications before generation:
+
+```gradle
+openapiModelgen {
+    defaults {
+        openapiNormalizer([
+            'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',  // Simplify allOf schemas
+            'SIMPLIFY_ONEOF_ANYOF': 'true',                 // Simplify oneOf/anyOf schemas
+            'KEEP_ONLY_FIRST_TAG_IN_OPERATION': 'true',     // Keep only first tag per operation
+            'SIMPLIFY_BOOLEAN_ENUM': 'true',                // Convert boolean enums to booleans
+            'SET_TAGS_FOR_ALL_OPERATIONS': 'default',       // Set default tag for untagged operations
+            'NORMALIZE_ENUM_MEMBERS': 'true'                // Normalize enum member names
+        ])
+    }
+}
+```
+
+**Common Normalizer Rules:**
+- `REFACTOR_ALLOF_WITH_PROPERTIES_ONLY`: Simplifies `allOf` schemas that only contain properties
+- `SIMPLIFY_ONEOF_ANYOF`: Simplifies `oneOf`/`anyOf` schemas where possible
+- `KEEP_ONLY_FIRST_TAG_IN_OPERATION`: Keeps only the first tag for operations with multiple tags
+- `SIMPLIFY_BOOLEAN_ENUM`: Converts enum with only true/false values to boolean type
+- `SET_TAGS_FOR_ALL_OPERATIONS`: Adds a default tag to operations without tags
+- `NORMALIZE_ENUM_MEMBERS`: Normalizes enum member names for consistency
+
+#### Mapping Precedence
+
+All mapping properties follow the same merge pattern:
+1. **Default-level mappings** are applied first
+2. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
+3. **Final merged mappings** are passed to OpenAPI Generator
+
 ## Specification Configuration
 
 Settings for individual OpenAPI specifications.

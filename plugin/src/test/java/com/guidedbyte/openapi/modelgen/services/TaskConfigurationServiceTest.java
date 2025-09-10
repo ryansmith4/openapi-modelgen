@@ -179,6 +179,32 @@ class TaskConfigurationServiceTest {
     }
 
     @Test
+    void testApplySpecConfigWithEmptyStringSuffix() {
+        // Given
+        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        SpecConfig specConfig = new SpecConfig(project);
+        specConfig.getInputSpec().set("test-spec.yaml");
+        specConfig.getModelPackage().set("com.example.test");
+        specConfig.getModelNameSuffix().set("");  // Test empty string suffix
+        
+        ProjectLayout projectLayout = ((ProjectInternal) project).getLayout();
+        ObjectFactory objectFactory = project.getObjects();
+        ProviderFactory providerFactory = project.getProviders();
+        
+        // When
+        // Create a mock template configuration
+        TemplateConfiguration templateConfig = TemplateConfiguration.builder("spring")
+            .templateWorkDir(projectLayout.getBuildDirectory().dir("template-work/spring-test").get().getAsFile().getAbsolutePath())
+            .build();
+            
+        taskConfigurationService.applySpecConfig(task, extension, specConfig, "test", 
+                project, projectLayout, objectFactory, providerFactory, templateConfig, null);
+        
+        // Then
+        assertEquals("", task.getModelNameSuffix().get(), "Empty string suffix should be preserved");
+    }
+
+    @Test
     void testApplyDefaultConfigurationSetsCommonOptions() {
         // Given
         GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);

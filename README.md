@@ -16,7 +16,7 @@ features including template customization, incremental builds, performance optim
 - **Incremental build support**: Only regenerates when inputs actually change
 - **Lombok integration**: Full annotation support with constructor conflict resolution
 - **Template variable expansion**: Nested variables like `{{copyright}}` containing `{{currentYear}}`
-- **OpenAPI Generator mapping support**: Import mappings, type mappings, and additional properties with merging
+- **OpenAPI Generator mapping support**: Import mappings, type mappings, additional properties, and normalizer rules with merging
 
 ### Performance & Enterprise Features
 
@@ -246,6 +246,10 @@ openapiModelgen {
             'library': 'spring-boot',
             'beanValidations': 'true',
             'useSpringBoot3': 'true'
+        ])
+        openapiNormalizer([
+            'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',
+            'SIMPLIFY_ONEOF_ANYOF': 'true'
         ])
         
         globalProperties([
@@ -887,6 +891,29 @@ additionalProperties([
     'serializableModel': 'true'      // Make models serializable
 ])
 ```
+
+#### OpenAPI Normalizer Rules
+
+Transform and normalize OpenAPI specifications before code generation. Equivalent to the `--openapi-normalizer` CLI option:
+
+```gradle
+openapiNormalizer([
+    'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',  // Simplify allOf schemas with only properties
+    'SIMPLIFY_ONEOF_ANYOF': 'true',                 // Simplify oneOf/anyOf schemas
+    'KEEP_ONLY_FIRST_TAG_IN_OPERATION': 'true',     // Keep only first tag per operation
+    'SIMPLIFY_BOOLEAN_ENUM': 'true',                // Convert boolean enums to simple booleans
+    'SET_TAGS_FOR_ALL_OPERATIONS': 'default',       // Set default tag for untagged operations
+    'NORMALIZE_ENUM_MEMBERS': 'true'                // Normalize enum member names
+])
+```
+
+Common normalizer rules:
+- **`REFACTOR_ALLOF_WITH_PROPERTIES_ONLY`**: Simplifies `allOf` schemas that only contain properties
+- **`SIMPLIFY_ONEOF_ANYOF`**: Simplifies `oneOf`/`anyOf` schemas where possible
+- **`KEEP_ONLY_FIRST_TAG_IN_OPERATION`**: Keeps only the first tag for operations with multiple tags
+- **`SIMPLIFY_BOOLEAN_ENUM`**: Converts enum with only true/false values to boolean type
+- **`SET_TAGS_FOR_ALL_OPERATIONS`**: Adds a default tag to operations without tags
+- **`NORMALIZE_ENUM_MEMBERS`**: Normalizes enum member names for consistency
 
 #### Mapping Precedence
 

@@ -13,15 +13,16 @@ import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for importMappings, typeMappings, and additionalProperties configuration properties.
+ * Tests for importMappings, typeMappings, additionalProperties, and openapiNormalizer configuration properties.
  * 
- * <p>Validates that the new mapping properties are properly configured and merged:</p>
+ * <p>Validates that the mapping properties are properly configured and merged:</p>
  * <ul>
  *   <li>Default-level mappings are applied</li>
  *   <li>Spec-level mappings are applied and merged with defaults</li>
  *   <li>Spec-level mappings override defaults for duplicate keys</li>
  *   <li>Empty mappings are handled correctly</li>
  *   <li>Additional properties are passed to OpenAPI Generator</li>
+ *   <li>OpenAPI normalizer rules are configured and merged</li>
  * </ul>
  */
 public class MappingPropertiesTest extends BaseTestKitTest {
@@ -196,6 +197,78 @@ public class MappingPropertiesTest extends BaseTestKitTest {
             .build();
         
         // Should compile and configure additional properties without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+    
+    @Test
+    void testOpenapiNormalizerConfigurationWorks() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+            
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    openapiNormalizer([
+                        'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',
+                        'SIMPLIFY_ONEOF_ANYOF': 'true'
+                    ])
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        openapiNormalizer([
+                            'KEEP_ONLY_FIRST_TAG_IN_OPERATION': 'true',
+                            'SIMPLIFY_ONEOF_ANYOF': 'false'  // Override default
+                        ])
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+        
+        // Should compile and configure OpenAPI normalizer without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+    
+    @Test
+    void testEmptyOpenapiNormalizerHandledCorrectly() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+            
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    openapiNormalizer([:])  // Empty map
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        // No normalizer rules defined at spec level
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+        
+        // Should handle empty normalizer rules without errors
         assertTrue(result.getOutput().contains("generateTest"));
         assertFalse(result.getOutput().contains("FAILED"));
     }

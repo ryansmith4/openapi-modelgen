@@ -35,6 +35,7 @@ import java.util.Map;
  *   <li><strong>importMappings:</strong> Map type names to fully qualified import statements (merged with spec-level mappings)</li>
  *   <li><strong>typeMappings:</strong> Map OpenAPI types to Java types (merged with spec-level mappings)</li>
  *   <li><strong>additionalProperties:</strong> Additional properties passed to OpenAPI Generator (merged with spec-level properties)</li>
+ *   <li><strong>openapiNormalizer:</strong> OpenAPI normalizer rules to transform input specifications (merged with spec-level rules)</li>
  *   <li><strong>saveOriginalTemplates:</strong> Save original OpenAPI Generator templates to orig/ subdirectory (default: false)</li>
  * </ul>
  * 
@@ -80,6 +81,10 @@ import java.util.Map;
  *         'beanValidations': 'true',
  *         'useSpringBoot3': 'true'
  *     ])
+ *     openapiNormalizer([
+ *         'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true',
+ *         'SIMPLIFY_ONEOF_ANYOF': 'true'
+ *     ])
  * }
  * }</pre>
  * 
@@ -106,6 +111,7 @@ public class DefaultConfig {
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
     private final MapProperty<String, String> additionalProperties;
+    private final MapProperty<String, String> openapiNormalizer;
     private final Property<Boolean> saveOriginalTemplates;
     
     /**
@@ -138,6 +144,7 @@ public class DefaultConfig {
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
+        this.openapiNormalizer = project.getObjects().mapProperty(String.class, String.class);
         this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
         this.saveOriginalTemplates.convention(false);  // Default to false to avoid clutter
     }
@@ -205,6 +212,10 @@ public class DefaultConfig {
     
     public MapProperty<String, String> getAdditionalProperties() {
         return additionalProperties;
+    }
+    
+    public MapProperty<String, String> getOpenapiNormalizer() {
+        return openapiNormalizer;
     }
     
     public Property<Boolean> getSaveOriginalTemplates() {
@@ -367,6 +378,18 @@ public class DefaultConfig {
     @Option(option = "additional-properties", description = "Additional properties for OpenAPI Generator")
     public void additionalProperties(Map<String, String> properties) {
         this.additionalProperties.set(properties);
+    }
+    
+    /**
+     * Sets OpenAPI normalizer rules to transform input specifications.
+     * These rules are merged with spec-level rules, with spec taking precedence.
+     * Equivalent to the --openapi-normalizer CLI option.
+     * 
+     * @param rules map of normalizer rules and their values (e.g., 'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true')
+     */
+    @Option(option = "openapi-normalizer", description = "OpenAPI normalizer rules to transform input specifications")
+    public void openapiNormalizer(Map<String, String> rules) {
+        this.openapiNormalizer.set(rules);
     }
     
     
