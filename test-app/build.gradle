@@ -57,7 +57,7 @@ openapiModelgen {
         userTemplateDir "src/main/templates" // Use explicit user templates
         userTemplateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
         modelNamePrefix "Api" // Add prefix to test the new feature
-        saveOriginalTemplates true // Disable saving original templates
+        saveOriginalTemplates true // Enable saving original templates
 //        templateSources([
 //            'user-templates',           // Use explicit user templates first
 //            'user-customizations',      // Then user YAML customizations

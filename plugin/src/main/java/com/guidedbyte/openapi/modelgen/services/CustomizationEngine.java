@@ -735,21 +735,36 @@ public class CustomizationEngine {
      * @param templateWorkDir the working directory for templates
      */
     public void processTemplateCustomizations(TemplateConfiguration templateConfig, File templateWorkDir) {
-        // Check if we have any customizations to process based on the configured template sources
-        List<String> templateSources = templateConfig.getTemplateSources();
-        boolean hasAnyRelevantCustomizations = hasCustomizationsForTemplateSources(templateConfig, templateSources);
-        
-        if (!hasAnyRelevantCustomizations) {
-            logger.debug("No relevant template customizations to process for generator: {} (templateSources: {})", 
-                templateConfig.getGeneratorName(), templateSources);
-            return;
-        }
-        
         try {
+            // Always extract original templates if saveOriginalTemplates is enabled, regardless of customizations
+            if (templateConfig.isSaveOriginalTemplates()) {
+                logger.debug("Extracting ALL templates to orig/ directory for user review (saveOriginalTemplates enabled)");
+                File origDir = new File(templateWorkDir, "orig");
+                TemplateDiscoveryService discoveryService = new TemplateDiscoveryService();
+                int extractedCount = discoveryService.extractAllTemplates(templateConfig.getGeneratorName(), origDir);
+                
+                if (extractedCount > 0) {
+                    logger.info("Extracted {} OpenAPI Generator templates for review in: {}", 
+                        extractedCount, origDir.getAbsolutePath());
+                } else {
+                    logger.debug("No templates were extracted using OpenAPI Generator's built-in extraction mechanism");
+                }
+            }
+            
+            // Check if we have any customizations to process based on the configured template sources
+            List<String> templateSources = templateConfig.getTemplateSources();
+            boolean hasAnyRelevantCustomizations = hasCustomizationsForTemplateSources(templateConfig, templateSources);
+            
+            if (!hasAnyRelevantCustomizations) {
+                logger.debug("No relevant template customizations to process for generator: {} (templateSources: {})", 
+                    templateConfig.getGeneratorName(), templateSources);
+                return;
+            }
+            
             logger.debug("Processing template customizations for generator: {}", templateConfig.getGeneratorName());
             
             // Extract base templates that need customization
-            extractRequiredBaseTemplates(templateConfig, templateWorkDir);
+            extractRequiredBaseTemplatesForCustomization(templateConfig, templateWorkDir);
             
             // Apply customizations in precedence order based on template precedence configuration
             applyCustomizationsInPrecedenceOrder(templateConfig, templateWorkDir);
@@ -985,26 +1000,13 @@ public class CustomizationEngine {
     
     /**
      * Extracts base templates that need customization from OpenAPI Generator.
-     * When saveOriginalTemplates is enabled, extracts ALL available templates for user review.
+     * This method only extracts templates that have customizations, since original 
+     * template extraction is now handled separately in processTemplateCustomizations.
      */
-    private void extractRequiredBaseTemplates(TemplateConfiguration templateConfig, File templateWorkDir) throws IOException {
+    private void extractRequiredBaseTemplatesForCustomization(TemplateConfiguration templateConfig, File templateWorkDir) throws IOException {
         logger.debug("Extracting required base templates for customization");
         
         TemplateDiscoveryService discoveryService = new TemplateDiscoveryService();
-        
-        // If saveOriginalTemplates is enabled, extract all available templates first
-        if (templateConfig.isSaveOriginalTemplates()) {
-            logger.debug("Extracting ALL templates to orig/ directory for user review");
-            File origDir = new File(templateWorkDir, "orig");
-            int extractedCount = discoveryService.extractAllTemplates(templateConfig.getGeneratorName(), origDir);
-            
-            if (extractedCount > 0) {
-                logger.info("Extracted {} OpenAPI Generator templates for review in: {}", 
-                    extractedCount, origDir.getAbsolutePath());
-            } else {
-                logger.debug("No templates were extracted using OpenAPI Generator's built-in extraction mechanism");
-            }
-        }
         
         // Collect all templates that need extraction based on available customizations
         Set<String> templatesToExtract = new java.util.HashSet<>();
