@@ -37,8 +37,8 @@ features including template customization, incremental builds, performance optim
 ### Developer Experience
 
 - **Command-line options**: Override any configuration via CLI parameters
-- **Comprehensive testing**: Complete test coverage with 125+ tests passing (100% success rate, all functionality
-  fully verified including caching optimizations)
+- **Comprehensive testing**: Complete test coverage with 144/144 tests passing (100% success rate, all functionality
+  fully verified including caching optimizations and template variable resolution)
 - **Auto-generated documentation**: Plugin help and comprehensive Javadoc documentation
 - **@Internal property optimization**: Precise incremental build invalidation
 
@@ -223,8 +223,9 @@ openapiModelgen {
             additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor"
         ])
         
-        // Template variables with nesting
+        // Template variables with nesting - automatically appear in generated code
         templateVariables([
+            header: "Copyright (c) {{currentYear}} {{companyName}}",  // Used in class headers
             copyright: "Copyright © {{currentYear}} {{companyName}}",
             currentYear: "2025",
             companyName: "GuidedByte Technologies Inc."
@@ -932,6 +933,8 @@ openapiModelgen {
     }
 }
 ```
+
+**Note**: This works even when you have no user templates or customizations - the plugin will extract all OpenAPI Generator templates to help you understand the available templates and create your own customizations.
 
 After generation, compare templates:
 ```bash

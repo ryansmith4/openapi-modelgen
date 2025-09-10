@@ -35,6 +35,12 @@ openapiModelgen {
     defaults {
         parallel true  // Enable thread-safe parallel processing (default: true)
         saveOriginalTemplates false  // Save original templates for debugging (default: false)
+        
+        // Template variables - appear in generated code headers
+        templateVariables([
+            header: "Copyright (c) {{currentYear}} MyCompany",
+            companyName: "MyCompany Inc."
+        ])
     }
     specs {
         myApi {
@@ -54,7 +60,8 @@ Generated Tasks:
 
 The plugin includes comprehensive caching with global persistence across builds and thread-safe parallel processing.
 It provides YAML customizations to enhance code readability while using OpenAPI Generator's official APIs for clean
-template access. It automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0+)
+template access. Features dynamic plugin customization discovery, template variable expansion, and saveOriginalTemplates
+functionality. It automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0+)
 and integrates seamlessly with corporate dependency management.
 
 For detailed documentation and examples visit: <https://github.com/guidedbyte/openapi-modelgen>

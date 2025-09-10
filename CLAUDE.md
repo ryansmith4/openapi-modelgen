@@ -186,9 +186,20 @@ defaults {
 
 ### Template Variables
 
+Built-in template variables available in all templates:
+- `{{currentYear}}`: Dynamically generated current year (e.g., "2025")
+- `{{generatedBy}}`: "OpenAPI Model Generator Plugin" 
+- `{{pluginVersion}}`: Plugin version from build (e.g., "2.0.0")
+
+User-configurable template variables (expand recursively):
+- `{{header}}`: "Copyright (c) {{currentYear}} MyCompany" - appears in generated class headers
 - `{{copyright}}`: "Copyright © {{currentYear}} {{companyName}}"
-- `{{currentYear}}`: Dynamically generated current year
-- `{{companyName}}`: "GuidedByte Technologies Inc."
+- `{{companyName}}`: "GuidedByte Technologies Inc." (user-configurable)
+
+**Key Features:**
+- Variables are resolved recursively (nested variable expansion)
+- Template variables are passed as `additionalProperties` to OpenAPI Generator
+- Available in all Mustache templates via `{{variableName}}` syntax
 
 ## Key Technical Concepts
 
@@ -215,8 +226,10 @@ defaults {
 - **Lazy evaluation**: Template extraction deferred until task execution
 - **Dynamic generator support**: Uses actual generator names from configuration instead of hard-coding
 - **CodegenConfig API integration**: Leverages OpenAPI Generator's official template discovery mechanisms
+- **Dynamic plugin customization discovery**: Scans JAR and filesystem resources at execution time for flexible template library support
 - **Configuration cache compatibility**: All services designed for Gradle configuration cache with no Project dependencies
 - **Static logging architecture**: SLF4J static loggers throughout for serialization compatibility
+- **Template directory orchestration**: Configuration-cache compatible templateDir setting at configuration time with task dependency coordination
 
 ## Template Directory Architecture
 
