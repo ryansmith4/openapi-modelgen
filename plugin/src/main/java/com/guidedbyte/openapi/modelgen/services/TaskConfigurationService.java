@@ -233,11 +233,19 @@ public class TaskConfigurationService implements Serializable {
          * will create it before OpenAPI Generator runs.
          */
         
-        // Template directory handling:
-        // - setupTemplatesTask creates the working directory at execution time
-        // - TemplatePreparationAction (doFirst) sets templateDir on the task after directory exists
-        // - This avoids configuration-time validation errors for directories that don't exist yet
-        logger.debug("Template directory will be configured at execution time by TemplatePreparationAction");
+        // Template directory handling - Configuration Cache Compatible Solution:
+        // Set templateDir at configuration time to predictable path, ensure directory creation via task dependencies
+        if (templateConfiguration.hasAnyCustomizations()) {
+            String workDir = templateConfiguration.getTemplateWorkDir();
+            if (workDir != null) {
+                // Set the predictable template directory path at configuration time
+                // The setupTemplatesTask will ensure this directory exists before the generate task runs
+                task.getTemplateDir().set(workDir);
+                logger.debug("Set templateDir for customized templates (will be prepared by setupTemplatesTask): {}", workDir);
+            }
+        } else {
+            logger.debug("No template customizations - using OpenAPI Generator defaults");
+        }
         
         // Apply default OpenAPI Generator configuration
         applyDefaultConfiguration(task);
@@ -254,6 +262,7 @@ public class TaskConfigurationService implements Serializable {
         for (Map.Entry<String, String> entry : resolvedConfig.getGlobalProperties().entrySet()) {
             task.getGlobalProperties().put(entry.getKey(), entry.getValue());
         }
+        
         
         // Apply import mappings from resolved config
         Map<String, String> importMappings = resolvedConfig.getImportMappings();
@@ -286,9 +295,11 @@ public class TaskConfigurationService implements Serializable {
         Map<String, String> templateVariables = resolvedConfig.getTemplateVariables();
         if (!templateVariables.isEmpty()) {
             Map<String, String> expandedVariables = expandTemplateVariables(templateVariables);
-            // Add expanded variables to global properties since GenerateTask doesn't have templateProperties
+            
+            // Pass template variables as additional properties - this makes them available to Mustache templates
             for (Map.Entry<String, String> entry : expandedVariables.entrySet()) {
-                task.getGlobalProperties().put(entry.getKey(), entry.getValue());
+                task.getAdditionalProperties().put(entry.getKey(), entry.getValue());
+                logger.debug("Added template variable '{}' = '{}' to additionalProperties", entry.getKey(), entry.getValue());
             }
             logger.debug("Configured {} template variables for spec: {}", expandedVariables.size(), specName);
         }

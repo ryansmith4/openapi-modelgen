@@ -198,46 +198,25 @@ public class TemplatePreparationAction implements Action<Task> {
     }
     
     /**
-     * Sets the templateDir property on the OpenAPI Generator task at execution time.
-     * This ensures configuration cache compatibility by setting the directory path
-     * only after the working directory has been created by setupTemplatesTask.
+     * Validates that the template directory exists and is ready for OpenAPI Generator.
+     * The templateDir property is now set at configuration time by TaskConfigurationService.
      */
     private void setTemplateDirectoryOnTask(Task task) {
-        // Cast to GenerateTask to access templateDir property
-        if (!(task instanceof org.openapitools.generator.gradle.plugin.tasks.GenerateTask)) {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
-                "Task is not a GenerateTask, skipping templateDir configuration");
-            return;
-        }
-        
-        org.openapitools.generator.gradle.plugin.tasks.GenerateTask generateTask = 
-            (org.openapitools.generator.gradle.plugin.tasks.GenerateTask) task;
-        
         String workDir = templateConfig.getTemplateWorkDir();
         if (workDir != null && templateConfig.hasAnyCustomizations()) {
             File templateWorkDir = new File(workDir);
             
             if (templateWorkDir.exists() && templateWorkDir.isDirectory()) {
-                // Use the orchestrated template working directory
-                // NOTE: This assumes the property can be set at execution time
-                // Some Gradle versions may not allow this - if it fails, we'll need a different approach
-                try {
-                    generateTask.getTemplateDir().set(templateWorkDir.getAbsolutePath());
-                    DebugLogger.debug(logger, templateConfig.isDebug(), 
-                        "Set templateDir to working directory: {}", templateWorkDir.getAbsolutePath());
-                } catch (Exception e) {
-                    DebugLogger.debug(logger, templateConfig.isDebug(), 
-                        "Failed to set templateDir at execution time (property may be final): {}", e.getMessage());
-                    logger.warn("Cannot set templateDir at execution time - using OpenAPI Generator defaults");
-                }
-            } else {
+                logger.info("Template working directory is ready for OpenAPI Generator: {}", templateWorkDir.getAbsolutePath());
                 DebugLogger.debug(logger, templateConfig.isDebug(), 
-                    "Template working directory does not exist, using OpenAPI Generator defaults: {}", 
+                    "Template working directory validated: {}", templateWorkDir.getAbsolutePath());
+            } else {
+                logger.warn("Template working directory does not exist - this may cause generation issues: {}", 
                     templateWorkDir.getAbsolutePath());
             }
         } else {
             DebugLogger.debug(logger, templateConfig.isDebug(), 
-                "No template working directory or customizations, using OpenAPI Generator defaults");
+                "No template customizations - OpenAPI Generator will use defaults");
         }
     }
     

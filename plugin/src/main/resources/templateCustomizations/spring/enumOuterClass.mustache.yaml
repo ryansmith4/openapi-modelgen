@@ -17,6 +17,11 @@ replacements:
     replace: "{{{name}}}({{{value}}}){{^-last}},\n  {{/-last}}{{#-last}};{{/-last}}"
 
 insertions:
+  - before: "{{^description}}"
+    content: |
+      {{#header}}{{header}}
+       * 
+       * {{/header}}
   # Add x-implements support for older generators
   - after: "{{/datatypeWithEnum}}"
     content: "{{#vendorExtensions.x-implements}}{{#-first}} implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}}"

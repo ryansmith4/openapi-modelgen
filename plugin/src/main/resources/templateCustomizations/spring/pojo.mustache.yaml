@@ -6,8 +6,8 @@ metadata:
   description: "Adds header variable and grouped JSON constants"
   version: "2.0.1"
 insertions:
-  - before: "{{#description}}"
+  - before: "{{description}}"
     content: |
-      {{#header}} * {{header}}
-      *
-      {{/header}}
+      {{#header}}{{header}}
+       * 
+       * {{/header}}

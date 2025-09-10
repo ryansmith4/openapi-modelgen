@@ -95,10 +95,10 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         
         BuildResult secondResult = runGenerationTask();
 
-        // Then: First run should succeed, second run should be UP_TO_DATE since we're using OpenAPI defaults
-        // (custom template changes don't affect the task when not using custom templateDir)
+        // Then: First run should succeed, second run should also be SUCCESS since template changed
+        // (custom template changes DO affect the task when using userTemplateDir)
         assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.UP_TO_DATE, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
     }
 
     @Test

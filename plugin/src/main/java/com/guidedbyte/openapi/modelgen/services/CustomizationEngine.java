@@ -1127,10 +1127,18 @@ public class CustomizationEngine {
     
     /**
      * Extracts a single base template from OpenAPI Generator.
+     * Only extracts if the template file doesn't already exist to avoid overwriting customizations.
      */
     private void extractBaseTemplate(TemplateDiscoveryService discoveryService, String templateName, 
                                    TemplateConfiguration templateConfig, File templateWorkDir) throws IOException {
         logger.debug("Extracting base template: {}", templateName);
+        
+        // Check if template file already exists (may have been customized by earlier steps)
+        File templateFile = new File(templateWorkDir, templateName);
+        if (templateFile.exists()) {
+            logger.debug("Template file {} already exists, skipping base extraction to preserve customizations", templateName);
+            return;
+        }
         
         // Use the actual generator name from the configuration instead of hard-coding "spring"
         String baseTemplateContent = discoveryService.extractBaseTemplate(templateName, templateConfig.getGeneratorName());
@@ -1145,7 +1153,6 @@ public class CustomizationEngine {
             }
             
             // Save to working directory for customization
-            File templateFile = new File(templateWorkDir, templateName);
             Files.createDirectories(templateFile.getParentFile().toPath());
             Files.writeString(templateFile.toPath(), baseTemplateContent);
             
@@ -1162,20 +1169,25 @@ public class CustomizationEngine {
         logger.debug("Applying plugin customizations for generator: {}", templateConfig.getGeneratorName());
         
         try {
-            // Load plugin customization resources
+            // Load plugin customization resources dynamically
             String generatorPath = "templateCustomizations/" + templateConfig.getGeneratorName();
             var classLoader = getClass().getClassLoader();
             
-            // For configuration cache compatibility, we need to process customizations 
-            // based on known files rather than dynamic discovery at execution time
-            String[] commonCustomizations = {"pojo.mustache.yaml", "model.mustache.yaml", "enumClass.mustache.yaml"};
+            // Discover all available plugin customization files at execution time
+            // This maintains flexibility while being configuration cache compatible
+            java.util.Set<String> discoveredCustomizations = discoverPluginCustomizations(generatorPath, classLoader);
             
-            for (String customizationFile : commonCustomizations) {
+            logger.debug("Discovered {} plugin customizations for generator '{}': {}", 
+                discoveredCustomizations.size(), templateConfig.getGeneratorName(), discoveredCustomizations);
+            
+            for (String customizationFile : discoveredCustomizations) {
                 String resourcePath = generatorPath + "/" + customizationFile;
                 var resource = classLoader.getResource(resourcePath);
                 
                 if (resource != null) {
                     applyPluginCustomizationFile(resource, customizationFile, templateWorkDir, templateConfig);
+                } else {
+                    logger.warn("Expected plugin customization resource not found: {}", resourcePath);
                 }
             }
             
@@ -1184,6 +1196,100 @@ public class CustomizationEngine {
             logger.debug("Plugin customization error details", e);
             throw new RuntimeException("Plugin customization failed: " + e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Discovers all plugin customization files for a given generator path.
+     * This method uses JAR scanning to find all .yaml/.yml files in the plugin's resources.
+     * 
+     * @param generatorPath the resource path for the generator (e.g., "templateCustomizations/spring")
+     * @param classLoader the classloader to use for resource discovery
+     * @return set of discovered customization filenames
+     */
+    private java.util.Set<String> discoverPluginCustomizations(String generatorPath, ClassLoader classLoader) {
+        java.util.Set<String> customizations = new java.util.HashSet<>();
+        
+        try {
+            // Get the resource URL for the generator path
+            java.net.URL resourceUrl = classLoader.getResource(generatorPath);
+            
+            if (resourceUrl == null) {
+                logger.debug("No plugin customizations directory found for path: {}", generatorPath);
+                return customizations;
+            }
+            
+            // Handle both file system and JAR resources
+            if (resourceUrl.getProtocol().equals("jar")) {
+                // We're running from a JAR - scan the JAR entries
+                customizations.addAll(discoverCustomizationsFromJar(resourceUrl, generatorPath));
+            } else {
+                // We're running from file system (development mode) - scan directory
+                customizations.addAll(discoverCustomizationsFromFileSystem(resourceUrl));
+            }
+            
+        } catch (Exception e) {
+            logger.warn("Failed to discover plugin customizations for path '{}': {}", generatorPath, e.getMessage());
+            logger.debug("Plugin customization discovery error details", e);
+        }
+        
+        return customizations;
+    }
+    
+    /**
+     * Discovers customizations from a JAR file.
+     */
+    private java.util.Set<String> discoverCustomizationsFromJar(java.net.URL jarUrl, String generatorPath) throws java.io.IOException {
+        java.util.Set<String> customizations = new java.util.HashSet<>();
+        
+        // Parse the JAR URL to get the JAR file path and entry path
+        String jarPath = jarUrl.getPath();
+        if (jarPath.startsWith("file:") && jarPath.contains("!")) {
+            jarPath = jarPath.substring(5, jarPath.indexOf("!"));
+        }
+        
+        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(new java.io.File(jarPath))) {
+            java.util.Enumeration<java.util.jar.JarEntry> entries = jarFile.entries();
+            
+            String searchPrefix = generatorPath + "/";
+            
+            while (entries.hasMoreElements()) {
+                java.util.jar.JarEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+                
+                if (entryName.startsWith(searchPrefix) && !entry.isDirectory()) {
+                    String fileName = entryName.substring(searchPrefix.length());
+                    
+                    // Only include direct files (no subdirectories) that are YAML files
+                    if (!fileName.contains("/") && (fileName.endsWith(".yaml") || fileName.endsWith(".yml"))) {
+                        customizations.add(fileName);
+                    }
+                }
+            }
+        }
+        
+        return customizations;
+    }
+    
+    /**
+     * Discovers customizations from the file system (development mode).
+     */
+    private java.util.Set<String> discoverCustomizationsFromFileSystem(java.net.URL dirUrl) throws java.io.IOException {
+        java.util.Set<String> customizations = new java.util.HashSet<>();
+        
+        java.io.File dir = new java.io.File(dirUrl.getPath());
+        
+        if (dir.exists() && dir.isDirectory()) {
+            java.io.File[] files = dir.listFiles((file) -> 
+                file.isFile() && (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")));
+            
+            if (files != null) {
+                for (java.io.File file : files) {
+                    customizations.add(file.getName());
+                }
+            }
+        }
+        
+        return customizations;
     }
     
     /**
