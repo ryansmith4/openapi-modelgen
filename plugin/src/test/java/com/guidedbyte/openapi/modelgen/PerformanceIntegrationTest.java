@@ -90,6 +90,13 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         
         BuildResult firstResult = runGenerationTask();
         
+        // Wait a bit to ensure file timestamps differ
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
         // Modify template
         modifyCustomTemplate();
         
@@ -362,7 +369,7 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
     }
 
     private void setupCustomTemplateConfiguration() throws IOException {
-        // Create custom template
+        // Create custom template  
         File templateDir = new File(testProjectDir, "src/main/resources/templates");
         templateDir.mkdirs();
         

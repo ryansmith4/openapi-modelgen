@@ -207,28 +207,19 @@ public class TemplateResolver {
                 "Template processing enabled for generator '{}', spec '{}', work directory: {}", 
                 generatorName, specName, templateWorkDirectory);
             
-            // Create the directory immediately during configuration time to avoid Gradle validation issues
-            // We create this aggressively since Gradle will validate it exists during task graph building
+            // Create the work directory but not the marker file during configuration phase
+            // to maintain proper input tracking while avoiding configuration cache issues
             File workDir = new File(templateWorkDirectory);
-            
-            // Force directory creation even if it exists to ensure it's not deleted by clean tasks
             try {
                 boolean created = workDir.mkdirs();
                 DebugLogger.debug(logger, debugEnabled, 
                     "Ensured template work directory exists: {} (created: {})", 
                     templateWorkDirectory, created);
                 
-                // Also create a marker file to help with Gradle input validation
-                File markerFile = new File(workDir, PluginConstants.TEMPLATE_MARKER_FILE);
-                if (!markerFile.exists()) {
-                    markerFile.createNewFile();
-                    DebugLogger.debug(logger, debugEnabled, 
-                        "Created template directory marker file: {}", markerFile.getAbsolutePath());
-                }
+                // DO NOT create marker file during configuration phase - this breaks configuration cache
+                // Marker files will be created during task execution phase by PrepareTemplateDirectoryTask
             } catch (Exception e) {
                 logger.warn("Failed to create template work directory '{}': {}", templateWorkDirectory, e.getMessage());
-                DebugLogger.debug(logger, debugEnabled, 
-                    "Exception creating template work directory: {}", e.getMessage());
             }
         } else {
             DebugLogger.debug(logger, debugEnabled, 
@@ -329,20 +320,31 @@ public class TemplateResolver {
             return false;
         }
         
-        File templateDir = new File(userTemplateDir, generatorName);
-        if (!templateDir.exists() || !templateDir.isDirectory()) {
-            return false;
+        // First check generator-specific subdirectory  
+        File generatorTemplateDir = new File(userTemplateDir, generatorName);
+        if (generatorTemplateDir.exists() && generatorTemplateDir.isDirectory()) {
+            File[] mustacheFiles = generatorTemplateDir.listFiles((dir, name) -> name.endsWith(".mustache"));
+            boolean hasTemplates = mustacheFiles != null && mustacheFiles.length > 0;
+            
+            if (hasTemplates) {
+                logger.debug("Found {} user template(s) in generator directory: {}", mustacheFiles.length, generatorTemplateDir.getAbsolutePath());
+                return true;
+            }
         }
         
-        // Check for any .mustache files
-        File[] mustacheFiles = templateDir.listFiles((dir, name) -> name.endsWith(".mustache"));
-        boolean hasTemplates = mustacheFiles != null && mustacheFiles.length > 0;
-        
-        if (hasTemplates) {
-            logger.debug("Found {} user template(s) in: {}", mustacheFiles.length, templateDir.getAbsolutePath());
+        // Also check root template directory
+        File rootTemplateDir = new File(userTemplateDir);
+        if (rootTemplateDir.exists() && rootTemplateDir.isDirectory()) {
+            File[] mustacheFiles = rootTemplateDir.listFiles((dir, name) -> name.endsWith(".mustache"));
+            boolean hasTemplates = mustacheFiles != null && mustacheFiles.length > 0;
+            
+            if (hasTemplates) {
+                logger.debug("Found {} user template(s) in root template directory: {}", mustacheFiles.length, rootTemplateDir.getAbsolutePath());
+                return true;
+            }
         }
         
-        return hasTemplates;
+        return false;
     }
     
     /**

@@ -5,13 +5,13 @@ import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.file.FileSystemOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 /**
  * Configuration-cache compatible task action that prepares template working directory
@@ -188,7 +188,7 @@ public class TemplatePreparationAction implements Action<Task> {
                         Files.createDirectories(targetPath);
                     } else {
                         Files.createDirectories(targetPath.getParent());
-                        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                        Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     }
                 } catch (IOException e) {
                     logger.warn("Failed to copy template file {}: {}", sourcePath, e.getMessage());
@@ -198,8 +198,8 @@ public class TemplatePreparationAction implements Action<Task> {
     }
     
     /**
-     * Validates that the template directory exists and is ready for OpenAPI Generator.
-     * The templateDir property is now set at configuration time by TaskConfigurationService.
+     * Validates that the template directory is ready for OpenAPI Generator.
+     * The templateDir property is set at configuration time by TaskConfigurationService.
      */
     private void setTemplateDirectoryOnTask(Task task) {
         String workDir = templateConfig.getTemplateWorkDir();
@@ -216,7 +216,7 @@ public class TemplatePreparationAction implements Action<Task> {
             }
         } else {
             DebugLogger.debug(logger, templateConfig.isDebug(), 
-                "No template customizations - OpenAPI Generator will use defaults");
+                "No template customizations - OpenAPI Generator will use default templates");
         }
     }
     

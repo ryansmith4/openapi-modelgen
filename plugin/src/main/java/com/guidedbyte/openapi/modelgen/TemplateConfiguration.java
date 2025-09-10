@@ -1,5 +1,9 @@
 package com.guidedbyte.openapi.modelgen;
 
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
@@ -79,24 +83,68 @@ public class TemplateConfiguration implements Serializable {
         return new Builder(generatorName);
     }
     
+    @Input
     public String getGeneratorName() { return generatorName; }
+    @Internal
     public String getTemplateWorkDir() { return templateWorkDir; }
+    @Input
+    public boolean getHasUserTemplates() { return hasUserTemplates; }
+    @Input
+    public boolean getHasUserCustomizations() { return hasUserCustomizations; }
+    @Input
+    public boolean getHasPluginCustomizations() { return hasPluginCustomizations; }
+    
+    // Keep original method names for compatibility
     public boolean hasUserTemplates() { return hasUserTemplates; }
     public boolean hasUserCustomizations() { return hasUserCustomizations; }
     public boolean hasPluginCustomizations() { return hasPluginCustomizations; }
+    @Input
+    @Optional
     public String getUserTemplateDirectory() { return userTemplateDirectory; }
+    
+    /**
+     * Gets the user template directory as a file input for Gradle's incremental build tracking.
+     * This ensures that changes to files in the user template directory properly invalidate the task.
+     * We track the entire user template directory to catch both direct templates and generator-specific subdirectories.
+     */
+    @InputDirectory
+    @Optional
+    @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    public java.io.File getUserTemplateDirectoryAsFile() { 
+        if (userTemplateDirectory == null) {
+            return null;
+        }
+        java.io.File dir = new java.io.File(userTemplateDirectory);
+        return dir.exists() && dir.isDirectory() ? dir : null;
+    }
+    @Input
+    @Optional
     public String getUserCustomizationsDirectory() { return userCustomizationsDirectory; }
+    @Input
     public Map<String, String> getTemplateVariables() { return templateVariables; }
+    @Input
     public boolean isTemplateProcessingEnabled() { return templateProcessingEnabled; }
+    @Input
     public List<String> getTemplateSources() { return templateSources; }
+    @Input
     public boolean isDebug() { return debug; }
+    @Input
     public boolean isSaveOriginalTemplates() { return saveOriginalTemplates; }
     
     // Library template getters
+    @Input
+    public boolean getHasLibraryTemplates() { return hasLibraryTemplates; }
+    @Input
+    public boolean getHasLibraryCustomizations() { return hasLibraryCustomizations; }
+    
+    // Keep original method names for compatibility
     public boolean hasLibraryTemplates() { return hasLibraryTemplates; }
     public boolean hasLibraryCustomizations() { return hasLibraryCustomizations; }
+    @Input
     public Map<String, String> getLibraryTemplates() { return libraryTemplates; }
+    @Input
     public Map<String, String> getLibraryCustomizations() { return libraryCustomizations; }
+    @Internal  // Internal metadata used for processing, not part of task inputs
     public Map<String, com.guidedbyte.openapi.modelgen.services.LibraryMetadata> getLibraryMetadata() { return libraryMetadata; }
     
     public boolean hasAnyCustomizations() {

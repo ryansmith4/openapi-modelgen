@@ -16,29 +16,45 @@ import java.util.List;
 public abstract class BaseTestKitTest {
     
     /**
-     * Creates a GradleRunner with custom classpath that includes both our plugin
-     * and the OpenAPI Generator plugin for TestKit compatibility with compileOnly dependency.
+     * Creates a GradleRunner with stable plugin classpath for configuration cache compatibility.
      */
     protected GradleRunner createGradleRunner(File testProjectDir) {
         return GradleRunner.create()
                 .withProjectDir(testProjectDir)
-                .withPluginClasspath(getTestKitClasspath());
+                .withPluginClasspath(getStableTestKitClasspath());
     }
     
     /**
-     * Gets the classpath for TestKit including our plugin and OpenAPI Generator plugin.
+     * Gets a stable classpath for TestKit that's configuration cache compatible.
      * 
-     * Since we use compileOnly dependency for OpenAPI Generator plugin to avoid bundling it,
-     * TestKit needs explicit classpath configuration to access those classes during testing.
-     * 
-     * This method includes ALL transitive dependencies needed by OpenAPI Generator to run properly.
+     * The key insight is that we cache the classpath result to avoid recomputation
+     * which can vary between test runs and break configuration cache.
      */
-    private List<File> getTestKitClasspath() {
+    private static volatile List<File> cachedClasspath = null;
+    
+    private List<File> getStableTestKitClasspath() {
+        if (cachedClasspath == null) {
+            synchronized (BaseTestKitTest.class) {
+                if (cachedClasspath == null) {
+                    cachedClasspath = computeStableClasspath();
+                }
+            }
+        }
+        return cachedClasspath;
+    }
+    
+    /**
+     * Computes a stable classpath once and caches it for configuration cache compatibility.
+     */
+    private List<File> computeStableClasspath() {
         List<File> classpath = new ArrayList<>();
         
         // Get the test classpath which includes all our dependencies
         String classpathProperty = System.getProperty("java.class.path");
         String[] classpathEntries = classpathProperty.split(File.pathSeparator);
+        
+        // Use a TreeSet to ensure consistent ordering for configuration cache
+        java.util.Set<String> stableEntries = new java.util.TreeSet<>();
         
         for (String entry : classpathEntries) {
             File file = new File(entry);
@@ -46,12 +62,17 @@ public abstract class BaseTestKitTest {
             // Include ALL JAR files from test classpath to ensure we have complete dependencies
             // This is necessary because OpenAPI Generator has many transitive dependencies
             if (entry.endsWith(".jar")) {
-                classpath.add(file);
+                stableEntries.add(entry);
             }
             // Also include any class directories (for our compiled plugin classes)
             else if (entry.contains("classes") || entry.contains("resources")) {
-                classpath.add(file);
+                stableEntries.add(entry);
             }
+        }
+        
+        // Convert to File objects in stable order
+        for (String entry : stableEntries) {
+            classpath.add(new File(entry));
         }
         
         return classpath;

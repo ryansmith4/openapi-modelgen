@@ -6,7 +6,6 @@ import com.guidedbyte.openapi.modelgen.SpecConfig;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.actions.ParallelExecutionLoggingAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
-import com.guidedbyte.openapi.modelgen.actions.TemplatePreparationAction;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -77,11 +76,28 @@ public class TaskConfigurationService implements Serializable {
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
             String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
+            String prepareTaskName = "prepareTemplateDirectory" + capitalize(specName);
             
+            // Create resolved config to determine if we need template preparation
+            ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
+            TemplateConfiguration templateConfig = resolveTemplateConfiguration(extension, specConfig, specName, project, projectLayout);
+            
+            // Create template preparation task if needed
+            TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> prepareTask = null;
+            if (templateConfig.hasAnyCustomizations()) {
+                prepareTask = tasks.register(prepareTaskName, com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask.class, task -> {
+                    task.setDescription("Prepares template directory for " + specName + " generation");
+                    task.setGroup(PluginConstants.TASK_GROUP);
+                    task.getTemplateConfiguration().set(templateConfig);
+                    task.getOutputDirectory().set(projectLayout.getBuildDirectory().dir("template-work/" + templateConfig.getGeneratorName() + "-" + specName));
+                });
+            }
+            
+            // Create the main generation task
+            final TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> finalPrepareTask = prepareTask;
             TaskProvider<GenerateTask> specTask = tasks.register(taskName, GenerateTask.class, task -> {
-                // Make sure template setup runs first
-                task.dependsOn(setupTemplatesTask);
-                configureGenerateTask(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory);
+                // Configure the task with the prepare task provider
+                configureGenerateTask(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, finalPrepareTask);
                 
                 // Configure incremental build support
                 configureIncrementalBuild(task, projectLayout, extension, specConfig);
@@ -155,7 +171,8 @@ public class TaskConfigurationService implements Serializable {
     public void configureGenerateTask(GenerateTask task, OpenApiModelGenExtension extension, 
                                     SpecConfig specConfig, String specName, Project project, 
                                     ProjectLayout projectLayout, ObjectFactory objectFactory, 
-                                    ProviderFactory providerFactory) {
+                                    ProviderFactory providerFactory,
+                                    TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> prepareTask) {
         
         // Set basic task properties
         task.setDescription(PluginConstants.DESC_GENERATE_PREFIX + specName + PluginConstants.DESC_GENERATE_SUFFIX);
@@ -164,11 +181,11 @@ public class TaskConfigurationService implements Serializable {
         // Resolve template configuration first to determine if templateDir is needed
         TemplateConfiguration templateConfiguration = resolveTemplateConfiguration(extension, specConfig, specName, project, projectLayout);
         
-        // Apply spec configuration with template configuration context
-        applySpecConfig(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, templateConfiguration);
+        // Apply spec configuration with template configuration context and prepare task
+        applySpecConfig(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, templateConfiguration, prepareTask);
         
-        // Add template preparation action with resolved template configuration
-        task.doFirst(new TemplatePreparationAction(templateConfiguration));
+        // Template preparation is now handled by the dedicated PrepareTemplateDirectoryTask
+        // No need for doFirst action - Gradle handles task dependencies automatically via Provider
         
         logger.debug("Configured generate task for spec: {}", specName);
     }
@@ -188,7 +205,8 @@ public class TaskConfigurationService implements Serializable {
      */
     public void applySpecConfig(GenerateTask task, OpenApiModelGenExtension extension, SpecConfig specConfig, 
                               String specName, Project project, ProjectLayout projectLayout, 
-                              ObjectFactory objectFactory, ProviderFactory providerFactory, TemplateConfiguration templateConfiguration) {
+                              ObjectFactory objectFactory, ProviderFactory providerFactory, TemplateConfiguration templateConfiguration,
+                              TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> prepareTask) {
         
         // Create resolved config to get proper generator name and other settings
         ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
@@ -233,18 +251,16 @@ public class TaskConfigurationService implements Serializable {
          * will create it before OpenAPI Generator runs.
          */
         
-        // Template directory handling - Configuration Cache Compatible Solution:
-        // Set templateDir at configuration time to predictable path, ensure directory creation via task dependencies
-        if (templateConfiguration.hasAnyCustomizations()) {
-            String workDir = templateConfiguration.getTemplateWorkDir();
-            if (workDir != null) {
-                // Set the predictable template directory path at configuration time
-                // The setupTemplatesTask will ensure this directory exists before the generate task runs
-                task.getTemplateDir().set(workDir);
-                logger.debug("Set templateDir for customized templates (will be prepared by setupTemplatesTask): {}", workDir);
-            }
+        // Template directory handling - Proper Gradle Solution:
+        // Use a dedicated cacheable task that produces the template directory
+        if (prepareTask != null && templateConfiguration.hasAnyCustomizations()) {
+            // Wire the prepare task output to OpenAPI Generator's templateDir via Provider
+            task.getTemplateDir().set(prepareTask.flatMap(prepTask -> 
+                prepTask.getOutputDirectory().map(dir -> dir.getAsFile().getAbsolutePath())));
+            
+            logger.debug("Set templateDir via dedicated PrepareTemplateDirectoryTask output");
         } else {
-            logger.debug("No template customizations - using OpenAPI Generator defaults");
+            logger.debug("No template customizations - templateDir not set (OpenAPI Generator uses defaults)");
         }
         
         // Apply default OpenAPI Generator configuration
@@ -472,39 +488,67 @@ public class TaskConfigurationService implements Serializable {
      * @param extension the plugin extension containing configuration
      */
     private void createHelpTask(TaskContainer tasks, OpenApiModelGenExtension extension) {
+        // Extract spec names at configuration time to avoid capturing extension/project references
+        final Map<String, String> specTaskNames = new HashMap<>();
+        if (extension.getSpecs() != null && !extension.getSpecs().isEmpty()) {
+            for (String specName : extension.getSpecs().keySet()) {
+                String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
+                specTaskNames.put(taskName, specName);
+            }
+        }
+        
         tasks.register(PluginConstants.TASK_HELP, task -> {
             task.setDescription(PluginConstants.DESC_HELP);
             task.setGroup(PluginConstants.TASK_GROUP);
-            task.doLast(t -> {
-                System.out.println("\n=== OpenAPI Model Generator Plugin ===\n");
-                System.out.println("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.\n");
-                System.out.println("Available tasks:");
-                System.out.println("  generateAllModels     - Generate models for all configured specifications");
-                
-                // Show actual configured spec tasks
-                if (extension.getSpecs() != null && !extension.getSpecs().isEmpty()) {
-                    for (String specName : extension.getSpecs().keySet()) {
-                        String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
-                        System.out.println("  " + taskName + "         - Generate models for " + specName + " specification");
-                    }
-                } else {
-                    System.out.println("  generate<SpecName>    - Generate models for a specific specification");
-                }
-                
-                System.out.println("  generateHelp          - Show this help information");
-                System.out.println("\nConfiguration Example:");
-                System.out.println("  openapiModelgen {");
-                System.out.println("    specs {");
-                System.out.println("      pets {");
-                System.out.println("        inputSpec \"src/main/resources/openapi-spec/pets.yaml\"");
-                System.out.println("        modelPackage \"com.example.pets\"");
-                System.out.println("      }");
-                System.out.println("    }");
-                System.out.println("  }");
-                System.out.println("\nFor complete documentation, visit:");
-                System.out.println("  https://github.com/guidedbyte/openapi-modelgen\n");
-            });
+            task.doLast(new HelpTaskAction(specTaskNames));
         });
+    }
+    
+    /**
+     * Configuration-cache compatible action for the help task.
+     */
+    private static class HelpTaskAction implements org.gradle.api.Action<org.gradle.api.Task>, Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+        
+        private final Map<String, String> specTaskNames;
+        
+        public HelpTaskAction(Map<String, String> specTaskNames) {
+            this.specTaskNames = specTaskNames != null ? 
+                java.util.Collections.unmodifiableMap(new HashMap<>(specTaskNames)) : java.util.Collections.emptyMap();
+        }
+        
+        @Override
+        public void execute(org.gradle.api.Task task) {
+            System.out.println("\n=== OpenAPI Model Generator Plugin ===\n");
+            System.out.println("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.\n");
+            System.out.println("Available tasks:");
+            System.out.println("  generateAllModels     - Generate models for all configured specifications");
+            
+            // Show actual configured spec tasks
+            if (!specTaskNames.isEmpty()) {
+                for (Map.Entry<String, String> entry : specTaskNames.entrySet()) {
+                    String taskName = entry.getKey();
+                    String specName = entry.getValue();
+                    System.out.println("  " + taskName + "         - Generate models for " + specName + " specification");
+                }
+            } else {
+                System.out.println("  generate<SpecName>    - Generate models for a specific specification");
+            }
+            
+            System.out.println("  generateHelp          - Show this help information");
+            System.out.println("\nConfiguration Example:");
+            System.out.println("  openapiModelgen {");
+            System.out.println("    specs {");
+            System.out.println("      pets {");
+            System.out.println("        inputSpec \"src/main/resources/openapi-spec/pets.yaml\"");
+            System.out.println("        modelPackage \"com.example.pets\"");
+            System.out.println("      }");
+            System.out.println("    }");
+            System.out.println("  }");
+            System.out.println("\nFor complete documentation, visit:");
+            System.out.println("  https://github.com/guidedbyte/openapi-modelgen\n");
+        }
     }
     
     /**
