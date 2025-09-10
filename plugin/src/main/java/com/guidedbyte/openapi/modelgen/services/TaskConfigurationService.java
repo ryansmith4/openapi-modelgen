@@ -224,28 +224,19 @@ public class TaskConfigurationService implements Serializable {
          * 
          * This ensures clean separation between user source files and build outputs,
          * while allowing multiple layers of template customization to be combined.
+         * 
+         * For configuration cache compatibility, we set the templateDir to the expected
+         * working directory path, even if it doesn't exist yet. The TemplatePreparationAction
+         * will create it before OpenAPI Generator runs.
          */
         
-        // ALWAYS use the template working directory if it exists (it contains the orchestrated templates)
-        File templateWorkDir = new File(projectLayout.getBuildDirectory()
-            .dir("template-work/" + resolvedConfig.getGeneratorName() + "-" + resolvedConfig.getSpecName()).get().getAsFile().getAbsolutePath());
+        // Set templateDir to the expected working directory path for configuration cache compatibility
+        String expectedWorkDir = projectLayout.getBuildDirectory()
+            .dir("template-work/" + resolvedConfig.getGeneratorName() + "-" + resolvedConfig.getSpecName()).get().getAsFile().getAbsolutePath();
         
-        if (templateWorkDir.exists() && templateWorkDir.isDirectory()) {
-            // This is the correct behavior - use the orchestrated template directory
-            task.getTemplateDir().set(templateWorkDir.getAbsolutePath());
-            logger.debug("Using template working directory (orchestrated templates): {}", templateWorkDir.getAbsolutePath());
-        } else if (resolvedConfig.getTemplateDir() != null) {
-            // Fallback for cases where no template processing was needed (rare)
-            // This would only happen if the user specified a templateDir but no customizations
-            // were applied and no templates needed to be extracted
-            File templateDir = new File(resolvedConfig.getTemplateDir());
-            if (templateDir.exists()) {
-                task.getTemplateDir().set(resolvedConfig.getTemplateDir());
-                logger.debug("Using user template directory directly (no orchestration needed): {}", templateDir.getAbsolutePath());
-            } else {
-                logger.debug("Template directory does not exist, using OpenAPI Generator defaults: {}", templateDir.getAbsolutePath());
-            }
-        }
+        // Always set the template working directory - TemplatePreparationAction will ensure it exists
+        task.getTemplateDir().set(expectedWorkDir);
+        logger.debug("Configured templateDir for OpenAPI Generator: {}", expectedWorkDir);
         
         // Apply default OpenAPI Generator configuration
         applyDefaultConfiguration(task);

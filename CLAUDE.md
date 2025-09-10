@@ -224,8 +224,8 @@ defaults {
 
 The plugin orchestrates templates from multiple sources with clear precedence hierarchy:
 
-1. **User templates** (`templateDir`) - Complete template overrides, highest priority
-2. **User YAML customizations** (`templateCustomizationsDir`) - Surgical template modifications  
+1. **User templates** (`userTemplateDir`) - Complete template overrides, highest priority
+2. **User YAML customizations** (`userTemplateCustomizationsDir`) - Surgical template modifications  
 3. **Plugin YAML customizations** - Built-in customizations (can be disabled)
 4. **OpenAPI Generator defaults** - Base templates extracted as needed
 

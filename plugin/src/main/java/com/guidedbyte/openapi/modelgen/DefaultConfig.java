@@ -18,8 +18,8 @@ import java.util.Map;
  * <h2>Supported Configuration Options:</h2>
  * <ul>
  *   <li><strong>outputDir:</strong> Base directory for generated code (default: "build/generated/sources/openapi")</li>
- *   <li><strong>templateDir:</strong> Directory containing user's custom Mustache templates (copied to build/template-work during processing)</li>
- *   <li><strong>templateCustomizationsDir:</strong> Directory containing user's YAML template customization files (applied to build/template-work)</li>
+ *   <li><strong>userTemplateDir:</strong> Directory containing user's custom Mustache templates (copied to build/template-work during processing)</li>
+ *   <li><strong>userTemplateCustomizationsDir:</strong> Directory containing user's YAML template customization files (applied to build/template-work)</li>
  *   <li><strong>modelNamePrefix:</strong> Prefix prepended to model class names (no default)</li>
  *   <li><strong>modelNameSuffix:</strong> Suffix appended to model class names (default: "Dto")</li>
  *   <li><strong>validateSpec:</strong> Enable/disable OpenAPI specification validation (default: false)</li>
@@ -89,8 +89,8 @@ import java.util.Map;
 public class DefaultConfig {
     
     private final Property<String> outputDir;
-    private final Property<String> templateDir;
-    private final Property<String> templateCustomizationsDir;
+    private final Property<String> userTemplateDir;
+    private final Property<String> userTemplateCustomizationsDir;
     private final Property<String> modelNamePrefix;
     private final Property<String> modelNameSuffix;
     private final Property<Boolean> generateModelTests;
@@ -118,8 +118,8 @@ public class DefaultConfig {
      */
     public DefaultConfig(Project project) {
         this.outputDir = project.getObjects().property(String.class);
-        this.templateDir = project.getObjects().property(String.class);
-        this.templateCustomizationsDir = project.getObjects().property(String.class);
+        this.userTemplateDir = project.getObjects().property(String.class);
+        this.userTemplateCustomizationsDir = project.getObjects().property(String.class);
         this.modelNamePrefix = project.getObjects().property(String.class);
         this.modelNameSuffix = project.getObjects().property(String.class);
         this.generateModelTests = project.getObjects().property(Boolean.class);
@@ -147,12 +147,12 @@ public class DefaultConfig {
         return outputDir;
     }
     
-    public Property<String> getTemplateDir() {
-        return templateDir;
+    public Property<String> getUserTemplateDir() {
+        return userTemplateDir;
     }
     
-    public Property<String> getTemplateCustomizationsDir() {
-        return templateCustomizationsDir;
+    public Property<String> getUserTemplateCustomizationsDir() {
+        return userTemplateCustomizationsDir;
     }
     
     public Property<String> getModelNamePrefix() {
@@ -218,8 +218,8 @@ public class DefaultConfig {
      * <p>Defines the ordered list of template sources to use for template resolution.
      * Sources are processed in order from highest to lowest priority. Available sources:
      * <ul>
-     *   <li><strong>user-templates:</strong> Explicit .mustache files in templateDir</li>
-     *   <li><strong>user-customizations:</strong> YAML customizations in templateCustomizationsDir</li>
+     *   <li><strong>user-templates:</strong> Explicit .mustache files in userTemplateDir</li>
+     *   <li><strong>user-customizations:</strong> YAML customizations in userTemplateCustomizationsDir</li>
      *   <li><strong>library-templates:</strong> Templates from JAR dependencies</li>
      *   <li><strong>library-customizations:</strong> YAML customizations from JAR dependencies</li>
      *   <li><strong>plugin-customizations:</strong> Built-in plugin YAML customizations</li>
@@ -255,8 +255,8 @@ public class DefaultConfig {
      * @param value Path to the directory containing custom templates organized by generator
      */
     @Option(option = "template-dir", description = "Source directory for user's custom Mustache templates (copied to build/template-work)")
-    public void templateDir(String value) {
-        this.templateDir.set(value);
+    public void userTemplateDir(String value) {
+        this.userTemplateDir.set(value);
     }
     
     /**
@@ -268,8 +268,8 @@ public class DefaultConfig {
      * @param value Path to the directory containing YAML customizations organized by generator
      */
     @Option(option = "template-customizations-dir", description = "Source directory for user's YAML template customizations (applied to build/template-work)")
-    public void templateCustomizationsDir(String value) {
-        this.templateCustomizationsDir.set(value);
+    public void userTemplateCustomizationsDir(String value) {
+        this.userTemplateCustomizationsDir.set(value);
     }
     
     @Option(option = "model-name-prefix", description = "Prefix to prepend to all generated model class names (e.g., 'Api', 'Generated')")

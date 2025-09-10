@@ -102,12 +102,12 @@ public class ConfigurationValidator implements Serializable {
         }
         
         // Validate template directory
-        if (defaults.getTemplateDir().isPresent()) {
-            String templateDir = defaults.getTemplateDir().get();
+        if (defaults.getUserTemplateDir().isPresent()) {
+            String templateDir = defaults.getUserTemplateDir().get();
             if (templateDir != null && !templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
                 if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
-                    errors.add("defaults.templateDir is not a directory: " + templateDir);
+                    errors.add("defaults.userTemplateDir is not a directory: " + templateDir);
                 }
                 // Note: Missing directories are allowed - plugin will fall back to built-in templates
             }
@@ -189,13 +189,13 @@ public class ConfigurationValidator implements Serializable {
             }
         }
         
-        // Validate optional templateDir
-        if (specConfig.getTemplateDir().isPresent()) {
-            String templateDir = specConfig.getTemplateDir().get();
+        // Validate optional userTemplateDir
+        if (specConfig.getUserTemplateDir().isPresent()) {
+            String templateDir = specConfig.getUserTemplateDir().get();
             if (templateDir != null && !templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
                 if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
-                    errors.add(specPrefix + ": templateDir is not a directory: " + templateDir);
+                    errors.add(specPrefix + ": userTemplateDir is not a directory: " + templateDir);
                 }
                 // Note: Missing directories are allowed - plugin will fall back to built-in templates
             }

@@ -44,8 +44,8 @@ public class ResolvedSpecConfig {
     
     // Template configuration
     private final String outputDir;
-    private final String templateDir;
-    private final String templateCustomizationsDir;
+    private final String userTemplateDir;
+    private final String userTemplateCustomizationsDir;
     private final String modelNamePrefix;
     private final String modelNameSuffix;
     
@@ -75,8 +75,8 @@ public class ResolvedSpecConfig {
         this.modelPackage = builder.modelPackage;
         this.generatorName = builder.generatorName;
         this.outputDir = builder.outputDir;
-        this.templateDir = builder.templateDir;
-        this.templateCustomizationsDir = builder.templateCustomizationsDir;
+        this.userTemplateDir = builder.userTemplateDir;
+        this.userTemplateCustomizationsDir = builder.userTemplateCustomizationsDir;
         this.modelNamePrefix = builder.modelNamePrefix;
         this.modelNameSuffix = builder.modelNameSuffix;
         this.validateSpec = builder.validateSpec;
@@ -116,12 +116,12 @@ public class ResolvedSpecConfig {
         return outputDir;
     }
     
-    public String getTemplateDir() {
-        return templateDir;
+    public String getUserTemplateDir() {
+        return userTemplateDir;
     }
     
-    public String getTemplateCustomizationsDir() {
-        return templateCustomizationsDir;
+    public String getUserTemplateCustomizationsDir() {
+        return userTemplateCustomizationsDir;
     }
     
     public String getModelNamePrefix() {
@@ -250,8 +250,8 @@ public class ResolvedSpecConfig {
         private String modelPackage;
         private String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME;
         private String outputDir = "build/" + PluginConstants.GENERATED_DIR + "/" + PluginConstants.SOURCES_DIR + "/" + PluginConstants.OPENAPI_DIR;
-        private String templateDir;
-        private String templateCustomizationsDir;
+        private String userTemplateDir;
+        private String userTemplateCustomizationsDir;
         private String modelNamePrefix; // No default value
         private String modelNameSuffix = "Dto";
         private boolean validateSpec = false;
@@ -347,11 +347,11 @@ public class ResolvedSpecConfig {
             if (defaults.getOutputDir().isPresent()) {
                 this.outputDir = defaults.getOutputDir().get();
             }
-            if (defaults.getTemplateDir().isPresent()) {
-                this.templateDir = defaults.getTemplateDir().get();
+            if (defaults.getUserTemplateDir().isPresent()) {
+                this.userTemplateDir = defaults.getUserTemplateDir().get();
             }
-            if (defaults.getTemplateCustomizationsDir().isPresent()) {
-                this.templateCustomizationsDir = defaults.getTemplateCustomizationsDir().get();
+            if (defaults.getUserTemplateCustomizationsDir().isPresent()) {
+                this.userTemplateCustomizationsDir = defaults.getUserTemplateCustomizationsDir().get();
             }
             if (defaults.getModelNamePrefix().isPresent()) {
                 this.modelNamePrefix = defaults.getModelNamePrefix().get();
@@ -420,11 +420,11 @@ public class ResolvedSpecConfig {
             if (spec.getOutputDir().isPresent()) {
                 this.outputDir = spec.getOutputDir().get();
             }
-            if (spec.getTemplateDir().isPresent()) {
-                this.templateDir = spec.getTemplateDir().get();
+            if (spec.getUserTemplateDir().isPresent()) {
+                this.userTemplateDir = spec.getUserTemplateDir().get();
             }
-            if (spec.getTemplateCustomizationsDir().isPresent()) {
-                this.templateCustomizationsDir = spec.getTemplateCustomizationsDir().get();
+            if (spec.getUserTemplateCustomizationsDir().isPresent()) {
+                this.userTemplateCustomizationsDir = spec.getUserTemplateCustomizationsDir().get();
             }
             if (spec.getModelNamePrefix().isPresent()) {
                 this.modelNamePrefix = spec.getModelNamePrefix().get();

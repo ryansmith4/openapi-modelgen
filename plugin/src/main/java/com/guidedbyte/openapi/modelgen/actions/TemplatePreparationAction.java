@@ -17,6 +17,9 @@ import java.nio.file.StandardCopyOption;
  * Configuration-cache compatible task action that prepares template working directory
  * using pre-resolved template configuration. This action operates without any project references,
  * making it fully compatible with Gradle's configuration cache.
+ * 
+ * This action also sets the OpenAPI Generator's templateDir property at execution time
+ * after creating the working directory, ensuring configuration cache compatibility.
  */
 public class TemplatePreparationAction implements Action<Task> {
     private static final Logger logger = LoggerFactory.getLogger(TemplatePreparationAction.class);
@@ -47,7 +50,7 @@ public class TemplatePreparationAction implements Action<Task> {
     }
     
     private void prepareTemplateWorkingDirectory() throws IOException {
-        String workDir = templateConfig.getTemplateWorkDirectory();
+        String workDir = templateConfig.getTemplateWorkDir();
         if (workDir == null) {
             return;
         }

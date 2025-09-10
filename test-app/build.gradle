@@ -54,8 +54,8 @@ openapiModelgen {
     debug true  // Disable debug logging for template resolution
     
     defaults {
-        templateDir "src/main/templates" // Use explicit user templates
-        templateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
+        userTemplateDir "src/main/templates" // Use explicit user templates
+        userTemplateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
         modelNamePrefix "Api" // Add prefix to test the new feature
         saveOriginalTemplates true // Disable saving original templates
 //        templateSources([

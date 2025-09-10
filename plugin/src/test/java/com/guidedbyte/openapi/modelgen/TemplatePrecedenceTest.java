@@ -64,7 +64,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
-                    templateDir "src/main/templates/custom" // Request customization (triggers plugin templates as fallback)
+                    userTemplateDir "src/main/templates/custom" // Request customization (triggers plugin templates as fallback)
                 }
                 specs {
                     test {
@@ -223,7 +223,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
-                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
+                    userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 specs {
                     test {
@@ -348,7 +348,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                     test {
                         inputSpec "${project.projectDir}/src/main/resources/test-spec.yaml"
                         modelPackage "com.example.test"
-                        templateDir "src/main/resources/non-existent-templates"
+                        userTemplateDir "src/main/resources/non-existent-templates"
                     }
                 }
             }

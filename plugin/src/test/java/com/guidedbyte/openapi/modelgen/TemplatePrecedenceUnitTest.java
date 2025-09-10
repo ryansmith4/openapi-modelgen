@@ -50,12 +50,12 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring template directory precedence
-        extension.getDefaults().templateDir("src/main/resources/user-templates");
+        extension.getDefaults().userTemplateDir("src/main/resources/user-templates");
 
         // Then: User template directory should be configured
-        assertTrue(extension.getDefaults().getTemplateDir().isPresent());
+        assertTrue(extension.getDefaults().getUserTemplateDir().isPresent());
         assertEquals("src/main/resources/user-templates", 
-                    extension.getDefaults().getTemplateDir().get());
+                    extension.getDefaults().getUserTemplateDir().get());
     }
 
     @Test
@@ -66,17 +66,17 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring both default and spec-specific template directories
-        extension.getDefaults().templateDir("src/main/resources/default-templates");
+        extension.getDefaults().userTemplateDir("src/main/resources/default-templates");
         
         SpecConfig specConfig = new SpecConfig(project);
-        specConfig.templateDir("src/main/resources/spec-templates");
+        specConfig.userTemplateDir("src/main/resources/spec-templates");
         extension.getSpecs().put("test", specConfig);
 
         // Then: Spec should have its own template directory
         assertEquals("src/main/resources/default-templates", 
-                    extension.getDefaults().getTemplateDir().get());
+                    extension.getDefaults().getUserTemplateDir().get());
         assertEquals("src/main/resources/spec-templates", 
-                    extension.getSpecs().get("test").getTemplateDir().get());
+                    extension.getSpecs().get("test").getUserTemplateDir().get());
     }
 
     @Test
@@ -117,8 +117,8 @@ public class TemplatePrecedenceUnitTest {
         extension.getSpecs().put("test", specConfig);
 
         // Then: Template directory should not be present (will use plugin defaults)
-        assertFalse(extension.getSpecs().get("test").getTemplateDir().isPresent());
-        assertFalse(extension.getDefaults().getTemplateDir().isPresent());
+        assertFalse(extension.getSpecs().get("test").getUserTemplateDir().isPresent());
+        assertFalse(extension.getDefaults().getUserTemplateDir().isPresent());
     }
 
     @Test
@@ -129,12 +129,12 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring multiple specs with different template sources
-        extension.getDefaults().templateDir("src/main/resources/common-templates");
+        extension.getDefaults().userTemplateDir("src/main/resources/common-templates");
         
         SpecConfig petsSpec = new SpecConfig(project);
         petsSpec.inputSpec("pets.yaml");
         petsSpec.modelPackage("com.example.pets");
-        petsSpec.templateDir("src/main/resources/pets-templates"); // Spec-specific override
+        petsSpec.userTemplateDir("src/main/resources/pets-templates"); // Spec-specific override
         
         SpecConfig ordersSpec = new SpecConfig(project);
         ordersSpec.inputSpec("orders.yaml");
@@ -146,10 +146,10 @@ public class TemplatePrecedenceUnitTest {
 
         // Then: Each spec should have appropriate template configuration
         assertEquals("src/main/resources/pets-templates", 
-                    extension.getSpecs().get("pets").getTemplateDir().get());
-        assertFalse(extension.getSpecs().get("orders").getTemplateDir().isPresent()); // Should inherit from defaults
+                    extension.getSpecs().get("pets").getUserTemplateDir().get());
+        assertFalse(extension.getSpecs().get("orders").getUserTemplateDir().isPresent()); // Should inherit from defaults
         assertEquals("src/main/resources/common-templates", 
-                    extension.getDefaults().getTemplateDir().get());
+                    extension.getDefaults().getUserTemplateDir().get());
     }
 
     @Test

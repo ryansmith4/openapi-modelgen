@@ -117,7 +117,7 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
-                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
+                    userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 specs {
                     pets {
@@ -388,7 +388,7 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
                     pets {
                         inputSpec "${project.projectDir}/src/main/resources/openapi-spec/pets.yaml"
                         modelPackage "com.example.model.pets"
-                        templateDir "src/main/resources/templates"
+                        userTemplateDir "src/main/resources/templates"
                     }
                 }
             }

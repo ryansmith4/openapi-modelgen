@@ -34,8 +34,8 @@ Settings applied to all specifications unless overridden at the spec level.
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `outputDir` | String | `"build/generated/sources/openapi"` | Base directory for generated code |
-| `templateDir` | String | `null` | Directory containing custom Mustache templates |
-| `templateCustomizationsDir` | String | `null` | Directory containing YAML template customizations |
+| `userTemplateDir` | String | `null` | Directory containing custom Mustache templates |
+| `userTemplateCustomizationsDir` | String | `null` | Directory containing YAML template customizations |
 | `modelNamePrefix` | String | `null` | Prefix prepended to generated model class names |
 | `modelNameSuffix` | String | `"Dto"` | Suffix added to generated model class names |
 
@@ -43,8 +43,8 @@ Settings applied to all specifications unless overridden at the spec level.
 openapiModelgen {
     defaults {
         outputDir "src/generated/java"
-        templateDir "src/main/resources/templates"
-        templateCustomizationsDir "src/main/resources/customizations"
+        userTemplateDir "src/main/resources/templates"
+        userTemplateCustomizationsDir "src/main/resources/customizations"
         modelNamePrefix "Api"
         modelNameSuffix "Model"
     }
@@ -216,7 +216,7 @@ openapiModelgen {
             modelNamePrefix "Legacy"
             modelNameSuffix "Entity"
             validateSpec true
-            templateDir "src/main/resources/users-templates"
+            userTemplateDir "src/main/resources/users-templates"
             
             configOptions([
                 useJakartaEe: "false",  // Use Java EE for this spec
@@ -411,8 +411,8 @@ openapiModelgen {
         generateModelTests false
         
         // Template settings
-        templateDir "src/main/resources/templates"
-        templateCustomizationsDir "src/main/resources/customizations"
+        userTemplateDir "src/main/resources/templates"
+        userTemplateCustomizationsDir "src/main/resources/customizations"
         templateSources([
             "user-templates",
             "user-customizations",
@@ -463,7 +463,7 @@ openapiModelgen {
             modelPackage "com.example.external.model"
             
             // Different template customizations for external API
-            templateCustomizationsDir "src/main/resources/external-customizations"
+            userTemplateCustomizationsDir "src/main/resources/external-customizations"
         }
     }
 }

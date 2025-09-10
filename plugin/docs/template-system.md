@@ -11,12 +11,12 @@ The plugin implements a sophisticated **6-source template resolution system** th
 The plugin processes template sources in the following precedence order (highest to lowest):
 
 1. **User Templates** (`user-templates`)
-   - Complete `.mustache` files in `templateDir`
+   - Complete `.mustache` files in `userTemplateDir`
    - **Highest precedence** - overrides everything
    - Example: `src/main/templates/spring/pojo.mustache`
 
 2. **User YAML Customizations** (`user-customizations`)
-   - Modifications defined in `templateCustomizationsDir`
+   - Modifications defined in `userTemplateCustomizationsDir`
    - Applied to base templates from lower-precedence sources
    - Example: `src/main/templateCustomizations/spring/pojo.mustache.yaml`
 

@@ -45,8 +45,8 @@ public class TemplateDirectorySetupAction implements Action<Task>, Serializable 
                 TemplateConfiguration templateConfig = templateResolver.resolveTemplateConfiguration(
                     projectLayout, resolvedConfig, resolvedConfig.getGeneratorName(), Map.of());
                 
-                if (templateConfig.isTemplateProcessingEnabled() && templateConfig.getTemplateWorkDirectory() != null) {
-                    File templateDir = new File(templateConfig.getTemplateWorkDirectory());
+                if (templateConfig.isTemplateProcessingEnabled() && templateConfig.getTemplateWorkDir() != null) {
+                    File templateDir = new File(templateConfig.getTemplateWorkDir());
                     if (!templateDir.exists()) {
                         boolean created = templateDir.mkdirs();
                         if (created) {

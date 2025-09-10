@@ -57,7 +57,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
-                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
+                    userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 
                 specs {
@@ -176,7 +176,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
             openapiModelgen {
                 defaults {
                     validateSpec false
-                    templateDir "src/main/templates/custom" // Trigger plugin template extraction
+                    userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
                 
                 specs {

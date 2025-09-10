@@ -29,7 +29,7 @@ public class TemplateConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private final String generatorName;
-    private final String templateWorkDirectory;
+    private final String templateWorkDir;
     private final boolean hasUserTemplates;
     private final boolean hasUserCustomizations;
     private final boolean hasPluginCustomizations;
@@ -50,7 +50,7 @@ public class TemplateConfiguration implements Serializable {
     
     private TemplateConfiguration(Builder builder) {
         this.generatorName = builder.generatorName;
-        this.templateWorkDirectory = builder.templateWorkDirectory;
+        this.templateWorkDir = builder.templateWorkDir;
         this.hasUserTemplates = builder.hasUserTemplates;
         this.hasUserCustomizations = builder.hasUserCustomizations;
         this.hasPluginCustomizations = builder.hasPluginCustomizations;
@@ -80,7 +80,7 @@ public class TemplateConfiguration implements Serializable {
     }
     
     public String getGeneratorName() { return generatorName; }
-    public String getTemplateWorkDirectory() { return templateWorkDirectory; }
+    public String getTemplateWorkDir() { return templateWorkDir; }
     public boolean hasUserTemplates() { return hasUserTemplates; }
     public boolean hasUserCustomizations() { return hasUserCustomizations; }
     public boolean hasPluginCustomizations() { return hasPluginCustomizations; }
@@ -115,7 +115,7 @@ public class TemplateConfiguration implements Serializable {
                 debug == that.debug &&
                 saveOriginalTemplates == that.saveOriginalTemplates &&
                 Objects.equals(generatorName, that.generatorName) &&
-                Objects.equals(templateWorkDirectory, that.templateWorkDirectory) &&
+                Objects.equals(templateWorkDir, that.templateWorkDir) &&
                 Objects.equals(userTemplateDirectory, that.userTemplateDirectory) &&
                 Objects.equals(userCustomizationsDirectory, that.userCustomizationsDirectory) &&
                 Objects.equals(templateVariables, that.templateVariables) &&
@@ -124,7 +124,7 @@ public class TemplateConfiguration implements Serializable {
     
     @Override
     public int hashCode() {
-        return Objects.hash(generatorName, templateWorkDirectory, hasUserTemplates, hasUserCustomizations,
+        return Objects.hash(generatorName, templateWorkDir, hasUserTemplates, hasUserCustomizations,
                 hasPluginCustomizations, userTemplateDirectory,
                 userCustomizationsDirectory, templateVariables, templateProcessingEnabled,
                 templateSources, debug, saveOriginalTemplates);
@@ -134,7 +134,7 @@ public class TemplateConfiguration implements Serializable {
     public String toString() {
         return "TemplateConfiguration{" +
                 "generatorName='" + generatorName + '\'' +
-                ", templateWorkDirectory='" + templateWorkDirectory + '\'' +
+                ", templateWorkDir='" + templateWorkDir + '\'' +
                 ", hasUserTemplates=" + hasUserTemplates +
                 ", hasUserCustomizations=" + hasUserCustomizations +
                 ", hasPluginCustomizations=" + hasPluginCustomizations +
@@ -144,7 +144,7 @@ public class TemplateConfiguration implements Serializable {
     
     public static class Builder {
         private final String generatorName;
-        private String templateWorkDirectory;
+        private String templateWorkDir;
         private boolean hasUserTemplates;
         private boolean hasUserCustomizations;
         private boolean hasPluginCustomizations;
@@ -167,8 +167,8 @@ public class TemplateConfiguration implements Serializable {
             this.generatorName = Objects.requireNonNull(generatorName, "generatorName must not be null");
         }
         
-        public Builder templateWorkDirectory(String templateWorkDirectory) {
-            this.templateWorkDirectory = templateWorkDirectory;
+        public Builder templateWorkDir(String templateWorkDir) {
+            this.templateWorkDir = templateWorkDir;
             return this;
         }
         

@@ -72,7 +72,7 @@ Enable template customizations in your build configuration:
 ```gradle
 openapiModelgen {
     defaults {
-        templateCustomizationsDir "src/main/resources/template-customizations"
+        userTemplateCustomizationsDir "src/main/resources/template-customizations"
     }
     specs {
         api {

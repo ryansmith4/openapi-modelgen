@@ -216,7 +216,7 @@ Full-featured template customization with YAML modifications:
 ```gradle
 openapiModelgen {
     defaults {
-        templateCustomizationsDir "src/main/resources/template-customizations"
+        userTemplateCustomizationsDir "src/main/resources/template-customizations"
         debug true  // Enable comprehensive debug logging
         
         templateVariables([

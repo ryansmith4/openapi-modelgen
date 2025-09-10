@@ -41,8 +41,8 @@ openapiModelgen {
             inputSpec "src/main/resources/api.yaml"
             modelPackage "com.example.model"
             // Optional: explicit templates and YAML customizations
-            templateDir "src/main/resources/templates"
-            templateCustomizationsDir "src/main/resources/customizations"
+            userTemplateDir "src/main/resources/templates"
+            userTemplateCustomizationsDir "src/main/resources/customizations"
         }
     }
 }

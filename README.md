@@ -83,8 +83,8 @@ The plugin comes pre-configured with sensible defaults for **Spring Boot 3 + Jak
 ```gradle
 generatorName = "spring"                           // OpenAPI Generator name
 outputDir = "build/generated/sources/openapi"     // Generated code output directory
-templateDir = null                                 // Custom template directory (not set by default)
-templateCustomizationsDir = null                  // YAML customizations directory (not set by default)
+userTemplateDir = null                             // Custom template directory (not set by default)
+userTemplateCustomizationsDir = null              // YAML customizations directory (not set by default)
 modelNameSuffix = "Dto"                           // Suffix for generated model classes
 ```
 
@@ -206,8 +206,8 @@ openapiModelgen {
 openapiModelgen {
     defaults {
         outputDir "build/generated/sources/openapi"
-        templateDir "src/main/resources/openapi-templates"
-        templateCustomizationsDir "src/main/resources/template-customizations"
+        userTemplateDir "src/main/resources/openapi-templates"
+        userTemplateCustomizationsDir "src/main/resources/template-customizations"
         modelNameSuffix "Dto"
         validateSpec true
         parallel true                       // Enable thread-safe parallel processing (default: true)
@@ -263,8 +263,8 @@ openapiModelgen {
             inputSpec "src/main/resources/openapi-spec/orders.yaml"
             modelPackage "com.example.orders.model"
             // Spec-specific overrides
-            templateDir "src/main/resources/orders-templates"
-            templateCustomizationsDir "src/main/resources/orders-customizations"
+            userTemplateDir "src/main/resources/orders-templates"
+            userTemplateCustomizationsDir "src/main/resources/orders-customizations"
             modelNameSuffix "Entity"
             validateSpec false          // Disable validation for this spec
             applyPluginCustomizations false // Disable plugin YAML customizations for this spec
@@ -333,12 +333,12 @@ selective backup mechanisms, see [template-system.md](plugin/docs/template-syste
 The plugin uses a sophisticated orchestration system to combine templates from multiple sources:
 
 #### User Directories (Source)
-- **`templateDir`**: Your custom Mustache templates (e.g., `src/main/templates/{generator}/*.mustache`)
-- **`templateCustomizationsDir`**: Your YAML customizations (e.g., `src/main/templateCustomizations/{generator}/*.mustache.yaml`)
+- **`userTemplateDir`**: Your custom Mustache templates (e.g., `src/main/templates/{generator}/*.mustache`)
+- **`userTemplateCustomizationsDir`**: Your YAML customizations (e.g., `src/main/templateCustomizations/{generator}/*.mustache.yaml`)
 
 #### Build Directory (Orchestration)
 - **`build/template-work/{generator}-{specName}`**: The orchestrated template directory used by OpenAPI Generator
-  - Contains user templates (copied from `templateDir`)
+  - Contains user templates (copied from `userTemplateDir`)
   - Contains extracted OpenAPI Generator templates (only those being customized)
   - Has all YAML customizations applied (plugin, user, library)
   - **Each spec gets its own isolated directory to prevent cross-contamination**
@@ -349,14 +349,14 @@ The plugin uses a sophisticated orchestration system to combine templates from m
   - Only created when `saveOriginalTemplates` is enabled
 
 #### Key Point
-The `templateDir` and `templateCustomizationsDir` are **source directories** - they provide inputs to the template orchestration process. The actual code generation uses the fully processed `build/template-work/{generator}-{specName}` directories, ensuring clean separation between your source files and build outputs, with each spec isolated in its own template directory.
+The `userTemplateDir` and `userTemplateCustomizationsDir` are **source directories** - they provide inputs to the template orchestration process. The actual code generation uses the fully processed `build/template-work/{generator}-{specName}` directories, ensuring clean separation between your source files and build outputs, with each spec isolated in its own template directory.
 
 ### Template Precedence Hierarchy
 
 The plugin follows a strict precedence hierarchy when resolving templates:
 
-1. **Explicit User Templates** (highest precedence) - Complete `.mustache` files in `templateDir`
-2. **User YAML Customizations** - Modifications defined in `templateCustomizationsDir`
+1. **Explicit User Templates** (highest precedence) - Complete `.mustache` files in `userTemplateDir`
+2. **User YAML Customizations** - Modifications defined in `userTemplateCustomizationsDir`
 3. **Library Templates** - Templates from template library JARs (if enabled)
 4. **Library YAML Customizations** - YAML customizations from template library JARs (if enabled)
 5. **Plugin YAML Customizations** - Built-in optimizations (if any configured)
@@ -800,8 +800,8 @@ The plugin supports customization of all OpenAPI Generator template files:
 ```gradle
 openapiModelgen {
     defaults {
-        templateDir "src/main/resources/openapi-templates"              // Explicit templates
-        templateCustomizationsDir "src/main/resources/customizations"   // YAML customizations
+        userTemplateDir "src/main/resources/openapi-templates"          // Explicit templates
+        userTemplateCustomizationsDir "src/main/resources/customizations" // YAML customizations
         
         templateVariables([
             companyName: "Acme Corp",
@@ -820,8 +820,8 @@ specs {
         modelPackage "com.example.orders"
         
         // Override templates for this spec only
-        templateDir "src/main/resources/orders-templates"
-        templateCustomizationsDir "src/main/resources/orders-customizations"
+        userTemplateDir "src/main/resources/orders-templates"
+        userTemplateCustomizationsDir "src/main/resources/orders-customizations"
         
         // Spec-specific variables
         templateVariables([

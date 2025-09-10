@@ -24,8 +24,8 @@ import java.util.Map;
  * <h2>Optional Configuration (overrides defaults):</h2>
  * <ul>
  *   <li><strong>outputDir:</strong> Override output directory for this spec</li>
- *   <li><strong>templateDir:</strong> Override template directory for this spec</li>
- *   <li><strong>templateCustomizationsDir:</strong> Override template customizations directory for this spec</li>
+ *   <li><strong>userTemplateDir:</strong> Override template directory for this spec</li>
+ *   <li><strong>userTemplateCustomizationsDir:</strong> Override template customizations directory for this spec</li>
  *   <li><strong>modelNameSuffix:</strong> Override model name suffix for this spec</li>
  *   <li><strong>validateSpec:</strong> Override validation setting for this spec</li>
  *   <li><strong>applyPluginCustomizations:</strong> Override plugin YAML customizations setting for this spec</li>
@@ -53,7 +53,7 @@ import java.util.Map;
  *         inputSpec "src/main/resources/openapi-spec/legacy-orders.yaml"
  *         modelPackage "com.example.legacy.orders"
  *         validateSpec false  // Disable validation for legacy spec
- *         templateDir "src/main/resources/legacy-templates"
+ *         userTemplateDir "src/main/resources/legacy-templates"
  *         generateModelTests false  // Skip tests for legacy spec
  *         generateApiDocumentation true  // Generate docs despite being legacy
  *         importMappings([
@@ -80,8 +80,8 @@ public class SpecConfig {
     private final Property<String> modelNamePrefix;
     private final Property<String> modelNameSuffix;
     private final Property<String> outputDir;
-    private final Property<String> templateDir;
-    private final Property<String> templateCustomizationsDir;
+    private final Property<String> userTemplateDir;
+    private final Property<String> userTemplateCustomizationsDir;
     private final Property<Boolean> validateSpec;
     private final ListProperty<String> templateSources;
     private final Property<Boolean> debug;
@@ -111,8 +111,8 @@ public class SpecConfig {
         this.modelNamePrefix = project.getObjects().property(String.class);
         this.modelNameSuffix = project.getObjects().property(String.class);
         this.outputDir = project.getObjects().property(String.class);
-        this.templateDir = project.getObjects().property(String.class);
-        this.templateCustomizationsDir = project.getObjects().property(String.class);
+        this.userTemplateDir = project.getObjects().property(String.class);
+        this.userTemplateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
         this.debug = project.getObjects().property(Boolean.class);
@@ -155,12 +155,12 @@ public class SpecConfig {
         return outputDir;
     }
     
-    public Property<String> getTemplateDir() {
-        return templateDir;
+    public Property<String> getUserTemplateDir() {
+        return userTemplateDir;
     }
     
-    public Property<String> getTemplateCustomizationsDir() {
-        return templateCustomizationsDir;
+    public Property<String> getUserTemplateCustomizationsDir() {
+        return userTemplateCustomizationsDir;
     }
     
     public Property<Boolean> getValidateSpec() {
@@ -247,13 +247,13 @@ public class SpecConfig {
     }
     
     @Option(option = "template-dir", description = "Custom template directory for this spec")
-    public void templateDir(String value) {
-        this.templateDir.set(value);
+    public void userTemplateDir(String value) {
+        this.userTemplateDir.set(value);
     }
     
     @Option(option = "template-customizations-dir", description = "Directory containing YAML template customization files for this spec")
-    public void templateCustomizationsDir(String value) {
-        this.templateCustomizationsDir.set(value);
+    public void userTemplateCustomizationsDir(String value) {
+        this.userTemplateCustomizationsDir.set(value);
     }
     
     @Option(option = "validate-spec", description = "Enable/disable OpenAPI specification validation for this spec")

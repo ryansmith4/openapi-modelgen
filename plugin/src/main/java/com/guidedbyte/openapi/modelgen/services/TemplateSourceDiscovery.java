@@ -147,7 +147,7 @@ public class TemplateSourceDiscovery implements Serializable {
      * Checks if user templates are available.
      */
     private SourceAvailability checkUserTemplates(ResolvedSpecConfig resolvedConfig, ProjectLayout projectLayout) {
-        String templateDir = resolvedConfig.getTemplateDir();
+        String templateDir = resolvedConfig.getUserTemplateDir();
         if (templateDir == null || templateDir.trim().isEmpty()) {
             return SourceAvailability.unavailable("No templateDir configured");
         }
@@ -174,7 +174,7 @@ public class TemplateSourceDiscovery implements Serializable {
      * Checks if user customizations are available.
      */
     private SourceAvailability checkUserCustomizations(ResolvedSpecConfig resolvedConfig, ProjectLayout projectLayout) {
-        String customizationsDir = resolvedConfig.getTemplateCustomizationsDir();
+        String customizationsDir = resolvedConfig.getUserTemplateCustomizationsDir();
         if (customizationsDir == null || customizationsDir.trim().isEmpty()) {
             return SourceAvailability.unavailable("No templateCustomizationsDir configured");
         }

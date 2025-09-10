@@ -93,7 +93,7 @@ public class TemplateResolver {
             "Generator: {}, Spec: {}", generatorName, resolvedConfig.getSpecName());
         DebugLogger.debug(logger, debugEnabled,
             "Template dir: {}, Customizations dir: {}", 
-            resolvedConfig.getTemplateDir(), resolvedConfig.getTemplateCustomizationsDir());
+            resolvedConfig.getUserTemplateDir(), resolvedConfig.getUserTemplateCustomizationsDir());
         
         // Get configured template sources (with fallback to defaults)
         List<String> configuredTemplateSources = resolvedConfig.getTemplateSources();
@@ -144,16 +144,16 @@ public class TemplateResolver {
         String resolvedUserTemplateDir = null;
         String resolvedUserCustomizationsDir = null;
         
-        if (hasUserTemplates && resolvedConfig.getTemplateDir() != null) {
+        if (hasUserTemplates && resolvedConfig.getUserTemplateDir() != null) {
             resolvedUserTemplateDir = projectLayout.getProjectDirectory()
-                .dir(resolvedConfig.getTemplateDir()).getAsFile().getAbsolutePath();
+                .dir(resolvedConfig.getUserTemplateDir()).getAsFile().getAbsolutePath();
             DebugLogger.debug(logger, debugEnabled, 
                 "Resolved user template directory: {}", resolvedUserTemplateDir);
         }
         
-        if (hasUserCustomizations && resolvedConfig.getTemplateCustomizationsDir() != null) {
+        if (hasUserCustomizations && resolvedConfig.getUserTemplateCustomizationsDir() != null) {
             resolvedUserCustomizationsDir = projectLayout.getProjectDirectory()
-                .dir(resolvedConfig.getTemplateCustomizationsDir()).getAsFile().getAbsolutePath();
+                .dir(resolvedConfig.getUserTemplateCustomizationsDir()).getAsFile().getAbsolutePath();
             DebugLogger.debug(logger, debugEnabled, 
                 "Resolved user customizations directory: {}", resolvedUserCustomizationsDir);
         }
@@ -274,7 +274,7 @@ public class TemplateResolver {
             generatorName, templateWorkDirectory, templateProcessingEnabled);
         
         TemplateConfiguration templateConfig = TemplateConfiguration.builder(generatorName)
-            .templateWorkDirectory(templateWorkDirectory)
+            .templateWorkDir(templateWorkDirectory)
             .hasUserTemplates(hasUserTemplates)
             .hasUserCustomizations(hasUserCustomizations)
             .hasLibraryTemplates(hasLibraryTemplates)
