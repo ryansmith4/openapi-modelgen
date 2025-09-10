@@ -3,6 +3,7 @@ package com.guidedbyte.openapi.modelgen.services;
 import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
+import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
@@ -129,8 +130,13 @@ class TaskConfigurationServiceTest {
         ProviderFactory providerFactory = project.getProviders();
         
         // When
+        // Create a mock template configuration
+        TemplateConfiguration templateConfig = TemplateConfiguration.builder("spring")
+            .templateWorkDir(projectLayout.getBuildDirectory().dir("template-work/spring-test").get().getAsFile().getAbsolutePath())
+            .build();
+            
         taskConfigurationService.applySpecConfig(task, extension, specConfig, "test", 
-                project, projectLayout, objectFactory, providerFactory);
+                project, projectLayout, objectFactory, providerFactory, templateConfig);
         
         // Then
         assertEquals("test-spec.yaml", task.getInputSpec().get());
@@ -157,8 +163,13 @@ class TaskConfigurationServiceTest {
         ProviderFactory providerFactory = project.getProviders();
         
         // When
+        // Create a mock template configuration
+        TemplateConfiguration templateConfig = TemplateConfiguration.builder("spring")
+            .templateWorkDir(projectLayout.getBuildDirectory().dir("template-work/spring-test").get().getAsFile().getAbsolutePath())
+            .build();
+            
         taskConfigurationService.applySpecConfig(task, extension, specConfig, "test", 
-                project, projectLayout, objectFactory, providerFactory);
+                project, projectLayout, objectFactory, providerFactory, templateConfig);
         
         // Then - outputDir is now resolved to absolute path
         String expectedOutputDir = new File(project.getProjectDir(), "custom/output/dir").getAbsolutePath();

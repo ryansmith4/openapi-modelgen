@@ -161,11 +161,13 @@ public class TaskConfigurationService implements Serializable {
         task.setDescription(PluginConstants.DESC_GENERATE_PREFIX + specName + PluginConstants.DESC_GENERATE_SUFFIX);
         task.setGroup(PluginConstants.TASK_GROUP);
         
-        // Apply spec configuration
-        applySpecConfig(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory);
+        // Resolve template configuration first to determine if templateDir is needed
+        TemplateConfiguration templateConfiguration = resolveTemplateConfiguration(extension, specConfig, specName, project, projectLayout);
+        
+        // Apply spec configuration with template configuration context
+        applySpecConfig(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, templateConfiguration);
         
         // Add template preparation action with resolved template configuration
-        TemplateConfiguration templateConfiguration = resolveTemplateConfiguration(extension, specConfig, specName, project, projectLayout);
         task.doFirst(new TemplatePreparationAction(templateConfiguration));
         
         logger.debug("Configured generate task for spec: {}", specName);
@@ -182,10 +184,11 @@ public class TaskConfigurationService implements Serializable {
      * @param projectLayout the project layout for path resolution
      * @param objectFactory the object factory for creating Gradle objects
      * @param providerFactory the provider factory for creating lazy properties
+     * @param templateConfiguration the resolved template configuration
      */
     public void applySpecConfig(GenerateTask task, OpenApiModelGenExtension extension, SpecConfig specConfig, 
                               String specName, Project project, ProjectLayout projectLayout, 
-                              ObjectFactory objectFactory, ProviderFactory providerFactory) {
+                              ObjectFactory objectFactory, ProviderFactory providerFactory, TemplateConfiguration templateConfiguration) {
         
         // Create resolved config to get proper generator name and other settings
         ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
@@ -230,13 +233,11 @@ public class TaskConfigurationService implements Serializable {
          * will create it before OpenAPI Generator runs.
          */
         
-        // Set templateDir to the expected working directory path for configuration cache compatibility
-        String expectedWorkDir = projectLayout.getBuildDirectory()
-            .dir("template-work/" + resolvedConfig.getGeneratorName() + "-" + resolvedConfig.getSpecName()).get().getAsFile().getAbsolutePath();
-        
-        // Always set the template working directory - TemplatePreparationAction will ensure it exists
-        task.getTemplateDir().set(expectedWorkDir);
-        logger.debug("Configured templateDir for OpenAPI Generator: {}", expectedWorkDir);
+        // Template directory handling:
+        // - setupTemplatesTask creates the working directory at execution time
+        // - TemplatePreparationAction (doFirst) sets templateDir on the task after directory exists
+        // - This avoids configuration-time validation errors for directories that don't exist yet
+        logger.debug("Template directory will be configured at execution time by TemplatePreparationAction");
         
         // Apply default OpenAPI Generator configuration
         applyDefaultConfiguration(task);
