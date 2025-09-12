@@ -13,6 +13,13 @@ import java.util.Map;
  */
 public class FeatureDetector {
     
+    /**
+     * Constructs a new FeatureDetector.
+     */
+    public FeatureDetector() {
+        // Default constructor
+    }
+    
     // Feature detection patterns - maps feature names to patterns that indicate support
     private static final Map<String, List<String>> FEATURE_PATTERNS = Map.of(
         "validation_support", List.of(
@@ -134,6 +141,7 @@ public class FeatureDetector {
     
     /**
      * Gets the list of supported built-in features.
+     * @return the set of supported feature names
      */
     public java.util.Set<String> getSupportedFeatures() {
         return FEATURE_PATTERNS.keySet();

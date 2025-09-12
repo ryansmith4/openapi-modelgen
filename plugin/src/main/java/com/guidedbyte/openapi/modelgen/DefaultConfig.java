@@ -150,74 +150,146 @@ public class DefaultConfig {
     }
     
     // Getter methods
+    /**
+     * Gets the output directory property.
+     * @return the output directory property
+     */
     public Property<String> getOutputDir() {
         return outputDir;
     }
     
+    /**
+     * Gets the user template directory property.
+     * @return the user template directory property
+     */
     public Property<String> getUserTemplateDir() {
         return userTemplateDir;
     }
     
+    /**
+     * Gets the user template customizations directory property.
+     * @return the user template customizations directory property
+     */
     public Property<String> getUserTemplateCustomizationsDir() {
         return userTemplateCustomizationsDir;
     }
     
+    /**
+     * Gets the model name prefix property.
+     * @return the model name prefix property
+     */
     public Property<String> getModelNamePrefix() {
         return modelNamePrefix;
     }
     
+    /**
+     * Gets the model name suffix property.
+     * @return the model name suffix property
+     */
     public Property<String> getModelNameSuffix() {
         return modelNameSuffix;
     }
     
+    /**
+     * Gets the generate model tests property.
+     * @return the generate model tests property
+     */
     public Property<Boolean> getGenerateModelTests() {
         return generateModelTests;
     }
     
+    /**
+     * Gets the generate API tests property.
+     * @return the generate API tests property
+     */
     public Property<Boolean> getGenerateApiTests() {
         return generateApiTests;
     }
     
+    /**
+     * Gets the generate API documentation property.
+     * @return the generate API documentation property
+     */
     public Property<Boolean> getGenerateApiDocumentation() {
         return generateApiDocumentation;
     }
     
+    /**
+     * Gets the generate model documentation property.
+     * @return the generate model documentation property
+     */
     public Property<Boolean> getGenerateModelDocumentation() {
         return generateModelDocumentation;
     }
     
+    /**
+     * Gets the validate spec property.
+     * @return the validate spec property
+     */
     public Property<Boolean> getValidateSpec() {
         return validateSpec;
     }
     
+    /**
+     * Gets the config options property.
+     * @return the config options property
+     */
     public MapProperty<String, String> getConfigOptions() {
         return configOptions;
     }
     
+    /**
+     * Gets the global properties.
+     * @return the global properties
+     */
     public MapProperty<String, String> getGlobalProperties() {
         return globalProperties;
     }
     
+    /**
+     * Gets the template variables property.
+     * @return the template variables property
+     */
     public MapProperty<String, String> getTemplateVariables() {
         return templateVariables;
     }
     
+    /**
+     * Gets the import mappings property.
+     * @return the import mappings property
+     */
     public MapProperty<String, String> getImportMappings() {
         return importMappings;
     }
     
+    /**
+     * Gets the type mappings property.
+     * @return the type mappings property
+     */
     public MapProperty<String, String> getTypeMappings() {
         return typeMappings;
     }
     
+    /**
+     * Gets the additional properties.
+     * @return the additional properties
+     */
     public MapProperty<String, String> getAdditionalProperties() {
         return additionalProperties;
     }
     
+    /**
+     * Gets the OpenAPI normalizer property.
+     * @return the OpenAPI normalizer property
+     */
     public MapProperty<String, String> getOpenapiNormalizer() {
         return openapiNormalizer;
     }
     
+    /**
+     * Gets the save original templates property.
+     * @return the save original templates property
+     */
     public Property<Boolean> getSaveOriginalTemplates() {
         return saveOriginalTemplates;
     }
@@ -246,12 +318,20 @@ public class DefaultConfig {
         return templateSources;
     }
     
+    /**
+     * Gets the debug property.
+     * @return the debug property
+     */
     public Property<Boolean> getDebug() {
         return debug;
     }
     
     
     // Convenience setter methods for Gradle DSL
+    /**
+     * Sets the output directory.
+     * @param value the output directory path
+     */
     @Option(option = "output-dir", description = "Directory where generated code will be written (relative to project root)")
     public void outputDir(String value) {
         this.outputDir.set(value);
@@ -283,36 +363,64 @@ public class DefaultConfig {
         this.userTemplateCustomizationsDir.set(value);
     }
     
+    /**
+     * Sets the model name prefix.
+     * @param value the prefix to prepend to all generated model class names
+     */
     @Option(option = "model-name-prefix", description = "Prefix to prepend to all generated model class names (e.g., 'Api', 'Generated')")
     public void modelNamePrefix(String value) {
         this.modelNamePrefix.set(value);
     }
     
+    /**
+     * Sets the model name suffix.
+     * @param value the suffix to append to all generated model class names
+     */
     @Option(option = "model-name-suffix", description = "Suffix to append to all generated model class names (e.g., 'Dto', 'Model')")
     public void modelNameSuffix(String value) {
         this.modelNameSuffix.set(value);
     }
     
+    /**
+     * Sets whether to generate model tests.
+     * @param value true to generate unit tests for model classes
+     */
     @Option(option = "generate-model-tests", description = "Generate unit tests for model classes")
     public void generateModelTests(Boolean value) {
         this.generateModelTests.set(value);
     }
     
+    /**
+     * Sets whether to generate API tests.
+     * @param value true to generate unit tests for API classes
+     */
     @Option(option = "generate-api-tests", description = "Generate unit tests for API classes")
     public void generateApiTests(Boolean value) {
         this.generateApiTests.set(value);
     }
     
+    /**
+     * Sets whether to generate API documentation.
+     * @param value true to generate API documentation from OpenAPI specification
+     */
     @Option(option = "generate-api-docs", description = "Generate API documentation from OpenAPI specification")
     public void generateApiDocumentation(Boolean value) {
         this.generateApiDocumentation.set(value);
     }
     
+    /**
+     * Sets whether to generate model documentation.
+     * @param value true to generate model documentation from OpenAPI specification
+     */
     @Option(option = "generate-model-docs", description = "Generate model documentation from OpenAPI specification")
     public void generateModelDocumentation(Boolean value) {
         this.generateModelDocumentation.set(value);
     }
     
+    /**
+     * Sets whether to validate the OpenAPI specification.
+     * @param value true to validate OpenAPI specification before code generation
+     */
     @Option(option = "validate-spec", description = "Validate OpenAPI specification before code generation")
     public void validateSpec(Boolean value) {
         this.validateSpec.set(value);

@@ -18,6 +18,13 @@ import java.util.jar.JarFile;
  * without requiring the CLI dependency.
  */
 public class OpenApiTemplateExtractor {
+    
+    /**
+     * Constructs a new OpenApiTemplateExtractor.
+     */
+    public OpenApiTemplateExtractor() {
+        // Default constructor
+    }
 
     /**
      * Extract templates for a given generator to a specified output directory
@@ -304,7 +311,10 @@ public class OpenApiTemplateExtractor {
     }
     
     /**
-     * Get the embedded template directory for a specific generator
+     * Get the embedded template directory for a specific generator.
+     * @param generatorName the generator name
+     * @return the embedded template directory path
+     * @throws Exception if the generator is not found or template directory cannot be retrieved
      */
     public static String getEmbeddedTemplateDir(String generatorName) throws Exception {
         CodegenConfig config = CodegenConfigLoader.forName(generatorName);
@@ -315,7 +325,8 @@ public class OpenApiTemplateExtractor {
     }
     
     /**
-     * Example usage and test method
+     * Example usage and test method.
+     * @param args command line arguments
      */
     public static void main(String[] args) {
         try {

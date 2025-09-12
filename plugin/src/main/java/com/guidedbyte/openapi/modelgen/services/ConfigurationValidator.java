@@ -26,6 +26,13 @@ import java.util.Set;
  * This service validates extension configuration, default settings, spec configurations, and library settings.
  */
 public class ConfigurationValidator implements Serializable {
+    
+    /**
+     * Constructs a new ConfigurationValidator.
+     */
+    public ConfigurationValidator() {
+        // Default constructor
+    }
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationValidator.class);
@@ -225,6 +232,9 @@ public class ConfigurationValidator implements Serializable {
     
     /**
      * Validates OpenAPI Generator config options.
+     * @param configOptions the config options to validate
+     * @param context the validation context
+     * @param errors the list to add validation errors to
      */
     public void validateConfigOptions(Map<String, String> configOptions, String context, List<String> errors) {
         if (configOptions == null) return;

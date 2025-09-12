@@ -39,6 +39,13 @@ import java.util.jar.JarFile;
  */
 public class LibraryTemplateExtractor {
     
+    /**
+     * Constructs a new LibraryTemplateExtractor.
+     */
+    public LibraryTemplateExtractor() {
+        // Default constructor
+    }
+    
     private static final Logger logger = LoggerFactory.getLogger(LibraryTemplateExtractor.class);
     
     private static final String TEMPLATES_BASE_PATH = "META-INF/openapi-templates/";
@@ -53,46 +60,87 @@ public class LibraryTemplateExtractor {
         private final Map<String, String> customizations;
         private final Map<String, LibraryMetadata> metadata;
         
+        /**
+         * Constructs a LibraryExtractionResult with templates and customizations.
+         * @param templates the templates map
+         * @param customizations the customizations map
+         */
         public LibraryExtractionResult(Map<String, String> templates, Map<String, String> customizations) {
             this(templates, customizations, new HashMap<>());
         }
         
+        /**
+         * Constructs a LibraryExtractionResult with templates, customizations, and metadata.
+         * @param templates the templates map
+         * @param customizations the customizations map
+         * @param metadata the metadata map
+         */
         public LibraryExtractionResult(Map<String, String> templates, Map<String, String> customizations, Map<String, LibraryMetadata> metadata) {
             this.templates = templates != null ? templates : new HashMap<>();
             this.customizations = customizations != null ? customizations : new HashMap<>();
             this.metadata = metadata != null ? metadata : new HashMap<>();
         }
         
+        /**
+         * Gets the templates map.
+         * @return the templates
+         */
         public Map<String, String> getTemplates() {
             return templates;
         }
         
+        /**
+         * Gets the customizations map.
+         * @return the customizations
+         */
         public Map<String, String> getCustomizations() {
             return customizations;
         }
         
+        /**
+         * Gets the metadata map.
+         * @return the metadata
+         */
         public Map<String, LibraryMetadata> getMetadata() {
             return metadata;
         }
         
+        /**
+         * Checks if there are any templates.
+         * @return true if templates are present
+         */
         public boolean hasTemplates() {
             return !templates.isEmpty();
         }
         
+        /**
+         * Checks if there are any customizations.
+         * @return true if customizations are present
+         */
         public boolean hasCustomizations() {
             return !customizations.isEmpty();
         }
         
+        /**
+         * Checks if there is any metadata.
+         * @return true if metadata is present
+         */
         public boolean hasMetadata() {
             return !metadata.isEmpty();
         }
         
+        /**
+         * Checks if the extraction result is empty.
+         * @return true if no templates or customizations are present
+         */
         public boolean isEmpty() {
             return templates.isEmpty() && customizations.isEmpty();
         }
         
         /**
          * Gets metadata for a specific library JAR file.
+         * @param libraryFileName the library file name
+         * @return the library metadata, or null if not found
          */
         public LibraryMetadata getMetadataForLibrary(String libraryFileName) {
             return metadata.get(libraryFileName);
@@ -100,6 +148,9 @@ public class LibraryTemplateExtractor {
         
         /**
          * Checks if a library supports the given generator.
+         * @param libraryFileName the library file name
+         * @param generatorName the generator name
+         * @return true if the generator is supported
          */
         public boolean librarySupportsGenerator(String libraryFileName, String generatorName) {
             LibraryMetadata meta = metadata.get(libraryFileName);

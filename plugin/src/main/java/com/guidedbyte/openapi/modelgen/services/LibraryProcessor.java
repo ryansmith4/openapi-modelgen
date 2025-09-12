@@ -427,21 +427,59 @@ public class LibraryProcessor implements Serializable {
      * Container for library content extracted from dependencies.
      */
     public static class LibraryContent implements Serializable {
+        
+        /**
+         * Constructs a new LibraryContent.
+         */
+        public LibraryContent() {
+            // Default constructor
+        }
         private static final long serialVersionUID = 1L;
         
         private Map<String, String> templates = new java.util.HashMap<>();
         private Map<String, String> customizations = new java.util.HashMap<>();
         private Map<String, LibraryMetadata> metadata = new java.util.HashMap<>();
         
+        /**
+         * Gets the templates map.
+         * @return the templates
+         */
         public Map<String, String> getTemplates() { return templates; }
+        
+        /**
+         * Sets the templates map.
+         * @param templates the templates
+         */
         public void setTemplates(Map<String, String> templates) { this.templates = templates; }
         
+        /**
+         * Gets the customizations map.
+         * @return the customizations
+         */
         public Map<String, String> getCustomizations() { return customizations; }
+        
+        /**
+         * Sets the customizations map.
+         * @param customizations the customizations
+         */
         public void setCustomizations(Map<String, String> customizations) { this.customizations = customizations; }
         
+        /**
+         * Gets the metadata map.
+         * @return the metadata
+         */
         public Map<String, LibraryMetadata> getMetadata() { return metadata; }
+        
+        /**
+         * Sets the metadata map.
+         * @param metadata the metadata
+         */
         public void setMetadata(Map<String, LibraryMetadata> metadata) { this.metadata = metadata; }
         
+        /**
+         * Checks if this library content is empty.
+         * @return true if all maps are empty
+         */
         public boolean isEmpty() {
             return templates.isEmpty() && customizations.isEmpty() && metadata.isEmpty();
         }
@@ -451,22 +489,45 @@ public class LibraryProcessor implements Serializable {
      * Result of library compatibility validation.
      */
     public static class LibraryValidationResult implements Serializable {
+        
+        /**
+         * Constructs a new LibraryValidationResult.
+         */
+        public LibraryValidationResult() {
+            // Default constructor
+        }
         private static final long serialVersionUID = 1L;
         
         private final java.util.List<String> issues = new java.util.ArrayList<>();
         
+        /**
+         * Adds an issue to the validation result.
+         * @param issue the issue to add
+         */
         public void addIssue(String issue) {
             issues.add(issue);
         }
         
+        /**
+         * Gets the list of validation issues.
+         * @return a copy of the issues list
+         */
         public java.util.List<String> getIssues() {
             return new java.util.ArrayList<>(issues);
         }
         
+        /**
+         * Checks if there are any validation issues.
+         * @return true if there are issues
+         */
         public boolean hasIssues() {
             return !issues.isEmpty();
         }
         
+        /**
+         * Checks if the validation passed.
+         * @return true if there are no issues
+         */
         public boolean isValid() {
             return issues.isEmpty();
         }

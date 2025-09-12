@@ -380,6 +380,8 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     /**
      * Detects the OpenAPI Generator version from project dependencies.
      * This method is public static to allow sharing with VersionDetectionService.
+     * @param project the Gradle project
+     * @return the detected OpenAPI Generator version, or null if not found
      */
     public static String detectOpenApiGeneratorVersion(Project project) {
         try {
