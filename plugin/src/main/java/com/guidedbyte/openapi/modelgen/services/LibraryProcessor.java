@@ -119,11 +119,9 @@ public class LibraryProcessor implements Serializable {
             // Validate library compatibility with current configuration
             LibraryValidationResult validationResult = validateLibraryCompatibility(project, customizationsConfig, extension.getSpecs());
             if (validationResult.hasIssues()) {
-                StringBuilder errorMessage = new StringBuilder("Library compatibility validation failed:");
-                for (String issue : validationResult.getIssues()) {
-                    errorMessage.append("\n  - ").append(issue);
-                }
-                throw new org.gradle.api.InvalidUserDataException(errorMessage.toString());
+                // Use ErrorHandlingUtils for consistent validation error handling
+                ErrorHandlingUtils.validateOrThrow(validationResult.getIssues(), 
+                    "Library compatibility", ErrorHandlingUtils.LIBRARY_GUIDANCE);
             }
             
             // Additional validation: Check library version compatibility with detected OpenAPI Generator version
@@ -145,7 +143,10 @@ public class LibraryProcessor implements Serializable {
             
         } catch (Exception e) {
             logger.error("Failed to process template libraries", e);
-            throw new org.gradle.api.InvalidUserDataException("Failed to process template libraries: " + e.getMessage(), e);
+            // Use ErrorHandlingUtils for consistent error creation
+            throw ErrorHandlingUtils.createConfigurationError(
+                "Failed to process template libraries: " + e.getMessage(), 
+                ErrorHandlingUtils.LIBRARY_GUIDANCE);
         }
     }
     
@@ -176,7 +177,10 @@ public class LibraryProcessor implements Serializable {
                 
             } catch (Exception e) {
                 logger.warn("Error extracting library content: {}", e.getMessage(), e);
-                throw new RuntimeException("Library content extraction failed", e);
+                // Use ErrorHandlingUtils for consistent error handling
+                String errorMessage = ErrorHandlingUtils.formatLibraryError("content extraction", 
+                    "failed: " + e.getMessage());
+                throw new RuntimeException(errorMessage, e);
             }
         }
         

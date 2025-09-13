@@ -77,14 +77,8 @@ public class ConfigurationValidator implements Serializable {
         }
         // Note: Empty specs are allowed - individual tasks will validate spec requirements at execution time
         
-        // Throw exception if any errors were found
-        if (!errors.isEmpty()) {
-            StringBuilder errorMessage = new StringBuilder("Configuration validation failed:").append(System.lineSeparator());
-            for (int i = 0; i < errors.size(); i++) {
-                errorMessage.append(String.format("  %d. %s", i + 1, errors.get(i))).append(System.lineSeparator());
-            }
-            throw new InvalidUserDataException(errorMessage.toString());
-        }
+        // Use ErrorHandlingUtils for consistent validation error handling
+        ErrorHandlingUtils.validateOrThrow(errors, "Configuration", ErrorHandlingUtils.CONFIG_GUIDANCE);
         
         logger.debug("Extension configuration validation completed successfully");
     }
@@ -336,8 +330,11 @@ public class ConfigurationValidator implements Serializable {
             validateLibraryMetadata(project, libraryFiles, specs, errors);
             
         } catch (Exception e) {
+            // Use ErrorHandlingUtils for consistent validation error handling
+            String errorMessage = ErrorHandlingUtils.formatLibraryError("configuration", 
+                "validation failed: " + e.getMessage());
             logger.debug("Error validating library configuration: {}", e.getMessage(), e);
-            errors.add("Error validating library configuration: " + e.getMessage());
+            errors.add(errorMessage);
         }
     }
     
@@ -382,8 +379,11 @@ public class ConfigurationValidator implements Serializable {
             logger.debug("Library metadata validation completed for {} libraries", libraryMetadata.size());
             
         } catch (Exception e) {
+            // Use ErrorHandlingUtils for consistent validation error handling
+            String errorMessage = ErrorHandlingUtils.formatLibraryError("metadata extraction", 
+                "failed: " + e.getMessage());
             logger.debug("Error extracting library metadata: {}", e.getMessage(), e);
-            errors.add("Error extracting library metadata: " + e.getMessage());
+            errors.add(errorMessage);
         }
     }
     

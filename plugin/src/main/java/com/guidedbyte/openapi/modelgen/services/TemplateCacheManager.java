@@ -96,7 +96,10 @@ public class TemplateCacheManager implements Serializable {
             return sb.toString();
             
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
+            // Use ErrorHandlingUtils for consistent error handling
+            String message = "SHA-256 algorithm not available. This indicates a serious JVM configuration issue.";
+            String guidance = "Verify Java installation and runtime environment. Contact system administrator if issue persists.";
+            throw new RuntimeException(message + " " + guidance, e);
         }
     }
     
@@ -108,6 +111,16 @@ public class TemplateCacheManager implements Serializable {
      * @throws IOException if hash file cannot be written
      */
     public void storeTemplateHashes(File targetDir, Map<String, String> templateHashes) throws IOException {
+        // Use ErrorHandlingUtils for validation
+        try {
+            ErrorHandlingUtils.validateNotNull(targetDir, "Target directory", 
+                ErrorHandlingUtils.FILE_NOT_FOUND_GUIDANCE, logger);
+            ErrorHandlingUtils.validateNotNull(templateHashes, "Template hashes map", 
+                "Ensure template extraction completed successfully", logger);
+        } catch (IllegalArgumentException e) {
+            throw new IOException(e.getMessage(), e);
+        }
+        
         File hashFile = new File(targetDir, "template-hashes.properties");
         Properties hashProps = new Properties();
         
@@ -115,9 +128,18 @@ public class TemplateCacheManager implements Serializable {
             hashProps.setProperty("hash." + entry.getKey(), entry.getValue());
         }
         
-        try (FileOutputStream fos = new FileOutputStream(hashFile)) {
-            hashProps.store(fos, "Template content hashes for cache validation");
-        }
+        // Use ErrorHandlingUtils for file operations
+        ErrorHandlingUtils.handleFileOperation(
+            () -> {
+                try (FileOutputStream fos = new FileOutputStream(hashFile)) {
+                    hashProps.store(fos, "Template content hashes for cache validation");
+                    return null;
+                }
+            },
+            "Failed to store template hashes in: " + hashFile.getAbsolutePath(),
+            ErrorHandlingUtils.PERMISSION_GUIDANCE,
+            logger
+        );
         
         logger.debug("Stored {} template hashes in {}", templateHashes.size(), hashFile.getAbsolutePath());
     }
@@ -187,21 +209,48 @@ public class TemplateCacheManager implements Serializable {
      * @throws IOException if cache file cannot be written
      */
     public void updateTemplateCache(File cacheFile, String cacheKey) throws IOException {
+        // Use ErrorHandlingUtils for validation
+        try {
+            ErrorHandlingUtils.validateNotNull(cacheFile, "Cache file", 
+                "Provide a valid cache file path", logger);
+            ErrorHandlingUtils.validateNotEmpty(cacheKey, "Cache key", 
+                "Ensure cache key is properly computed", logger);
+        } catch (IllegalArgumentException e) {
+            throw new IOException(e.getMessage(), e);
+        }
+        
         Properties props = new Properties();
         props.setProperty("cacheKey", cacheKey);
         props.setProperty("timestamp", String.valueOf(System.currentTimeMillis()));
         
-        // Ensure parent directory exists
+        // Ensure parent directory exists with improved error handling
         File parentDir = cacheFile.getParentFile();
         if (parentDir != null && !parentDir.exists()) {
-            if (!parentDir.mkdirs()) {
-                throw new IOException("Failed to create cache directory: " + parentDir.getAbsolutePath());
-            }
+            ErrorHandlingUtils.handleFileOperation(
+                () -> {
+                    if (!parentDir.mkdirs()) {
+                        throw new IOException("Directory creation failed");
+                    }
+                    return null;
+                },
+                "Failed to create cache directory: " + parentDir.getAbsolutePath(),
+                ErrorHandlingUtils.PERMISSION_GUIDANCE,
+                logger
+            );
         }
         
-        try (FileOutputStream fos = new FileOutputStream(cacheFile)) {
-            props.store(fos, "Template cache metadata");
-        }
+        // Use ErrorHandlingUtils for file operations
+        ErrorHandlingUtils.handleFileOperation(
+            () -> {
+                try (FileOutputStream fos = new FileOutputStream(cacheFile)) {
+                    props.store(fos, "Template cache metadata");
+                    return null;
+                }
+            },
+            "Failed to update template cache: " + cacheFile.getAbsolutePath(),
+            ErrorHandlingUtils.PERMISSION_GUIDANCE,
+            logger
+        );
         
         logger.debug("Updated template cache: {}", cacheFile.getAbsolutePath());
     }

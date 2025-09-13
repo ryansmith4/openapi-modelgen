@@ -76,19 +76,25 @@ public class CustomizationEngine {
     public CustomizationConfig parseCustomizationYaml(File yamlFile) throws CustomizationException {
         LoggingContext.setComponent("CustomizationEngine");
         try {
-            if (!yamlFile.exists()) {
-                throw new CustomizationException("Customization file does not exist: " + yamlFile.getPath());
-            }
+            // Use ErrorHandlingUtils for consistent file validation
+            ErrorHandlingUtils.validateFileExists(yamlFile.toPath(), "Customization file", logger);
             
-            if (!yamlFile.isFile()) {
-                throw new CustomizationException("Customization path is not a file: " + yamlFile.getPath());
-            }
-            
-            try (InputStream inputStream = new FileInputStream(yamlFile)) {
-                return parseCustomizationYaml(inputStream, yamlFile.getName());
-            } catch (IOException e) {
-                throw new CustomizationException("Failed to read customization file: " + yamlFile.getPath(), e);
-            }
+            // Use ErrorHandlingUtils for file operations with proper error context
+            return ErrorHandlingUtils.handleFileOperation(
+                () -> {
+                    try (InputStream inputStream = new FileInputStream(yamlFile)) {
+                        return parseCustomizationYaml(inputStream, yamlFile.getName());
+                    } catch (CustomizationException e) {
+                        throw new RuntimeException(e.getMessage(), e);
+                    }
+                },
+                "Failed to read customization file: " + yamlFile.getPath(),
+                ErrorHandlingUtils.PERMISSION_GUIDANCE,
+                logger
+            );
+        } catch (RuntimeException e) {
+            // Convert RuntimeException from ErrorHandlingUtils back to CustomizationException
+            throw new CustomizationException(e.getMessage(), e.getCause());
         } finally {
             LoggingContext.clear();
         }
@@ -105,45 +111,54 @@ public class CustomizationEngine {
     public CustomizationConfig parseCustomizationYaml(InputStream inputStream, String sourceName) throws CustomizationException {
         LoggingContext.setComponent("CustomizationEngine");
         try {
-            // Read YAML content for pre-validation
-            String yamlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            // Use ErrorHandlingUtils for consistent YAML operation handling
+            return ErrorHandlingUtils.handleYamlOperation(() -> {
+                try {
+                    // Read YAML content for pre-validation
+                    String yamlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    
+                    // Pre-validate YAML structure before attempting deserialization
+                    validateYamlStructure(yamlContent, sourceName);
+                    
+                    // Create safe YAML loader with security restrictions
+                    Yaml yaml = createSafeYamlLoader();
+                    
+                    // Parse YAML content with validated structure
+                    CustomizationConfig config = yaml.loadAs(yamlContent, CustomizationConfig.class);
+                    
+                    // Use ErrorHandlingUtils for validation
+                    ErrorHandlingUtils.validateNotNull(config, 
+                        "Empty or invalid YAML content in: " + sourceName,
+                        ErrorHandlingUtils.YAML_SYNTAX_GUIDANCE,
+                        logger);
+                    
+                    // CRITICAL: Validate that deserialized config matches original YAML structure
+                    validateDeserializationCompleteness(yamlContent, config, sourceName);
+                    
+                    // Validate the parsed configuration
+                    yamlValidator.validateCustomizationConfig(config, sourceName);
+                    
+                    logger.debug("Parsed config: replacements={}, insertions={}, smartReplacements={}, smartInsertions={}", 
+                        config.getReplacements() != null ? config.getReplacements().size() : "null",
+                        config.getInsertions() != null ? config.getInsertions().size() : "null", 
+                        config.getSmartReplacements() != null ? config.getSmartReplacements().size() : "null",
+                        config.getSmartInsertions() != null ? config.getSmartInsertions().size() : "null");
+                    logger.debug("Successfully parsed and validated customization: {}", sourceName);
+                    return config;
+                    
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to read YAML content from " + sourceName, e);
+                } catch (CustomizationException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            }, sourceName, logger);
             
-            // Pre-validate YAML structure before attempting deserialization
-            validateYamlStructure(yamlContent, sourceName);
-            
-            // Create safe YAML loader with security restrictions
-            Yaml yaml = createSafeYamlLoader();
-            
-            // Parse YAML content with validated structure
-            CustomizationConfig config = yaml.loadAs(yamlContent, CustomizationConfig.class);
-            
-            if (config == null) {
-                throw new CustomizationException("Empty or invalid YAML content in: " + sourceName);
+        } catch (RuntimeException e) {
+            // Convert RuntimeException back to CustomizationException for API consistency
+            if (e.getCause() instanceof CustomizationException) {
+                throw (CustomizationException) e.getCause();
             }
-            
-            // CRITICAL: Validate that deserialized config matches original YAML structure
-            validateDeserializationCompleteness(yamlContent, config, sourceName);
-            
-            // Validate the parsed configuration
-            yamlValidator.validateCustomizationConfig(config, sourceName);
-            
-            logger.debug("Parsed config: replacements={}, insertions={}, smartReplacements={}, smartInsertions={}", 
-                config.getReplacements() != null ? config.getReplacements().size() : "null",
-                config.getInsertions() != null ? config.getInsertions().size() : "null", 
-                config.getSmartReplacements() != null ? config.getSmartReplacements().size() : "null",
-                config.getSmartInsertions() != null ? config.getSmartInsertions().size() : "null");
-            logger.debug("Successfully parsed and validated customization: {}", sourceName);
-            return config;
-            
-        } catch (ConstructorException e) {
-            throw new CustomizationException("Invalid YAML structure in " + sourceName + ": " + e.getMessage(), e);
-        } catch (IOException e) {
-            throw new CustomizationException("Failed to read YAML content from " + sourceName + ": " + e.getMessage(), e);
-        } catch (Exception e) {
-            if (e instanceof CustomizationException) {
-                throw e;
-            }
-            throw new CustomizationException("Failed to parse YAML customization from " + sourceName + ": " + e.getMessage(), e);
+            throw new CustomizationException(e.getMessage(), e.getCause());
         } finally {
             LoggingContext.clear();
         }
@@ -176,9 +191,14 @@ public class CustomizationEngine {
                 logger.debug("Template starts with: '{}'", baseTemplate != null && baseTemplate.length() > 50 ? baseTemplate.substring(0, 50).replace("\n", "\\n") : "null");
             }
         
-        // Validate base template first (before caching logic)
-        if (baseTemplate == null) {
-            throw new CustomizationException("Base template content cannot be null");
+        // Use ErrorHandlingUtils for consistent validation
+        try {
+            ErrorHandlingUtils.validateNotNull(baseTemplate, 
+                "Base template content cannot be null",
+                ErrorHandlingUtils.TEMPLATE_GUIDANCE,
+                logger);
+        } catch (IllegalArgumentException e) {
+            throw new CustomizationException(e.getMessage(), e);
         }
         
         // Check cache first
@@ -220,8 +240,14 @@ public class CustomizationEngine {
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
             && "true".equals(context.getProjectProperties().get("debug"));
         
-        if (baseTemplate == null) {
-            throw new CustomizationException("Base template content cannot be null");
+        // Use ErrorHandlingUtils for consistent validation
+        try {
+            ErrorHandlingUtils.validateNotNull(baseTemplate, 
+                "Base template content cannot be null",
+                ErrorHandlingUtils.TEMPLATE_GUIDANCE,
+                logger);
+        } catch (IllegalArgumentException e) {
+            throw new CustomizationException(e.getMessage(), e);
         }
         
         DebugLogger.debug(logger, debugEnabled,
@@ -312,7 +338,16 @@ public class CustomizationEngine {
         } catch (Exception e) {
             DebugLogger.debug(logger, debugEnabled,
                 "CUSTOMIZATION DEBUG: Exception during customization: {}", e.getMessage());
-            throw new CustomizationException("Failed to apply customizations: " + e.getMessage(), e);
+            
+            // Use ErrorHandlingUtils for consistent error wrapping with context
+            String templateName = "unknown template";
+            if (context != null && context.getProjectProperties() != null) {
+                templateName = context.getProjectProperties().getOrDefault("templateName", "unknown template");
+            }
+            
+            String errorMessage = ErrorHandlingUtils.formatTemplateError(templateName,
+                "customization failed: " + e.getMessage());
+            throw new CustomizationException(errorMessage, e);
         }
     }
     

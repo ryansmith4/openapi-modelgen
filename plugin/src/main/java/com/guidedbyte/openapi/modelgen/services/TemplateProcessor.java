@@ -63,7 +63,10 @@ public class TemplateProcessor {
         } else if (insertion.getAt() != null) {
             return applyAtInsertion(template, insertion.getAt(), content);
         } else {
-            throw new CustomizationException("Insertion must specify after, before, or at");
+            // Use ErrorHandlingUtils for consistent error messaging
+            String errorMessage = ErrorHandlingUtils.formatTemplateError("insertion", 
+                "must specify after, before, or at");
+            throw new CustomizationException(errorMessage);
         }
     }
     
@@ -157,7 +160,10 @@ public class TemplateProcessor {
         } else if (replacement.getFindPattern() != null) {
             return applyFindPatternReplacement(template, replacement.getFindPattern(), replaceContent);
         } else {
-            throw new CustomizationException("Smart replacement must specify findAny, semantic, or findPattern");
+            // Use ErrorHandlingUtils for consistent error messaging
+            String errorMessage = ErrorHandlingUtils.formatTemplateError("smart replacement", 
+                "must specify findAny, semantic, or findPattern");
+            throw new CustomizationException(errorMessage);
         }
     }
     
@@ -185,7 +191,10 @@ public class TemplateProcessor {
         } else if (insertion.getFindInsertionPoint() != null) {
             return applyFindInsertionPoint(template, insertion.getFindInsertionPoint(), content);
         } else {
-            throw new CustomizationException("Smart insertion must specify semantic or findInsertionPoint");
+            // Use ErrorHandlingUtils for consistent error messaging
+            String errorMessage = ErrorHandlingUtils.formatTemplateError("smart insertion", 
+                "must specify semantic or findInsertionPoint");
+            throw new CustomizationException(errorMessage);
         }
     }
     
