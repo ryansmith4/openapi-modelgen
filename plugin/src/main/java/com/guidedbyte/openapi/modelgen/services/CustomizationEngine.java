@@ -4,6 +4,8 @@ import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import com.guidedbyte.openapi.modelgen.services.ContextAwareLogger;
+import com.guidedbyte.openapi.modelgen.services.RichFileLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -754,6 +756,15 @@ public class CustomizationEngine {
         LoggingContext.setSpec(generatorName);
         LoggingContext.setComponent("CustomizationEngine");
         
+        // Optional: Enable rich file logging for power users
+        RichFileLogger richLogger = null;
+        if (templateConfig.isDebug()) {
+            File buildDir = templateWorkDir.getParentFile().getParentFile(); // Navigate up from template-work/spring-pets to build
+            richLogger = RichFileLogger.forBuildDir(buildDir);
+            richLogger.section("Template Customization Processing");
+            richLogger.info("Starting template customization processing for generator: {}", generatorName);
+        }
+        
         try {
             // Always extract original templates if saveOriginalTemplates is enabled, regardless of customizations
             if (templateConfig.isSaveOriginalTemplates()) {
@@ -1394,9 +1405,13 @@ public class CustomizationEngine {
     private void applyYamlCustomizationToFile(File templateFile, String yamlContent, TemplateConfiguration templateConfig) throws IOException {
         LoggingContext.setTemplate(templateFile.getName());
         try {
-            logger.debug("Applying YAML customization to template: {}", templateFile.getName());
-            logger.debug("YAML content length: {}", yamlContent.length());
-            logger.debug("YAML content preview: '{}'", yamlContent.length() > 100 ? yamlContent.substring(0, 100) + "..." : yamlContent);
+            // Demonstrate context-aware logging - users will see "[spring:pojo.mustache] Applying YAML customization"
+            ContextAwareLogger.debug(logger, templateConfig.isDebug(), 
+                "Applying YAML customization to template: {}", templateFile.getName());
+            ContextAwareLogger.debug(logger, templateConfig.isDebug(),
+                "YAML content length: {}", yamlContent.length());
+            ContextAwareLogger.debug(logger, templateConfig.isDebug(),
+                "YAML content preview: '{}'", yamlContent.length() > 100 ? yamlContent.substring(0, 100) + "..." : yamlContent);
             
             // Parse the YAML customization
             CustomizationConfig customizationConfig = parseCustomizationYaml(

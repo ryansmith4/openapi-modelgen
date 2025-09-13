@@ -1,0 +1,88 @@
+// Example: How to customize logging context format in your build.gradle
+
+openapiModelgen {
+    defaults {
+        // Enable debug mode to see context logging
+        debug true
+        
+        // Choose from predefined formats or create custom ones
+        // Predefined options: "default", "debug", "minimal", "verbose", "none"
+        
+        // Option 1: Use a predefined format
+        loggingContextFormat "verbose"  // Shows: [CustomizationEngine] [spring:pojo.mustache] message
+        
+        // Option 2: Create a custom format using template variables
+        // loggingContextFormat "[{{spec}}{{#template}} > {{template}}{{/template}}]"
+        // Results in: [spring > pojo.mustache] message or [spring] message
+        
+        // Option 3: More custom examples
+        // loggingContextFormat "{{spec}}{{#template}}:{{template}}{{/template}} |"
+        // Results in: spring:pojo.mustache | message
+        
+        // Option 4: Disable context (equivalent to "none")
+        // loggingContextFormat ""
+        
+        outputDir "build/generated"
+        parallel true
+        applyPluginCustomizations true
+        
+        templateVariables([
+            copyright: "© {{currentYear}} {{companyName}}"
+        ])
+    }
+    
+    specs {
+        pets { 
+            inputSpec "specs/pets.yaml"
+            // Can also override logging format per spec
+            // loggingContextFormat "minimal"  // Would show: [spring] message
+        }
+        orders { 
+            inputSpec "specs/orders.yaml" 
+        }
+    }
+}
+
+/*
+Available template variables:
+- {{spec}} - The OpenAPI specification name (e.g., "spring", "orders")
+- {{template}} - The template file being processed (e.g., "pojo.mustache", "enumClass.mustache")
+- {{component}} - Internal component name for debugging (e.g., "CustomizationEngine")
+
+Conditional sections:
+- {{#template}}:{{template}}{{/template}} - Only shows ":template" if template is set
+- {{#component}}[{{component}}]{{/component}} - Only shows "[component]" if component is set
+
+Predefined formats:
+- "default": [{{spec}}{{#template}}:{{template}}{{/template}}]
+  Results in: [spring:pojo.mustache] or [spring]
+
+- "debug": [{{component}}|{{spec}}{{#template}}:{{template}}{{/template}}]
+  Results in: [CustomizationEngine|spring:pojo.mustache] or [CustomizationEngine|spring]
+
+- "minimal": [{{spec}}]
+  Results in: [spring]
+
+- "verbose": [{{component}}] [{{spec}}{{#template}}:{{template}}{{/template}}]
+  Results in: [CustomizationEngine] [spring:pojo.mustache]
+
+- "none" or "": (empty string - no context)
+  Results in: message (no context prefix)
+
+Example output with different formats:
+
+Default format output:
+[spring] Processing template customizations
+[spring:pojo.mustache] Applying YAML customization to template: pojo.mustache
+[spring:enumClass.mustache] Applying YAML customization to template: enumClass.mustache
+
+Debug format output:
+[CustomizationEngine|spring] Processing template customizations
+[CustomizationEngine|spring:pojo.mustache] Applying YAML customization to template: pojo.mustache
+[TemplateProcessor|spring:enumClass.mustache] Applying YAML customization to template: enumClass.mustache
+
+Custom format "{{spec}} > {{template}} |" output:
+spring >  | Processing template customizations
+spring > pojo.mustache | Applying YAML customization to template: pojo.mustache
+spring > enumClass.mustache | Applying YAML customization to template: enumClass.mustache
+*/

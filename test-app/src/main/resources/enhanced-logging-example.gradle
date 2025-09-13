@@ -1,0 +1,47 @@
+// Example: How to enable enhanced MDC context logging in your build.gradle
+
+openapiModelgen {
+    defaults {
+        // Enable debug mode to see rich context logging in console output
+        debug true
+        
+        outputDir "build/generated"
+        parallel true
+        applyPluginCustomizations true
+        saveOriginalTemplates true // Also creates rich debug logs
+        
+        templateVariables([
+            copyright: "© {{currentYear}} {{companyName}}"
+        ])
+    }
+    
+    specs {
+        pets { 
+            inputSpec "specs/pets.yaml"
+            // Debug can also be enabled per-spec
+            debug true
+        }
+        orders { 
+            inputSpec "specs/orders.yaml" 
+        }
+    }
+}
+
+/*
+With debug enabled, you'll see enhanced console output focused on spec/template context:
+
+[spring] Processing template customizations
+[spring:pojo.mustache] Applying YAML customization to template: pojo.mustache
+[spring:pojo.mustache] YAML content length: 245
+[spring:enumClass.mustache] Applying YAML customization to template: enumClass.mustache
+[spring] Preparing template directory: /build/template-work/spring-pets
+
+Clean, user-focused output showing WHICH spec and template is being processed!
+
+Additionally, when debug=true, a rich log file is created at:
+build/logs/openapi-modelgen-debug.log
+
+This file contains full technical details with timestamps and component info:
+2025-01-15 14:23:45.123 [DEBUG] [CustomizationEngine] [spring:pojo.mustache] - Applying YAML customization to template: pojo.mustache
+2025-01-15 14:23:45.124 [INFO] [PrepareTemplateDirectoryTask] [spring] - Successfully prepared template directory
+*/
