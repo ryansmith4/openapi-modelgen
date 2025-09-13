@@ -3,6 +3,7 @@ package com.guidedbyte.openapi.modelgen.services;
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
+import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -71,18 +72,23 @@ public class CustomizationEngine {
      * @throws CustomizationException if parsing or validation fails
      */
     public CustomizationConfig parseCustomizationYaml(File yamlFile) throws CustomizationException {
-        if (!yamlFile.exists()) {
-            throw new CustomizationException("Customization file does not exist: " + yamlFile.getPath());
-        }
-        
-        if (!yamlFile.isFile()) {
-            throw new CustomizationException("Customization path is not a file: " + yamlFile.getPath());
-        }
-        
-        try (InputStream inputStream = new FileInputStream(yamlFile)) {
-            return parseCustomizationYaml(inputStream, yamlFile.getName());
-        } catch (IOException e) {
-            throw new CustomizationException("Failed to read customization file: " + yamlFile.getPath(), e);
+        LoggingContext.setComponent("CustomizationEngine");
+        try {
+            if (!yamlFile.exists()) {
+                throw new CustomizationException("Customization file does not exist: " + yamlFile.getPath());
+            }
+            
+            if (!yamlFile.isFile()) {
+                throw new CustomizationException("Customization path is not a file: " + yamlFile.getPath());
+            }
+            
+            try (InputStream inputStream = new FileInputStream(yamlFile)) {
+                return parseCustomizationYaml(inputStream, yamlFile.getName());
+            } catch (IOException e) {
+                throw new CustomizationException("Failed to read customization file: " + yamlFile.getPath(), e);
+            }
+        } finally {
+            LoggingContext.clear();
         }
     }
     
@@ -95,6 +101,7 @@ public class CustomizationEngine {
      * @throws CustomizationException if parsing or validation fails
      */
     public CustomizationConfig parseCustomizationYaml(InputStream inputStream, String sourceName) throws CustomizationException {
+        LoggingContext.setComponent("CustomizationEngine");
         try {
             // Read YAML content for pre-validation
             String yamlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
@@ -118,8 +125,7 @@ public class CustomizationEngine {
             // Validate the parsed configuration
             yamlValidator.validateCustomizationConfig(config, sourceName);
             
-            logger.info("=== PARSED CONFIG DEBUG for {} ===", sourceName);
-            logger.info("Parsed config: replacements={}, insertions={}, smartReplacements={}, smartInsertions={}", 
+            logger.debug("Parsed config: replacements={}, insertions={}, smartReplacements={}, smartInsertions={}", 
                 config.getReplacements() != null ? config.getReplacements().size() : "null",
                 config.getInsertions() != null ? config.getInsertions().size() : "null", 
                 config.getSmartReplacements() != null ? config.getSmartReplacements().size() : "null",
@@ -136,6 +142,8 @@ public class CustomizationEngine {
                 throw e;
             }
             throw new CustomizationException("Failed to parse YAML customization from " + sourceName + ": " + e.getMessage(), e);
+        } finally {
+            LoggingContext.clear();
         }
     }
     
@@ -150,18 +158,21 @@ public class CustomizationEngine {
      * @throws CustomizationException if customization application fails
      */
     public String applyCustomizations(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
+        LoggingContext.setComponent("CustomizationEngine");
+        
         // Check if debug is enabled from context
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
             && "true".equals(context.getProjectProperties().get("debug"));
         
-        // Enhanced debug logging for troubleshooting
-        if (debugEnabled) {
-            logger.info("=== CUSTOMIZATION ENGINE ENTRY ===");
-            logger.info("Template length: {}", baseTemplate != null ? baseTemplate.length() : "null");
-            logger.info("Config name: {}", config != null && config.getMetadata() != null ? config.getMetadata().getName() : "null");
-            logger.info("Config has replacements: {}", config != null && config.getReplacements() != null ? config.getReplacements().size() : 0);
-            logger.info("Template starts with: '{}'", baseTemplate != null && baseTemplate.length() > 50 ? baseTemplate.substring(0, 50).replace("\n", "\\n") : "null");
-        }
+        try {
+            // Enhanced debug logging for troubleshooting
+            if (debugEnabled) {
+                logger.debug("Starting customization application");
+                logger.debug("Template length: {}", baseTemplate != null ? baseTemplate.length() : "null");
+                logger.debug("Config name: {}", config != null && config.getMetadata() != null ? config.getMetadata().getName() : "null");
+                logger.debug("Config has replacements: {}", config != null && config.getReplacements() != null ? config.getReplacements().size() : 0);
+                logger.debug("Template starts with: '{}'", baseTemplate != null && baseTemplate.length() > 50 ? baseTemplate.substring(0, 50).replace("\n", "\\n") : "null");
+            }
         
         // Validate base template first (before caching logic)
         if (baseTemplate == null) {
@@ -179,15 +190,18 @@ public class CustomizationEngine {
             return cachedResult;
         }
         
-        // Apply customizations and cache result
-        String result = applyCustomizationsInternal(baseTemplate, config, context);
-        customizationResultCache.put(cacheKey, result);
-        
-        DebugLogger.debug(logger, debugEnabled,
-            "Cached customization result (key: {}, cache size: {})", 
-            cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...", customizationResultCache.size());
-        
-        return result;
+            // Apply customizations and cache result
+            String result = applyCustomizationsInternal(baseTemplate, config, context);
+            customizationResultCache.put(cacheKey, result);
+            
+            DebugLogger.debug(logger, debugEnabled,
+                "Cached customization result (key: {}, cache size: {})", 
+                cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...", customizationResultCache.size());
+            
+            return result;
+        } finally {
+            LoggingContext.clear();
+        }
     }
     
     /**
@@ -239,14 +253,14 @@ public class CustomizationEngine {
             
             // 1. Apply replacements first (modify existing content)
             if (config.getReplacements() != null) {
-                logger.debug("=== PROCESSING {} REPLACEMENTS ===", config.getReplacements().size());
+                logger.debug("Processing {} replacements", config.getReplacements().size());
                 int replacementIndex = 0;
                 for (Replacement replacement : config.getReplacements()) {
                     logger.debug("Processing replacement #{}: find='{}', replace='{}'", 
                         replacementIndex++, replacement.getFind(), replacement.getReplace());
                     result = processor.applyReplacement(result, replacement, context, config.getPartials());
                 }
-                logger.debug("=== FINISHED PROCESSING REPLACEMENTS ===");
+                logger.debug("Finished processing replacements");
             } else {
                 logger.debug("No replacements to process");
             }
@@ -288,7 +302,7 @@ public class CustomizationEngine {
                 result.length() > 200 ? result.substring(0, 200) + "..." : result);
             
             if (debugEnabled) {
-                logger.info("=== CUSTOMIZATION DEBUG: Finished template customization ===");
+                logger.debug("Finished template customization");
             }
             
             return result;
@@ -393,7 +407,7 @@ public class CustomizationEngine {
                 }
             }
             
-            logger.debug("Deserialization completeness validation passed for: {}", sourceName);
+            logger.debug("Deserialization completeness validation passed");
             
         } catch (Exception e) {
             if (e instanceof CustomizationException) {
@@ -452,7 +466,7 @@ public class CustomizationEngine {
                 validateSmartInsertionsStructure(root.get("smartInsertions"), sourceName);
             }
             
-            logger.debug("YAML structure validation passed for: {}", sourceName);
+            logger.debug("YAML structure validation passed");
             
         } catch (Exception e) {
             if (e instanceof CustomizationException) {
@@ -735,6 +749,11 @@ public class CustomizationEngine {
      * @param templateWorkDir the working directory for templates
      */
     public void processTemplateCustomizations(TemplateConfiguration templateConfig, File templateWorkDir) {
+        // Use generator name as context since spec name isn't available in TemplateConfiguration
+        String generatorName = templateConfig.getGeneratorName();
+        LoggingContext.setSpec(generatorName);
+        LoggingContext.setComponent("CustomizationEngine");
+        
         try {
             // Always extract original templates if saveOriginalTemplates is enabled, regardless of customizations
             if (templateConfig.isSaveOriginalTemplates()) {
@@ -750,6 +769,7 @@ public class CustomizationEngine {
                     logger.debug("No templates were extracted using OpenAPI Generator's built-in extraction mechanism");
                 }
             }
+            
             
             // Check if we have any customizations to process based on the configured template sources
             List<String> templateSources = templateConfig.getTemplateSources();
@@ -776,6 +796,8 @@ public class CustomizationEngine {
                 templateConfig.getGeneratorName(), e.getMessage());
             logger.debug("Customization processing error details", e);
             throw new RuntimeException("Template customization processing failed", e);
+        } finally {
+            LoggingContext.clear();
         }
     }
     
@@ -788,10 +810,10 @@ public class CustomizationEngine {
      */
     private void applyCustomizationsInPrecedenceOrder(TemplateConfiguration templateConfig, File templateWorkDir) {
         List<String> templateSources = templateConfig.getTemplateSources();
-        logger.info("TEMPLATE SOURCES DEBUG: received templateSources = {}, isEmpty = {}", templateSources, templateSources.isEmpty());
+        logger.debug("Template sources configuration: {}", templateSources);
         if (templateSources.isEmpty()) {
             // Fallback to legacy approach if no precedence is configured
-            logger.info("TEMPLATE SOURCES DEBUG: Falling back to legacy order because templateSources is empty");
+            logger.debug("Falling back to legacy order because templateSources is empty");
             applyCustomizationsLegacyOrder(templateConfig, templateWorkDir);
             return;
         }
@@ -1370,11 +1392,11 @@ public class CustomizationEngine {
      * Applies YAML customization to a template file using the comprehensive customization engine.
      */
     private void applyYamlCustomizationToFile(File templateFile, String yamlContent, TemplateConfiguration templateConfig) throws IOException {
+        LoggingContext.setTemplate(templateFile.getName());
         try {
-            logger.info("=== YAML CUSTOMIZATION FILE DEBUG ===");
-            logger.info("Template file: {}", templateFile.getName());
-            logger.info("YAML content length: {}", yamlContent.length());
-            logger.info("YAML content preview: '{}'", yamlContent.length() > 100 ? yamlContent.substring(0, 100) + "..." : yamlContent);
+            logger.debug("Applying YAML customization to template: {}", templateFile.getName());
+            logger.debug("YAML content length: {}", yamlContent.length());
+            logger.debug("YAML content preview: '{}'", yamlContent.length() > 100 ? yamlContent.substring(0, 100) + "..." : yamlContent);
             
             // Parse the YAML customization
             CustomizationConfig customizationConfig = parseCustomizationYaml(
@@ -1397,6 +1419,8 @@ public class CustomizationEngine {
         } catch (CustomizationException e) {
             logger.warn("Failed to apply YAML customization to {}: {}", templateFile.getName(), e.getMessage());
             logger.debug("YAML customization error details", e);
+        } finally {
+            LoggingContext.clearTemplate();
         }
     }
     

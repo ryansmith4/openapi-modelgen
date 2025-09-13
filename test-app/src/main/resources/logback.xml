@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender with MDC context -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Include MDC context in log format -->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{component}] [%X{spec}:%X{template}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- OpenAPI Model Generator specific loggers -->
+    <logger name="com.guidedbyte.openapi.modelgen" level="DEBUG" />
+    
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
+
+<!-- 
+IMPORTANT: This logback configuration affects application logging only.
+Gradle plugin logging runs in a separate context due to Gradle's architecture.
+
+GRADLE LOGGING LIMITATION:
+The OpenAPI Model Generator plugin uses SLF4J MDC for rich context logging,
+but Gradle's logging system doesn't support MDC context display.
+This is a known limitation: https://github.com/gradle/gradle/issues/2408
+
+The plugin sets these MDC context keys:
+- component: The service/component performing the operation  
+- spec: The OpenAPI specification being processed
+- template: The template file being customized
+
+WORKAROUNDS FOR BETTER DEBUGGING:
+1. Use --debug flag: ./gradlew generatePets --debug
+2. Use --info flag for more details: ./gradlew generatePets --info  
+3. Check plugin source code for specific debug points
+4. Use IDE integration that shows full Gradle logging context
+
+FUTURE: When Gradle adds MDC support, this configuration will work automatically.
+-->

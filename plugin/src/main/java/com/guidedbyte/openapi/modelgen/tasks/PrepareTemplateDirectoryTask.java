@@ -3,6 +3,7 @@ package com.guidedbyte.openapi.modelgen.tasks;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
+import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import com.guidedbyte.openapi.modelgen.services.TemplateDiscoveryService;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.DefaultTask;
@@ -47,9 +48,12 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
         TemplateConfiguration templateConfig = getTemplateConfiguration().get();
         File outputDir = getOutputDirectory().get().getAsFile();
         
-        logger.info("Preparing template directory: {}", outputDir.getAbsolutePath());
+        // Set up MDC context for task-level logging
+        LoggingContext.setSpec(templateConfig.getGeneratorName());
+        LoggingContext.setComponent("PrepareTemplateDirectoryTask");
         
         try {
+            logger.info("Preparing template directory: {}", outputDir.getAbsolutePath());
             // Clean and recreate the output directory using FileSystemOperations
             getFileSystemOperations().delete(deleteSpec -> {
                 deleteSpec.delete(outputDir);
@@ -97,6 +101,8 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
         } catch (RuntimeException e) {
             logger.error("Failed to prepare template directory '{}': {}", outputDir.getAbsolutePath(), e.getMessage());
             throw new TaskExecutionException(this, e);
+        } finally {
+            LoggingContext.clear();
         }
     }
     

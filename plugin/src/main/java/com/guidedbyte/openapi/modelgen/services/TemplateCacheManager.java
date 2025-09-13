@@ -523,15 +523,15 @@ public class TemplateCacheManager implements Serializable {
     }
     
     /**
-     * Detects OpenAPI Generator version from project - simplified version for cache manager.
+     * Detects OpenAPI Generator version from project using comprehensive detection strategies.
      */
     private String detectOpenApiGeneratorVersion(Project project) {
         try {
-            // Simple version detection - full implementation would be in a separate service
-            return "7.14.0"; // Placeholder
+            OpenApiGeneratorVersionDetector detector = new OpenApiGeneratorVersionDetector();
+            return detector.detectVersionOrFail(project);
         } catch (Exception e) {
-            logger.debug("Error detecting OpenAPI Generator version: {}", e.getMessage());
-            return "unknown";
+            logger.warn("Failed to detect OpenAPI Generator version: {}", e.getMessage());
+            throw e; // Re-throw to maintain fail-fast behavior
         }
     }
 }
