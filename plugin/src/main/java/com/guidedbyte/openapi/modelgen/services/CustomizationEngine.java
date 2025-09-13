@@ -4,7 +4,7 @@ import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
-import com.guidedbyte.openapi.modelgen.services.ContextAwareLogger;
+import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
 import com.guidedbyte.openapi.modelgen.services.RichFileLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

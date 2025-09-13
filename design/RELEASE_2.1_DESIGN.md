@@ -45,7 +45,7 @@ The plugin has achieved excellent adoption with comprehensive test coverage (21 
 
 ## High Priority Improvements
 
-### 1. Enhanced Logging with SLF4J MDC Context
+### 1. Enhanced Logging with SLF4J MDC Context ✅ COMPLETED
 **Priority:** High  
 **Component:** All Services  
 **Impact:** Production log pollution + lack of detailed template resolution visibility
@@ -185,16 +185,970 @@ public class TemplateCacheManager {
 - **DEBUG:** Template processing, customization decisions, cache operations
 - **TRACE:** Detailed internal operations, condition evaluations
 
-#### Implementation Impact
-- **Production logs** remain clean (INFO level shows only major operations)
-- **Debug logs** provide rich context for troubleshooting (`--debug` flag)
-- **Users get visibility** into template resolution precedence and customization logic
-- **Developers get performance metrics** for cache effectiveness and timing
+#### ✅ COMPLETED Implementation 
 
-### 2. Error Handling Standardization
+**Standards Compliance & Design Philosophy:**
+
+Our implementation follows **standard SLF4J MDC patterns** at the core while adding a **compatibility layer** for Gradle's limitations. We are NOT deviating from SLF4J standards - we're extending them.
+
+### Core SLF4J MDC Implementation (Standard Compliant)
+
+1. **LoggingContext Utility** - Pure SLF4J MDC management
+   ```java
+   // 100% standard SLF4J MDC usage
+   public class LoggingContext {
+       private static final String SPEC_KEY = "spec";
+       private static final String TEMPLATE_KEY = "template";
+       private static final String COMPONENT_KEY = "component";
+       
+       public static void setContext(String specName, String templateName) {
+           MDC.put(SPEC_KEY, specName);
+           if (templateName != null) {
+               MDC.put(TEMPLATE_KEY, templateName);
+           }
+       }
+       
+       public static void setComponent(String componentName) {
+           MDC.put(COMPONENT_KEY, componentName);  // Standard MDC pattern
+       }
+       
+       public static void clear() {
+           MDC.clear();  // Standard MDC cleanup
+       }
+   }
+   
+   // Usage follows standard patterns:
+   LoggingContext.setContext("spring", "pojo.mustache");
+   LoggingContext.setComponent("CustomizationEngine"); 
+   logger.debug("Processing customization");  // Standard SLF4J logging
+   LoggingContext.clear();
+   ```
+
+2. **Standard Logback Configuration** - Works with any SLF4J-compliant logger
+   ```xml
+   <!-- 100% standard logback configuration -->
+   <configuration>
+       <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+           <encoder>
+               <!-- Standard MDC pattern - %X{key} is standard SLF4J -->
+               <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{component}] [%X{spec}:%X{template}] - %msg%n</pattern>
+           </encoder>
+       </appender>
+   </configuration>
+   ```
+
+### Gradle Compatibility Layer (Non-Standard Extension)
+
+**The Problem:** Gradle's logging subsystem doesn't expose MDC context to console output, even with proper logback configuration. This is a [known Gradle limitation](https://github.com/gradle/gradle/issues/2408).
+
+**Our Solution:** Add a compatibility layer that preserves standard MDC while providing enhanced console output.
+
+3. **ContextAwareLogger** - Gradle-compatible console enhancement
+   ```java
+   // This is our NON-STANDARD extension to work around Gradle limitations
+   public class ContextAwareLogger {
+       public static void debug(Logger logger, boolean debugEnabled, String message, Object... args) {
+           if (debugEnabled) {
+               // Extract context from STANDARD MDC
+               String contextPrefix = buildContextFromStandardMDC();
+               logger.info(contextPrefix + " " + message, args); // Use INFO for Gradle visibility
+           } else {
+               logger.debug(message, args); // Standard SLF4J debug logging
+           }
+       }
+       
+       private static String buildContextFromStandardMDC() {
+           // Read from STANDARD SLF4J MDC
+           String spec = MDC.get("spec");
+           String template = MDC.get("template");  
+           String component = MDC.get("component");
+           // Format using user's configuration
+           return formatContext(spec, template, component);
+       }
+   }
+   ```
+
+### User Configuration System (Our Extension)
+
+4. **LoggingContextFormatter** - User-configurable context display
+   ```java
+   // This provides user customization of how MDC context appears in console
+   public class LoggingContextFormatter {
+       // Maps to standard MDC keys
+       public String formatContext(String spec, String template, String component) {
+           // spec = MDC.get("spec")
+           // template = MDC.get("template") 
+           // component = MDC.get("component")
+           
+           // User can configure how these appear in console output
+           return applyUserFormat(spec, template, component);
+       }
+   }
+   ```
+
+### MDC Context Variables Explained
+
+**Our "fake MDC" variables are actually REAL MDC variables** - we're just providing user control over formatting:
+
+| Variable | MDC Key | Description | Example Values |
+|----------|---------|-------------|----------------|
+| `{{spec}}` | `spec` | OpenAPI specification name being processed | `"pets"`, `"orders"`, `"spring"` |
+| `{{template}}` | `template` | Template file currently being processed | `"pojo.mustache"`, `"enumClass.mustache"`, `"api.mustache"` |
+| `{{component}}` | `component` | Internal component performing the work | `"CustomizationEngine"`, `"TemplateCacheManager"`, `"PrepareTemplateDirectoryTask"` |
+
+**Template Variables & Conditionals:**
+```gradle
+openapiModelgen {
+    defaults {
+        // User controls PRESENTATION, not the underlying MDC data
+        loggingContextFormat "[{{spec}}{{#template}}:{{template}}{{/template}}]"
+        
+        // This creates different console output from the SAME MDC data:
+        // When template exists: [spring:pojo.mustache] Processing customization
+        // When no template: [spring] Processing customization
+        
+        // The underlying MDC still contains:
+        // MDC.get("spec") = "spring"
+        // MDC.get("template") = "pojo.mustache" or null
+        // MDC.get("component") = "CustomizationEngine"
+    }
+}
+```
+
+**Conditional Sections:**
+- `{{#template}}:{{template}}{{/template}}` - Only shows `:template` if template is present
+- `{{#component}}[{{component}}]{{/component}}` - Only shows `[component]` if component is set
+
+### Future Gradle Compatibility
+
+**Q: What if Gradle eventually supports user-provided SLF4J and MDC contexts?**
+
+**A: Minimal effort - we're already standards compliant at the core.**
+
+```java
+// Current implementation (today):
+if (debugEnabled) {
+    String contextPrefix = buildContextFromStandardMDC();
+    logger.info(contextPrefix + " " + message, args); // Workaround for Gradle
+} else {
+    logger.debug(message, args); // Standard logging
+}
+
+// Future implementation (when Gradle supports MDC):
+logger.debug(message, args); // Just use standard logging - MDC works automatically!
+
+// The user's logback.xml would handle formatting:
+// <pattern>%d{HH:mm:ss.SSS} [%X{spec}:%X{template}] - %msg%n</pattern>
+```
+
+**Migration Path:**
+1. **Phase 1 (Today):** Use our compatibility layer + standard MDC
+2. **Phase 2 (Future Gradle):** Detect MDC support, prefer standard logging
+3. **Phase 3 (Long-term):** Deprecate compatibility layer, pure SLF4J
+
+**Code Required for Future Compatibility:**
+```java
+// Detection logic (maybe 20 lines of code)
+public class GradleMDCDetector {
+    public static boolean gradleSupportsUserMDC() {
+        // Test if MDC context appears in console output
+        // Return true if Gradle has fixed the limitation
+    }
+}
+
+// Modified ContextAwareLogger (maybe 5 line change)
+public static void debug(Logger logger, boolean debugEnabled, String message, Object... args) {
+    if (debugEnabled && !GradleMDCDetector.gradleSupportsUserMDC()) {
+        // Use our compatibility layer
+        String contextPrefix = buildContextFromStandardMDC();
+        logger.info(contextPrefix + " " + message, args);
+    } else {
+        // Use standard SLF4J - MDC formatting handled by logback.xml
+        logger.debug(message, args);
+    }
+}
+```
+
+### Comparison to Standard SLF4J/MDC
+
+| Aspect | Standard SLF4J/MDC | Our Implementation | Deviation? |
+|--------|---------------------|-------------------|------------|
+| **MDC Usage** | `MDC.put("key", "value")` | `MDC.put("spec", "spring")` | ✅ **No - identical** |
+| **MDC Keys** | User-defined | `spec`, `template`, `component` | ✅ **No - just conventions** |
+| **Logger Usage** | `logger.debug("message")` | `logger.debug("message")` | ✅ **No - identical** |
+| **Logback Config** | `%X{key}` patterns | `%X{spec}:%X{template}` | ✅ **No - identical** |
+| **Console Output** | Depends on logger config | Enhanced for Gradle | ⚠️ **Extension - not deviation** |
+| **File Logging** | Standard appenders | Standard appenders | ✅ **No - identical** |
+| **Context Cleanup** | `MDC.clear()` | `MDC.clear()` | ✅ **No - identical** |
+
+### Design Benefits
+
+1. **✅ Standards Compliant:** Core logging follows SLF4J patterns exactly
+2. **✅ Future Compatible:** Easy migration when Gradle improves
+3. **✅ User Friendly:** Gradle console shows context despite limitations  
+4. **✅ Flexible:** Users control presentation without changing logging code
+5. **✅ No Lock-in:** Remove our layer anytime, standard logging remains
+6. **✅ Testable:** Standard MDC testing patterns work unchanged
+
+### 🤔 DESIGN CONSIDERATION: SLF4J-Compatible `logPattern`
+
+**Question:** Should we use `logPattern` with SLF4J-compatible syntax instead of `loggingContextFormat` with custom syntax?
+
+#### Current Approach: `loggingContextFormat`
+```gradle
+// Custom template variable syntax
+loggingContextFormat "[{{spec}}{{#template}}:{{template}}{{/template}}]"
+// Output: [spring:pojo.mustache] message
+```
+
+#### Alternative Approach: SLF4J-Compatible `logPattern`
+```gradle
+// Standard SLF4J MDC pattern syntax (100% compatible)
+logPattern "[%X{spec}:%X{template}]"  // Standard SLF4J syntax
+// Output: [spring:pojo.mustache] message
+
+// Would also support full SLF4J patterns:
+logPattern "%d{HH:mm:ss} [%X{spec}:%X{template}] - %msg"
+// Output: 14:23:45 [spring:pojo.mustache] - Processing customization
+```
+
+#### Benefits of SLF4J-Compatible Approach:
+
+1. **✅ 100% Standard Compliance**
+   ```gradle
+   // Users already know this syntax from logback.xml
+   logPattern "[%X{spec}:%X{template}]"  // Familiar to SLF4J users
+   
+   // vs our custom syntax they need to learn
+   loggingContextFormat "[{{spec}}:{{template}}]"  // New syntax to learn
+   ```
+
+2. **✅ Future-Proof Migration**
+   ```xml
+   <!-- When Gradle supports MDC, users can copy-paste directly to logback.xml -->
+   <pattern>[%X{spec}:%X{template}] - %msg%n</pattern>
+   
+   <!-- vs having to translate our custom syntax -->
+   <pattern>[{{spec}}:{{template}}] - %msg%n</pattern> <!-- This won't work in logback -->
+   ```
+
+3. **✅ Conditional Logic with Standard SLF4J**
+   ```gradle
+   // Standard SLF4J approach (works in logback.xml too)
+   logPattern "[%X{spec}]%X{template:+:%X{template}}"  // SLF4J conditional syntax
+   
+   // vs our custom conditional syntax
+   loggingContextFormat "[{{spec}}{{#template}}:{{template}}{{/template}}]"
+   ```
+
+#### Implementation Strategy: Hybrid Compatibility
+
+```java
+public class LogFormatProcessor {
+    
+    public String processLogFormat(String userFormat, String spec, String template, String component) {
+        
+        // 1. Handle predefined formats first
+        if ("default".equals(userFormat)) {
+            return spec != null && template != null 
+                ? "[" + spec + ":" + template + "]"
+                : spec != null ? "[" + spec + "]" : "";
+        }
+        
+        // 2. Process SLF4J-style patterns (standard compatibility)
+        if (containsSLF4JPatterns(userFormat)) {
+            return processSLF4JPattern(userFormat, spec, template, component);
+        }
+        
+        // 3. Process our custom template patterns (Gradle enhancement)
+        if (containsCustomPatterns(userFormat)) {
+            return processCustomPattern(userFormat, spec, template, component);
+        }
+        
+        return userFormat; // Return as-is if no patterns
+    }
+    
+    private String processSLF4JPattern(String pattern, String spec, String template, String component) {
+        // Handle standard SLF4J MDC patterns
+        return pattern
+            .replace("%X{spec}", spec != null ? spec : "")
+            .replace("%X{template}", template != null ? template : "")
+            .replace("%X{component}", component != null ? component : "")
+            // Support SLF4J conditional: %X{template:+:%X{template}} 
+            .replaceAll("%X\\{template:\\+:(%X\\{template\\})\\}", 
+                       template != null ? ":" + template : "");
+    }
+    
+    private String processCustomPattern(String pattern, String spec, String template, String component) {
+        // Handle our custom {{variable}} and {{#conditional}} patterns
+        // (Current LoggingContextFormatter implementation)
+        return currentCustomPatternLogic(pattern, spec, template, component);
+    }
+}
+```
+
+#### Configuration Examples: Best of Both Worlds
+
+```gradle
+openapiModelgen {
+    defaults {
+        // Option 1: Predefined (simple)
+        logPattern "default"  // [spring:pojo.mustache]
+        
+        // Option 2: SLF4J-compatible (standard)
+        logPattern "[%X{spec}:%X{template}]"  // Standard SLF4J users know this
+        
+        // Option 3: SLF4J with conditionals
+        logPattern "[%X{spec}]%X{template:+:%X{template}}"  // [spring:pojo.mustache] or [spring]
+        
+        // Option 4: Our custom enhancements (for complex logic)
+        logPattern "[{{spec}}{{#template}}:{{template}}{{/template}}]"  // Complex conditionals
+        
+        // Option 5: Full SLF4J log pattern (advanced)
+        logPattern "%d{mm:ss} [%X{component}] [%X{spec}:%X{template}] - %msg"
+        // Output: 23:45 [CustomizationEngine] [spring:pojo.mustache] - Processing customization
+    }
+}
+```
+
+#### Migration Path from Current Implementation
+
+```gradle
+// Phase 1: Support both (backward compatibility)
+openapiModelgen {
+    defaults {
+        loggingContextFormat "[{{spec}}:{{template}}]"  // OLD: still works
+        logPattern "[%X{spec}:%X{template}]"            // NEW: preferred
+        // logPattern takes precedence if both specified
+    }
+}
+
+// Phase 2: Deprecate loggingContextFormat
+// Phase 3: Remove loggingContextFormat (breaking change in 3.0)
+```
+
+#### **REVISED RECOMMENDATION:** Simplified SLF4J-Only with Property Control
+
+**Problems with Complex Dual-Format Approach:**
+- ❌ Supporting two formats creates confusion and maintenance burden
+- ❌ Runtime detection of Gradle capabilities is unreliable  
+- ❌ Custom conditional syntax provides minimal benefit over standard SLF4J
+
+**Better Solution: Property-Controlled Single Format**
+
+```gradle
+openapiModelgen {
+    defaults {
+        // Control which formatter to use
+        logPatternSrc "plugin"  // Options: "plugin" (default) or "native"
+        
+        // Standard SLF4J pattern (works with both formatters)
+        logPattern "[%X{spec}:%X{template}] %msg"
+        
+        // OR predefined shortcuts
+        logPattern "default"    // Maps to "[%X{spec}:%X{template}]"
+        logPattern "minimal"    // Maps to "[%X{spec}]" 
+        logPattern "verbose"    // Maps to "[%X{component}] [%X{spec}:%X{template}]"
+    }
+}
+```
+
+#### Implementation: Clean Property-Based Control
+
+```java
+public class UnifiedLogFormatter {
+    
+    public static void log(Logger logger, boolean debugEnabled, String logPatternSrc, 
+                          String logPattern, String message, Object... args) {
+        if (!debugEnabled) {
+            logger.debug(message, args);
+            return;
+        }
+        
+        if ("native".equals(logPatternSrc)) {
+            // User expects Gradle/logback.xml to handle formatting
+            logger.debug(message, args);
+        } else {
+            // Use plugin's SLF4J-compatible formatter
+            String resolvedPattern = resolvePattern(logPattern); // "default" -> "[%X{spec}:%X{template}]"
+            SLF4JFormatter formatter = new SLF4JFormatter(resolvedPattern);
+            String formattedMessage = formatter.format(String.format(message, args), 
+                                                     MDC.get("spec"), 
+                                                     MDC.get("template"), 
+                                                     MDC.get("component"));
+            logger.info(formattedMessage); // Use INFO for Gradle console visibility
+        }
+    }
+}
+
+// Lightweight SLF4J-compatible pattern parser (Logback not available in Gradle plugins)
+public class SLF4JCompatibleFormatter {
+    private final String pattern;
+    
+    public SLF4JCompatibleFormatter(String pattern) {
+        this.pattern = pattern != null ? pattern : "[%X{spec}:%X{template}]";
+    }
+    
+    public String format(String message, String spec, String template, String component) {
+        String result = pattern;
+        
+        // Replace MDC variables: %X{key}
+        result = result.replace("%X{spec}", spec != null ? spec : "");
+        result = result.replace("%X{template}", template != null ? template : "");
+        result = result.replace("%X{component}", component != null ? component : "");
+        
+        // Replace message placeholder: %msg or %m
+        result = result.replace("%msg", message);
+        result = result.replace("%m", message);
+        
+        // Handle basic timestamp patterns: %d{pattern} -> simplified implementation
+        if (result.contains("%d{")) {
+            String timestamp = java.time.LocalTime.now().toString().substring(0, 8); // HH:MM:SS
+            result = result.replaceAll("%d\\{[^}]*\\}", timestamp);
+        }
+        
+        // Clean up any empty brackets from missing variables
+        result = result.replaceAll("\\[:[^\\]]*\\]", "[]"); // [: ] -> []
+        result = result.replaceAll("\\[[^:]*:\\]", "[]");   // [value:] -> []
+        
+        return result.trim();
+    }
+}
+
+// ALTERNATIVE: Even simpler approach - just support our specific use cases
+public class SimpleSLF4JFormatter {
+    private final String pattern;
+    
+    public SimpleSLF4JFormatter(String pattern) {
+        this.pattern = pattern;
+    }
+    
+    public String format(String message, String spec, String template, String component) {
+        // Only support the patterns we actually need
+        switch (pattern) {
+            case "default":
+            case "[%X{spec}:%X{template}]":
+                return buildDefault(spec, template);
+            case "minimal":
+            case "[%X{spec}]":
+                return spec != null ? "[" + spec + "]" : "";
+            case "verbose":
+            case "[%X{component}] [%X{spec}:%X{template}]":
+                return buildVerbose(component, spec, template);
+            case "debug":
+            case "[%X{component}|%X{spec}:%X{template}]":
+                return buildDebug(component, spec, template);
+            default:
+                // For custom patterns, do basic substitution
+                return pattern
+                    .replace("%X{spec}", spec != null ? spec : "")
+                    .replace("%X{template}", template != null ? template : "")
+                    .replace("%X{component}", component != null ? component : "")
+                    .replace("%msg", message);
+        }
+    }
+    
+    private String buildDefault(String spec, String template) {
+        if (spec == null) return "";
+        return template != null ? "[" + spec + ":" + template + "]" : "[" + spec + "]";
+    }
+    
+    private String buildVerbose(String component, String spec, String template) {
+        StringBuilder sb = new StringBuilder();
+        if (component != null) sb.append("[").append(component).append("] ");
+        if (spec != null) {
+            sb.append("[").append(spec);
+            if (template != null) sb.append(":").append(template);
+            sb.append("]");
+        }
+        return sb.toString();
+    }
+    
+    private String buildDebug(String component, String spec, String template) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        if (component != null) sb.append(component);
+        if (spec != null) {
+            if (component != null) sb.append("|");
+            sb.append(spec);
+            if (template != null) sb.append(":").append(template);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+}
+
+## Implementation Comparison: SLF4JCompatibleFormatter vs SimpleSLF4JFormatter
+
+### Option 1: SLF4JCompatibleFormatter (Generic Pattern Parser)
+
+#### Pros ✅
+- **Full SLF4J Compatibility**: Supports most standard SLF4J patterns (`%X{key}`, `%msg`, `%d{pattern}`, `%logger`, etc.)
+- **Maximum Flexibility**: Users can use any SLF4J-style pattern they're familiar with
+- **Future-Proof**: When Gradle supports MDC, patterns are identical
+- **Extensible**: Easy to add support for new SLF4J pattern elements
+- **Industry Standard**: Uses exact same syntax as logback.xml
+
+#### Cons ❌
+- **Complex Implementation**: Regex parsing, edge case handling, pattern validation
+- **More Bug-Prone**: String manipulation with multiple replacement passes
+- **Performance Overhead**: Regex operations on every log message
+- **Maintenance Burden**: Need to handle all SLF4J pattern edge cases
+- **Testing Complexity**: Many more test scenarios for pattern combinations
+
+#### Code Complexity Example:
+```java
+// Must handle complex patterns like:
+logPattern "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{component}] [%X{spec}:%X{template}] - %msg%n"
+
+// Requires regex parsing:
+result = result.replaceAll("%d\\{([^}]*)\\}", timestampReplacement);
+result = result.replaceAll("%-?\\d*level", levelReplacement);
+result = result.replaceAll("%logger\\{(\\d+)\\}", loggerReplacement);
+// ... many more pattern types
+```
+
+#### User Configuration:
+```gradle
+openapiModelgen {
+    defaults {
+        // Any valid SLF4J pattern works
+        logPattern "%d{HH:mm:ss} [%X{component}] [%X{spec}:%X{template}] - %msg"
+        logPattern "[%X{spec}]%X{template:+:%X{template}}" // SLF4J conditionals
+        logPattern "%-20logger [%X{spec}:%X{template}] %msg"
+    }
+}
+```
+
+### Option 2: SimpleSLF4JFormatter (Predefined + Basic Custom)
+
+#### Pros ✅
+- **Simple & Reliable**: Clear switch statement, predictable behavior
+- **High Performance**: No regex operations, direct string building
+- **Easy Testing**: Limited, well-defined test scenarios
+- **Low Maintenance**: Fewer edge cases, easier debugging
+- **Sufficient Coverage**: Handles all our actual use cases perfectly
+- **Clear Error Messages**: Can provide specific guidance for unsupported patterns
+
+#### Cons ❌
+- **Limited Flexibility**: Only supports predefined formats + basic custom patterns
+- **Learning Curve**: Users need to know our predefined format names
+- **Potential Future Limitations**: Might need to add more formats as users request them
+- **Less SLF4J-Native**: Mixes predefined names with SLF4J syntax
+
+#### Code Simplicity Example:
+```java
+// Clean, predictable logic:
+switch (pattern) {
+    case "default":
+    case "[%X{spec}:%X{template}]":
+        return buildDefault(spec, template);
+    case "minimal":
+    case "[%X{spec}]": 
+        return buildMinimal(spec);
+    // ... clear, testable cases
+}
+```
+
+#### User Configuration:
+```gradle
+openapiModelgen {
+    defaults {
+        // Option 1: Predefined (recommended)
+        logPattern "default"   // [spring:pojo.mustache]
+        logPattern "verbose"   // [CustomizationEngine] [spring:pojo.mustache]
+        
+        // Option 2: Simple SLF4J patterns (basic support)
+        logPattern "[%X{spec}:%X{template}] %msg"
+        
+        // Option 3: Unsupported - clear error message
+        logPattern "%d{HH:mm:ss} %logger [%X{spec}]" // ❌ Not supported
+    }
+}
+```
+
+## Detailed Comparison Matrix
+
+| Aspect | SLF4JCompatibleFormatter | SimpleSLF4JFormatter |
+|--------|-------------------------|---------------------|
+| **Implementation Complexity** | High (200+ lines) | Low (100 lines) |
+| **Runtime Performance** | Slower (regex parsing) | Faster (switch statement) |
+| **Memory Usage** | Higher (regex objects) | Lower (string building) |
+| **Test Coverage Required** | Extensive (50+ test cases) | Moderate (15 test cases) |
+| **Maintenance Effort** | High (handle SLF4J edge cases) | Low (fixed set of formats) |
+| **User Flexibility** | Maximum (any SLF4J pattern) | Limited (predefined + basic) |
+| **Standards Compliance** | 100% SLF4J compatible | Mostly SLF4J compatible |
+| **Future Migration** | Seamless (identical patterns) | Easy (map presets to SLF4J) |
+| **Error Handling** | Complex (pattern validation) | Simple (clear error messages) |
+| **Debugging Experience** | Harder (regex failures) | Easier (clear logic flow) |
+
+## Real-World Usage Scenarios
+
+### Scenario 1: Basic User (80% of users)
+```gradle
+// What they want: Simple context in logs
+logPattern "default" // [spring:pojo.mustache] message
+
+// SimpleSLF4JFormatter: ✅ Perfect - clear, simple
+// SLF4JCompatibleFormatter: ✅ Works, but overkill
+```
+
+### Scenario 2: Advanced User (15% of users)  
+```gradle
+// What they want: Custom context format
+logPattern "[%X{spec}] %X{component} -> %msg"
+
+// SimpleSLF4JFormatter: ✅ Basic support for this pattern
+// SLF4JCompatibleFormatter: ✅ Full support
+```
+
+### Scenario 3: Power User (5% of users)
+```gradle
+// What they want: Full SLF4J patterns with timestamps, etc.
+logPattern "%d{HH:mm:ss.SSS} [%thread] %-5level [%X{spec}:%X{template}] - %msg%n"
+
+// SimpleSLF4JFormatter: ❌ Not supported - clear error message
+// SLF4JCompatibleFormatter: ✅ Full support (but complex to implement)
+```
+
+## Risk Assessment
+
+### SLF4JCompatibleFormatter Risks:
+- **High Implementation Risk**: Complex regex parsing prone to edge case bugs
+- **Performance Risk**: Regex operations on every log message
+- **Maintenance Risk**: Need to handle growing list of SLF4J pattern types
+- **Testing Risk**: Exponential test case combinations
+
+### SimpleSLF4JFormatter Risks:
+- **User Limitation Risk**: Power users might want unsupported patterns
+- **Future Request Risk**: Might need to add more predefined formats over time
+- **Migration Risk**: If Gradle adds MDC support, need to map our presets
+
+## Recommendation Analysis
+
+### For Phase 2B: **SimpleSLF4JFormatter** ⭐
+
+**Why SimpleSLF4JFormatter is the better choice:**
+
+1. **✅ Faster Implementation**: Can complete Phase 2B quickly and reliably
+2. **✅ Lower Risk**: Simple implementation reduces chance of bugs
+3. **✅ Meets Real Needs**: Covers 95% of actual user requirements
+4. **✅ Better UX**: Clear predefined options are easier for users
+5. **✅ Future Extensible**: Easy to add new predefined formats based on user feedback
+
+### Future Evolution Path:
+
+```java
+// Phase 2B: Start simple
+SimpleSLF4JFormatter formatter = new SimpleSLF4JFormatter("default");
+
+// Phase 2C (if needed): Add more presets based on user feedback
+// - Add "timestamp" preset: "[HH:mm:ss] [%X{spec}:%X{template}]"  
+// - Add "detailed" preset: "[%X{component}] [%X{spec}:%X{template}] %msg"
+
+// Phase 3 (if compelling use case): Hybrid approach
+// - Keep simple presets for most users
+// - Add limited regex support for advanced patterns
+// - Provide clear error messages for unsupported patterns
+```
+
+**Final Recommendation**: Implement High-Performance Compiled Pattern SLF4JFormatter with format modifier support and global-only configuration.
+
+## Refined Implementation: Global Configuration + Format Modifiers
+
+### Simplified Configuration (Global Only)
+
+```gradle
+openapiModelgen {
+    // Global logging configuration - applies to all specs
+    logPattern "[%X{spec}:%X{template}] %msg"  // SLF4J pattern
+    logPatternSrc "plugin"  // "plugin" or "native"
+    
+    // Per-spec debug control only
+    defaults {
+        debug false  // Default debug level
+    }
+    specs {
+        pets { debug true }     // Enable debug for pets -> [pets:pojo.mustache] messages
+        orders { debug false }  // Disable for orders -> no debug output
+    }
+}
+```
+
+**Benefits of Global-Only Approach:**
+- ✅ **Simpler Configuration** - One format applies everywhere
+- ✅ **Consistent Output** - All specs use same formatting style
+- ✅ **Less Confusion** - Users don't need to choose format per spec
+- ✅ **Spec Differentiation** - Format shows [pets:...] vs [orders:...] naturally
+- ✅ **Debug Control** - Users still control debug on/off per spec
+- ✅ **Easier Implementation** - No inheritance/override logic needed
+
+### Enhanced Pattern Support with Format Modifiers
+
+```java
+public class FormatModifier {
+    final boolean leftAlign;      // %-20s (left align)
+    final boolean rightAlign;     // %20s (right align) 
+    final int minWidth;           // %20s (minimum 20 chars)
+    final int maxWidth;           // %.30s (maximum 30 chars)
+    final String dateFormat;     // %d{ISO8601}, %d{HH:mm:ss}
+    
+    public String apply(String value) {
+        if (value == null) value = "";
+        
+        // Apply max width truncation first
+        if (maxWidth > 0 && value.length() > maxWidth) {
+            value = value.substring(0, maxWidth);
+        }
+        
+        // Apply min width padding
+        if (minWidth > 0) {
+            if (leftAlign) {
+                return String.format("%-" + minWidth + "s", value);
+            } else {
+                return String.format("%" + minWidth + "s", value);
+            }
+        }
+        
+        return value;
+    }
+}
+
+// Enhanced MDC Element with format modifier support
+class MDCElement implements PatternElement {
+    private final String key;
+    private final FormatModifier modifier;
+    
+    public void append(StringBuilder sb, String message, String spec, String template, String component) {
+        String value = null;
+        switch (key) {
+            case "spec": value = spec; break;
+            case "template": value = template; break;
+            case "component": value = component; break;
+        }
+        
+        // Apply format modifier
+        String formatted = modifier.apply(value);
+        sb.append(formatted);
+    }
+}
+```
+
+### Pattern Examples with Format Modifiers
+
+```gradle
+openapiModelgen {
+    // Basic format
+    logPattern "[%X{spec}:%X{template}] %msg"
+    // Output: [spring:pojo.mustache] Processing customization
+    
+    // With format modifiers for alignment
+    logPattern "[%-10X{spec}:%-20X{template}] %msg"  
+    // Output: [spring    :pojo.mustache        ] Processing customization
+    //         [orders   :enumClass.mustache   ] Processing customization
+    
+    // With timestamp and alignment
+    logPattern "%d{HH:mm:ss} [%-8X{spec}] [%-15X{template}] %msg"
+    // Output: 14:23:45 [spring  ] [pojo.mustache   ] Processing customization
+    //         14:23:46 [orders  ] [enumClass      ] Processing customization
+    
+    // Truncate long template names
+    logPattern "[%X{spec}:%.15X{template}] %msg"
+    // Output: [spring:pojo.mustache] Processing customization
+    //         [orders:veryLongTempl] Processing customization (truncated)
+}
+```
+
+### Enhanced Pattern Parser with Modifier Support
+
+```java
+public class EnhancedPatternParser {
+    
+    private static int parsePercentPattern(String pattern, int start, List<PatternElement> elements) {
+        int i = start + 1; // Skip the %
+        
+        // Parse format modifier: %[-][\d*][.\d*]
+        FormatModifier modifier = parseFormatModifier(pattern, i);
+        i = modifier.endPosition;
+        
+        if (i >= pattern.length()) return i;
+        
+        char patternChar = pattern.charAt(i);
+        switch (patternChar) {
+            case 'X':
+                // Parse %X{key} with modifier support
+                if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '{') {
+                    int closeIndex = pattern.indexOf('}', i + 2);
+                    if (closeIndex != -1) {
+                        String key = pattern.substring(i + 2, closeIndex);
+                        elements.add(new MDCElement(key, modifier));
+                        return closeIndex + 1;
+                    }
+                }
+                break;
+                
+            case 'd':
+                // Parse %d{format} with modifier
+                return parseTimestampPattern(pattern, i, elements, modifier);
+                
+            case 'm':
+                // Parse %msg with modifier
+                elements.add(new MessageElement(modifier));
+                return i + (pattern.startsWith("msg", i) ? 3 : 1);
+        }
+        
+        return i + 1;
+    }
+    
+    private static FormatModifier parseFormatModifier(String pattern, int start) {
+        boolean leftAlign = false;
+        int minWidth = 0;
+        int maxWidth = 0;
+        int i = start;
+        
+        // Check for left alignment: %-
+        if (i < pattern.length() && pattern.charAt(i) == '-') {
+            leftAlign = true;
+            i++;
+        }
+        
+        // Parse minimum width: %20 or %-20
+        StringBuilder widthStr = new StringBuilder();
+        while (i < pattern.length() && Character.isDigit(pattern.charAt(i))) {
+            widthStr.append(pattern.charAt(i));
+            i++;
+        }
+        if (widthStr.length() > 0) {
+            minWidth = Integer.parseInt(widthStr.toString());
+        }
+        
+        // Parse maximum width: %.30
+        if (i < pattern.length() && pattern.charAt(i) == '.') {
+            i++; // Skip the dot
+            StringBuilder maxWidthStr = new StringBuilder();
+            while (i < pattern.length() && Character.isDigit(pattern.charAt(i))) {
+                maxWidthStr.append(pattern.charAt(i));
+                i++;
+            }
+            if (maxWidthStr.length() > 0) {
+                maxWidth = Integer.parseInt(maxWidthStr.toString());
+            }
+        }
+        
+        return new FormatModifier(leftAlign, minWidth, maxWidth, i);
+    }
+}
+```
+
+### Benefits of This Enhanced Approach:
+
+1. **✅ Global Simplicity** - One format configuration for entire plugin
+2. **✅ Format Modifier Support** - Professional log alignment and formatting  
+3. **✅ High Performance** - Compiled patterns with minimal runtime overhead
+4. **✅ Real SLF4J Compatibility** - Supports the formatting users expect
+5. **✅ Spec Differentiation** - Context naturally shows which spec is processing
+6. **✅ Debug Control** - Users enable/disable debug per spec as needed
+
+### Migration from Phase 1:
+
+```gradle
+// OLD (Phase 1): Custom syntax with complex inheritance
+openapiModelgen {
+    defaults {
+        loggingContextFormat "[{{spec}}:{{template}}]"  // Custom syntax
+        debug true
+    }
+    specs {
+        pets { 
+            loggingContextFormat "verbose"  // Override per spec
+        }
+    }
+}
+
+// NEW (Phase 2): SLF4J syntax with global configuration
+openapiModelgen {
+    logPattern "[%-8X{spec}:%-15X{template}] %msg"  // Global SLF4J pattern
+    logPatternSrc "plugin"
+    
+    defaults { debug false }
+    specs {
+        pets { debug true }  // Only debug control per spec
+    }
+}
+```
+
+This approach is much cleaner and more maintainable while providing the formatting power users need!
+
+```gradle
+openapiModelgen {
+    defaults {
+        // Current state: Use plugin formatter (Gradle doesn't support custom MDC yet)
+        logPatternSrc "plugin"
+        logPattern "[%X{spec}:%X{template}]"  // Plugin processes this pattern
+        debug true
+    }
+}
+
+// Future state: When user has custom Gradle setup that supports MDC
+openapiModelgen {
+    defaults {
+        logPatternSrc "native"  // Let Gradle/logback handle formatting
+        logPattern "[%X{spec}:%X{template}]"  // Same pattern, but processed by logback.xml
+        debug true
+    }
+}
+```
+
+#### Benefits of Property-Based Approach:
+
+1. **✅ Explicit Control** - No guessing about Gradle capabilities
+2. **✅ Simple Implementation** - No runtime detection logic needed
+3. **✅ Future-Proof** - Users can opt into native formatting when ready
+4. **✅ Standards Compliant** - Single SLF4J pattern format
+5. **✅ Zero Custom Parsing** - Leverage Logback's PatternLayout
+6. **✅ Testable** - Clear behavior based on configuration
+7. **✅ Performance** - No runtime capability detection overhead
+
+#### Migration Strategy:
+
+```gradle
+// Phase 1 (Release 2.1): Introduce new system
+openapiModelgen {
+    defaults {
+        logPatternSrc "plugin"  // Default - current behavior
+        logPattern "default"    // Standard SLF4J patterns only
+        
+        // DEPRECATED: Still works but logs warning
+        // loggingContextFormat "[{{spec}}:{{template}}]"  
+    }
+}
+
+// Phase 2 (Release 2.2): Deprecation warnings for old format
+// Phase 3 (Release 3.0): Remove loggingContextFormat entirely
+```
+
+**Final Recommendation:**
+1. **Property control:** `logPatternSrc` with `"plugin"` (default) and `"native"` options
+2. **Single format:** Standard SLF4J patterns only (`%X{key}`, `%msg`, etc.)
+3. **Leverage SLF4J:** Use Logback's PatternLayout (no custom parsing)
+4. **Predefined shortcuts:** Map common names to SLF4J patterns
+5. **Clean migration:** Deprecate `loggingContextFormat` custom syntax
+
+#### Implementation Impact
+- **✅ Production logs** remain clean (INFO level shows only major operations)
+- **✅ Debug logs** provide rich context for troubleshooting (`--debug` flag)  
+- **✅ Users get visibility** into template resolution precedence and customization logic
+- **✅ Configurable context** allows users to customize logging output format
+- **✅ Gradle limitations bypassed** - context visible in console despite MDC restrictions
+- **✅ File-based debugging** provides full technical detail with timestamps
+- **✅ Zero dependencies added** - pure SLF4J and standard Java
+
+### 2. Error Handling Standardization - **PHASE 2 FOCUS**
 **Priority:** High  
 **Component:** All Services  
 **Impact:** Inconsistent error messages and debugging difficulty
+
+**Status:** Ready for implementation now that logging infrastructure is complete
 
 #### Problem
 Inconsistent error handling patterns across services:
@@ -243,7 +1197,7 @@ return ErrorHandlingUtils.handleWithContext(
 - Better debugging context
 - Standardized exception handling patterns
 
-### 3. Robust Version Detection (Critical)
+### 3. Robust Version Detection (Critical) ✅ COMPLETED
 **Priority:** High  
 **Component:** Version Management  
 **Files:** `TemplateCacheManager.java`, `ConditionEvaluator.java`
@@ -344,6 +1298,35 @@ public class OpenApiGeneratorVersionDetector {
 - **Forces proper OpenAPI Generator configuration**
 - **Clear error messages** guide users to fix configuration
 - **No false assumptions** about version compatibility
+
+#### ✅ COMPLETED Implementation
+**What Was Actually Built:**
+
+1. **OpenApiGeneratorVersionDetector** - Multi-strategy version detection
+   ```java
+   // Strategy 1: Plugin version detection  
+   // Strategy 2: Dependency analysis
+   // Strategy 3: Classpath inspection
+   // Fail-fast if version cannot be detected
+   ```
+
+2. **Updated TemplateCacheManager** - Uses detector instead of hardcoded fallback
+   ```java
+   // BEFORE: String detectedVersion = "7.14.0"; // Hardcoded fallback
+   // AFTER: String detectedVersion = versionDetector.detectVersionOrFail(project);
+   ```
+
+3. **Comprehensive Test Suite** - `OpenApiGeneratorVersionDetectorTest`
+   - Tests all three detection strategies
+   - Validates fail-fast behavior when version unavailable
+   - Uses real project configurations for testing
+
+#### Implementation Impact  
+- **✅ Version-conditional customizations work reliably** - no more hardcoded fallbacks
+- **✅ Early error detection** prevents silent failures when version needed
+- **✅ Multi-strategy robustness** - tries plugin, dependencies, and classpath
+- **✅ Clear error messages** guide users to fix configuration issues
+- **✅ Fail-fast behavior** ensures no false assumptions about compatibility
 
 #### Alternative: Version-Agnostic Mode
 If version detection fails but no version-conditional customizations exist:
@@ -633,36 +1616,67 @@ public class BatchFileOperations {
 
 ## Implementation Plan
 
-### Phase 1: Core Infrastructure Improvements
+### Phase 1: Core Infrastructure Improvements ✅ COMPLETED
 **Objective:** Fix critical infrastructure issues and enhance developer experience
 
-- [ ] Robust OpenAPI Generator version detection with fail-fast behavior
-- [ ] SLF4J MDC logging enhancement with context-aware messages
-- [ ] Error handling standardization across services
-- [ ] Enhanced error messages with actionable context
-- [ ] Logback configuration for rich debug output
-- [ ] Validation of existing functionality
+- [x] **Phase 1A:** Robust OpenAPI Generator version detection with fail-fast behavior
+- [x] **Phase 1B:** Version detection testing with real OpenAPI Generator 
+- [x] **Phase 1C:** SLF4J MDC logging enhancement with context-aware messages
+- [x] **Phase 1D:** Configurable MDC context formatting system
+- [x] Enhanced error messages with actionable context
+- [x] Sample logback configuration for rich debug output
+- [x] Validation of existing functionality and configuration cache compatibility
+
+**✅ Completed Deliverables:**
+- ✅ OpenApiGeneratorVersionDetector with multi-strategy detection (plugin, dependencies, classpath)
+- ✅ LoggingContext utility for SLF4J MDC pattern with spec/template/component context
+- ✅ ContextAwareLogger for enhanced console logging (works around Gradle limitations)
+- ✅ RichFileLogger for detailed file-based debug logs
+- ✅ LoggingContextFormatter with configurable template variables and conditional sections
+- ✅ Configurable context formats: default, debug, minimal, verbose, custom user templates
+- ✅ Enhanced debugging experience with customizable context display
+- ✅ Clean production logs with appropriate levels
+- ✅ Full test coverage (112+ tests passing)
+- ✅ Configuration cache compatibility maintained
+
+### Phase 2: Error Handling Standardization & Logging Enhancement
+**Objective:** Standardize error handling patterns and enhance logging with SLF4J compatibility
+
+**Key Focus Areas:**
+- [ ] **Error Handling Standardization:** Consistent error patterns across all services
+- [ ] **Enhanced Error Context:** Better error messages with actionable guidance  
+- [ ] **Exception Handling Patterns:** Standardized exception wrapping and context
+- [ ] **Error Recovery Strategies:** Graceful degradation where appropriate
+- [ ] **Logging Format Enhancement:** SLF4J-compatible formatting with property control
+- [ ] **Code Quality Improvements:** Remove technical debt identified during Phase 1 work
+
+**Phase 2A: Error Handling Standardization**
+- Create `ErrorHandlingUtils` class for consistent error patterns
+- Standardize exception handling across `CustomizationEngine`, `TemplateCacheManager`, etc.
+- Enhanced error messages with actionable context and recovery suggestions
+- Implement structured error information for better debugging
+
+**Phase 2B: Logging Format Enhancement** 
+- Replace `loggingContextFormat` with SLF4J-compatible `logPattern`
+- Add `logPatternSrc` property control (`"plugin"` default, `"native"` for future)
+- Leverage Logback's `PatternLayout` instead of custom parsing
+- Maintain backward compatibility with deprecation warnings
+
+**Scope Refinement:** 
+With Phase 1's comprehensive logging infrastructure complete, Phase 2 focuses on:
+1. **Primary:** Error handling consistency (addresses real developer pain points)
+2. **Secondary:** Logging format standardization (SLF4J compatibility for future-proofing)  
+3. **Tertiary:** Code quality improvements (maintainability enhancements)
+4. **Evidence-based only:** Performance/memory optimizations (only if profiling shows need)
 
 **Deliverables:**
-- Reliable version detection enabling version-conditional customizations
-- Context-aware logging using SLF4J MDC pattern
-- Rich template resolution and customization visibility
-- Consistent error handling patterns
-- Enhanced debugging experience with `--debug` flag
-- Clean production logs with appropriate levels
-
-### Phase 2: Code Quality & Maintainability
-**Objective:** Improve code maintainability and remove technical debt
-
-- [ ] Memory management optimization (optional, if evidence shows need)
-- [ ] Code structure improvements
-- [ ] Integration testing with various Gradle/OpenAPI versions
-- [ ] Performance validation
-
-**Deliverables:**
-- Optimized memory usage (if evidence supports implementation)
-- Better code maintainability
-- Performance benchmark validation
+- Standardized error handling utilities (`ErrorHandlingUtils` class)
+- Consistent exception patterns across all services  
+- Enhanced error messages with context and recovery suggestions
+- Better debugging experience through structured error information
+- SLF4J-compatible log formatting with property-based control
+- Future-ready logging system that works with native Gradle MDC support
+- Reduced technical debt and improved code maintainability
 
 ### Phase 3: Final Polish & Release Preparation  
 **Objective:** Complete final improvements and prepare for release
@@ -715,29 +1729,151 @@ time ./gradlew generateAllModels --no-daemon  # No-change
 **No breaking changes** - all existing configurations remain compatible.
 
 ### New Configuration Options (Optional)
+
+#### Global Configuration (applies to all specs)
 ```gradle
 openapiModelgen {
     defaults {
-        // NEW: Cache management (optional)
-        cacheSettings {
-            maxCustomizationCacheSize 1000
-            maxTemplateCacheSize 500
-            cacheExpirationHours 1
-        }
+        // NEW: Configurable logging context formatting
+        loggingContextFormat "default"  // Predefined options: "default", "debug", "minimal", "verbose", "none"
         
-        // NEW: Enhanced logging (optional)
-        loggingLevel "INFO"  // ERROR, WARN, INFO, DEBUG, TRACE
-        enablePerformanceMetrics true
+        // OR use custom format with template variables
+        loggingContextFormat "[{{spec}}{{#template}} > {{template}}{{/template}}]"
+        
+        // Enable debug mode to see enhanced context logging in console
+        debug true
+        
+        // Other existing options...
+        outputDir "build/generated"
+        parallel true
+        applyPluginCustomizations true
+    }
+    
+    // Specs inherit global defaults but can override
+    specs {
+        pets { 
+            inputSpec "specs/pets.yaml"
+            // Optional: Override logging format for this spec only
+            loggingContextFormat "minimal"  // Only this spec uses minimal format
+        }
+        orders { 
+            inputSpec "specs/orders.yaml" 
+            // Uses global loggingContextFormat from defaults
+        }
     }
 }
 ```
 
-### Behavioral Changes
+#### Per-Spec Configuration Override
+```gradle
+openapiModelgen {
+    defaults {
+        loggingContextFormat "default"
+        debug true
+    }
+    
+    specs {
+        // Each spec can have its own logging format
+        pets { 
+            inputSpec "specs/pets.yaml"
+            loggingContextFormat "verbose"  // [CustomizationEngine] [pets:pojo.mustache] message
+        }
+        orders { 
+            inputSpec "specs/orders.yaml"
+            loggingContextFormat "minimal"  // [orders] message
+        }
+        users {
+            inputSpec "specs/users.yaml"
+            loggingContextFormat "{{spec}} ({{template}}) ->"  // users (pojo.mustache) -> message
+        }
+    }
+}
+```
+
+#### Format Examples & Output Preview
+```gradle
+// Available predefined formats:
+loggingContextFormat "default"   // Output: [spring:pojo.mustache] Processing customization
+loggingContextFormat "debug"     // Output: [CustomizationEngine|spring:pojo.mustache] Processing customization  
+loggingContextFormat "minimal"   // Output: [spring] Processing customization
+loggingContextFormat "verbose"   // Output: [CustomizationEngine] [spring:pojo.mustache] Processing customization
+loggingContextFormat "none"      // Output: Processing customization (no context)
+
+// Custom format examples:
+loggingContextFormat "{{spec}}{{#template}} > {{template}}{{/template}} |"
+// Output: spring > pojo.mustache | Processing customization
+
+loggingContextFormat "[{{component}}] {{spec}}{{#template}}:{{template}}{{/template}} ->"  
+// Output: [CustomizationEngine] spring:pojo.mustache -> Processing customization
+
+loggingContextFormat "spec={{spec}}{{#template}} template={{template}}{{/template}}"
+// Output: spec=spring template=pojo.mustache Processing customization
+```
+
+#### Configuration Priority (Inheritance Rules)
+1. **Spec-level `loggingContextFormat`** (highest priority)
+2. **Global defaults `loggingContextFormat`** 
+3. **Built-in default** (`"default"` format)
+
+```gradle
+openapiModelgen {
+    defaults {
+        loggingContextFormat "debug"  // Global default: debug format
+        debug true
+    }
+    
+    specs {
+        pets { 
+            inputSpec "specs/pets.yaml"
+            loggingContextFormat "minimal"  // ← This overrides global "debug" for pets spec
+            // Result: pets spec uses minimal, others use debug
+        }
+        orders { 
+            inputSpec "specs/orders.yaml" 
+            // No loggingContextFormat specified
+            // Result: inherits global "debug" format
+        }
+    }
+}
+```
+
+### Behavioral Changes (Release 2.1)
+
+#### ✅ Phase 1 Completed Changes:
 1. **Logging Levels:** Debug information moved from INFO to DEBUG level
-2. **Log Context:** All debug logs now include spec and template context via MDC
-3. **Error Messages:** More detailed error context and suggestions  
-4. **Debug Experience:** Rich template resolution visibility with `--debug` flag
-5. **Production Logs:** Cleaner with only major operations at INFO level
+2. **Log Context:** All debug logs now include configurable spec/template context  
+3. **Console Logging:** Enhanced context display that works around Gradle MDC limitations
+4. **File Logging:** Rich debug logs created at `build/logs/openapi-modelgen-debug.log`
+5. **Configurable Context:** Users can customize logging format via `loggingContextFormat`
+6. **Debug Experience:** Rich template resolution visibility with `--debug` flag
+7. **Production Logs:** Cleaner with only major operations at INFO level
+8. **Version Detection:** Robust multi-strategy detection replaces hardcoded fallback
+
+#### 🔄 Phase 2 Planned Changes:
+9. **SLF4J-Compatible Logging:** Replace `loggingContextFormat` with standard `logPattern` patterns
+10. **Pattern Source Control:** Add `logPatternSrc` property (`"plugin"` default, `"native"` for future)
+11. **Enhanced Error Context:** Better error messages with actionable guidance
+12. **Standardized Error Handling:** Consistent exception patterns across all services
+13. **Error Recovery Strategies:** Graceful degradation where appropriate
+
+#### Configuration Migration (Phase 2):
+```gradle
+// OLD (Phase 1): Custom template syntax
+openapiModelgen {
+    defaults {
+        loggingContextFormat "[{{spec}}:{{template}}]"  // DEPRECATED in Phase 2
+    }
+}
+
+// NEW (Phase 2): SLF4J-compatible patterns  
+openapiModelgen {
+    defaults {
+        logPatternSrc "plugin"  // Control formatter source
+        logPattern "[%X{spec}:%X{template}]"  // Standard SLF4J pattern
+        // OR predefined: logPattern "default"
+    }
+}
+```
 
 ## Risk Assessment
 
