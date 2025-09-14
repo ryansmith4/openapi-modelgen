@@ -230,7 +230,10 @@ public class CodegenConfigTemplateExtractor {
                     String relativePath = entryName.substring((resourcePath + "/").length());
                     Path targetPath = outputPath.resolve(relativePath);
                     
-                    Files.createDirectories(targetPath.getParent());
+                    Path parentPath = targetPath.getParent();
+                    if (parentPath != null) {
+                        Files.createDirectories(parentPath);
+                    }
                     
                     try (InputStream inputStream = jarFile.getInputStream(entry)) {
                         Files.copy(inputStream, targetPath);
@@ -252,7 +255,10 @@ public class CodegenConfigTemplateExtractor {
                     Path relativePath = sourcePath.relativize(sourceFile);
                     Path targetPath = outputPath.resolve(relativePath);
                     
-                    Files.createDirectories(targetPath.getParent());
+                    Path parentPath = targetPath.getParent();
+                    if (parentPath != null) {
+                        Files.createDirectories(parentPath);
+                    }
                     Files.copy(sourceFile, targetPath);
                     
                     logger.debug("Extracted from filesystem: {}", relativePath);
@@ -272,7 +278,10 @@ public class CodegenConfigTemplateExtractor {
      */
     public void saveTemplate(String templateName, String content, File workingDirectory) throws IOException {
         File templateFile = new File(workingDirectory, templateName);
-        Files.createDirectories(templateFile.getParentFile().toPath());
+        File parentFile = templateFile.getParentFile();
+        if (parentFile != null) {
+            Files.createDirectories(parentFile.toPath());
+        }
         Files.writeString(templateFile.toPath(), content);
         logger.debug("Saved template to: {}", templateFile.getAbsolutePath());
     }

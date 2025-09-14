@@ -22,7 +22,7 @@ import java.util.List;
  * @author GuidedByte Technologies Inc.
  * @since 2.1.0
  */
-public class CompiledSLF4JPattern {
+public final class CompiledSLF4JPattern {
     private final PatternElement[] elements;
     private final int estimatedLength;
     private final String originalPattern;

@@ -58,7 +58,9 @@ public class RichFileLogger {
         String key = buildDir.getAbsolutePath();
         return instances.computeIfAbsent(key, k -> {
             File logsDir = new File(buildDir, "logs");
-            logsDir.mkdirs();
+            if (!logsDir.exists() && !logsDir.mkdirs()) {
+                throw new RuntimeException("Failed to create logs directory: " + logsDir.getAbsolutePath());
+            }
             File logFile = new File(logsDir, "openapi-modelgen-debug.log");
             return new RichFileLogger(logFile);
         });
