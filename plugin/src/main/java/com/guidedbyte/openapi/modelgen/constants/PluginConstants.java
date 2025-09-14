@@ -58,6 +58,34 @@ public final class PluginConstants {
     /** Marker file name for template directories. */
     public static final String TEMPLATE_MARKER_FILE = ".gradle-template-dir";
     
+    // Version compatibility
+    /** Minimum tested OpenAPI Generator version. */
+    public static final String MIN_OPENAPI_GENERATOR_VERSION = "7.10.0";
+    /** Maximum tested OpenAPI Generator version. */
+    public static final String MAX_OPENAPI_GENERATOR_VERSION = "7.14.0";
+    /** Fallback version for OpenAPI Generator when detection fails. */
+    public static final String FALLBACK_OPENAPI_GENERATOR_VERSION = "7.11.0";
+    /** Literal string returned when version cannot be determined. */
+    public static final String UNKNOWN_VERSION = "unknown";
+    
+    // Directory and file names
+    /** Name of the original templates backup directory. */
+    public static final String ORIG_DIR_NAME = "orig";
+    
+    // Performance and sizing constants
+    /** Buffer size added to estimated log message length. */
+    public static final int LOG_MESSAGE_BUFFER = 50;
+    /** 
+     * Maximum length cap for log message pattern estimation (StringBuilder pre-allocation).
+     * This is NOT a functional limit - StringBuilder will grow beyond this if needed.
+     * Set generously to avoid performance penalties from multiple reallocations.
+     */
+    public static final int LOG_MESSAGE_MAX_LENGTH = 4000;
+    /** Default hash display length for debugging (does not limit functionality). */
+    public static final int HASH_DISPLAY_LENGTH = 16;
+    /** Base retry delay in milliseconds for error handling. */
+    public static final int BASE_RETRY_DELAY_MS = 100;
+    
     // Task descriptions
     /** Description for setup template directories task. */
     public static final String DESC_SETUP_DIRS = "Creates required template directories";

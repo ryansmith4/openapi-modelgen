@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import com.guidedbyte.openapi.modelgen.constants.LoggingConstants;
+
 /**
  * Represents SLF4J format modifiers for log pattern elements.
  * 
@@ -109,8 +111,8 @@ public class FormatModifier {
     @Override
     public int hashCode() {
         int result = Boolean.hashCode(leftAlign);
-        result = 31 * result + minWidth;
-        result = 31 * result + maxWidth;
+        result = LoggingConstants.HASH_PRIME * result + minWidth;
+        result = LoggingConstants.HASH_PRIME * result + maxWidth;
         return result;
     }
 }

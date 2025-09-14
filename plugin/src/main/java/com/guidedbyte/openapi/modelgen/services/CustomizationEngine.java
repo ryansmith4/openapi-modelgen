@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
@@ -1529,7 +1530,7 @@ public class CustomizationEngine {
         }
         
         // Fallback to a reasonable default
-        String fallbackVersion = "7.11.0";
+        String fallbackVersion = PluginConstants.FALLBACK_OPENAPI_GENERATOR_VERSION;
         logger.debug("Using fallback OpenAPI Generator version: {}", fallbackVersion);
         return fallbackVersion;
     }

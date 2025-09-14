@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+
 import java.util.List;
 
 /**
@@ -110,8 +112,8 @@ public class CompiledSLF4JPattern {
         }
         
         // Add some buffer for growth, but cap at reasonable maximum
-        int withBuffer = total + 20;
-        return Math.min(withBuffer, 500); // Cap at 500 chars for extremely long patterns
+        int withBuffer = total + PluginConstants.LOG_MESSAGE_BUFFER;
+        return Math.min(withBuffer, PluginConstants.LOG_MESSAGE_MAX_LENGTH); // Cap at reasonable length for extremely long patterns
     }
     
     @Override

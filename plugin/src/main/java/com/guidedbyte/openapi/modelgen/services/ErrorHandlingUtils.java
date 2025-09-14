@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
@@ -224,7 +225,7 @@ public class ErrorHandlingUtils {
                         attempt, operationDescription, e.getMessage());
                     // Brief pause between retries
                     try {
-                        Thread.sleep(100 * attempt); // Exponential backoff
+                        Thread.sleep(PluginConstants.BASE_RETRY_DELAY_MS * attempt); // Exponential backoff
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         break;

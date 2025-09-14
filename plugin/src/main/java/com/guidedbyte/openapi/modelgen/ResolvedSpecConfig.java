@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.constants.OpenApiConfigDefaults;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 
@@ -327,7 +328,7 @@ public class ResolvedSpecConfig {
         private String userTemplateDir;
         private String userTemplateCustomizationsDir;
         private String modelNamePrefix; // No default value
-        private String modelNameSuffix = "Dto";
+        private String modelNameSuffix = OpenApiConfigDefaults.DEFAULT_MODEL_NAME_SUFFIX;
         private boolean validateSpec = false;
         private boolean generateModelTests = false;
         private boolean generateApiTests = false;
@@ -373,27 +374,27 @@ public class ResolvedSpecConfig {
             // Plugin defaults are already set as field initializers
             
             // Default config options
-            configOptions.put("annotationLibrary", "swagger2");
-            configOptions.put("swagger2AnnotationLibrary", "true");
-            configOptions.put("useSpringBoot3", "true");
-            configOptions.put("useJakartaEe", "true");
-            configOptions.put("useBeanValidation", "true");
-            configOptions.put("dateLibrary", "java8");
-            configOptions.put("serializableModel", "true");
-            configOptions.put("hideGenerationTimestamp", "true");
-            configOptions.put("performBeanValidation", "true");
-            configOptions.put("enumUnknownDefaultCase", "true");
-            configOptions.put("generateBuilders", "true");
-            configOptions.put("legacyDiscriminatorBehavior", "false");
-            configOptions.put("disallowAdditionalPropertiesIfNotPresent", "false");
-            configOptions.put("useEnumCaseInsensitive", "true");
-            configOptions.put("openApiNullable", "false");
+            configOptions.put("annotationLibrary", OpenApiConfigDefaults.ANNOTATION_LIBRARY);
+            configOptions.put("swagger2AnnotationLibrary", OpenApiConfigDefaults.SWAGGER2_ANNOTATION_LIBRARY);
+            configOptions.put("useSpringBoot3", OpenApiConfigDefaults.USE_SPRING_BOOT_3);
+            configOptions.put("useJakartaEe", OpenApiConfigDefaults.USE_JAKARTA_EE);
+            configOptions.put("useBeanValidation", OpenApiConfigDefaults.USE_BEAN_VALIDATION);
+            configOptions.put("dateLibrary", OpenApiConfigDefaults.DATE_LIBRARY);
+            configOptions.put("serializableModel", OpenApiConfigDefaults.SERIALIZABLE_MODEL);
+            configOptions.put("hideGenerationTimestamp", OpenApiConfigDefaults.HIDE_GENERATION_TIMESTAMP);
+            configOptions.put("performBeanValidation", OpenApiConfigDefaults.PERFORM_BEAN_VALIDATION);
+            configOptions.put("enumUnknownDefaultCase", OpenApiConfigDefaults.ENUM_UNKNOWN_DEFAULT_CASE);
+            configOptions.put("generateBuilders", OpenApiConfigDefaults.GENERATE_BUILDERS);
+            configOptions.put("legacyDiscriminatorBehavior", OpenApiConfigDefaults.LEGACY_DISCRIMINATOR_BEHAVIOR);
+            configOptions.put("disallowAdditionalPropertiesIfNotPresent", OpenApiConfigDefaults.DISALLOW_ADDITIONAL_PROPERTIES_IF_NOT_PRESENT);
+            configOptions.put("useEnumCaseInsensitive", OpenApiConfigDefaults.USE_ENUM_CASE_INSENSITIVE);
+            configOptions.put("openApiNullable", OpenApiConfigDefaults.OPENAPI_NULLABLE);
             // Lombok compatibility options
-            configOptions.put("skipDefaults", "true"); // Skip default constructor generation when using Lombok
-            configOptions.put("generateConstructorPropertiesAnnotation", "false"); // Don't generate @ConstructorProperties
+            configOptions.put("skipDefaults", OpenApiConfigDefaults.SKIP_DEFAULTS); // Skip default constructor generation when using Lombok
+            configOptions.put("generateConstructorPropertiesAnnotation", OpenApiConfigDefaults.GENERATE_CONSTRUCTOR_PROPERTIES_ANNOTATION); // Don't generate @ConstructorProperties
             
             // Default global properties
-            globalProperties.put("models", "");
+            globalProperties.put("models", OpenApiConfigDefaults.MODELS_ONLY);
             
             // Default template variables
             templateVariables.put("currentYear", String.valueOf(java.time.Year.now().getValue()));

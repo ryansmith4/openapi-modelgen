@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import com.guidedbyte.openapi.modelgen.constants.LoggingConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
@@ -85,11 +86,11 @@ public class TimestampElement implements PatternElement {
         
         switch (StringUtils.toRootUpperCase(pattern)) {
             case "ISO8601":
-                return 23; // 2023-12-25T14:30:45.123
+                return LoggingConstants.ISO_TIMESTAMP_LENGTH; // 2023-12-25T14:30:45.123
             case "ABSOLUTE":
-                return 12; // HH:mm:ss,SSS
+                return LoggingConstants.TIME_ONLY_LENGTH; // HH:mm:ss,SSS
             case "DATE":
-                return 24; // 25 Dec 2023 14:30:45,123
+                return LoggingConstants.READABLE_TIMESTAMP_LENGTH; // 25 Dec 2023 14:30:45,123
             default:
                 // Estimate based on pattern length + some buffer
                 return Math.max(pattern.length() + 5, 8);
@@ -124,6 +125,6 @@ public class TimestampElement implements PatternElement {
     
     @Override
     public int hashCode() {
-        return 31 * formatter.hashCode() + modifier.hashCode();
+        return LoggingConstants.HASH_PRIME * formatter.hashCode() + modifier.hashCode();
     }
 }

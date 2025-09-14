@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.actions;
 
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.Action;
@@ -140,7 +141,7 @@ public class TemplatePreparationAction implements Action<Task> {
             String hash = computeTemplateConfigurationHash();
             Files.writeString(cacheFile.toPath(), hash);
             DebugLogger.debug(logger, templateConfig.isDebug(), 
-                "Updated working directory cache with hash: {}", hash.substring(0, Math.min(16, hash.length())));
+                "Updated working directory cache with hash: {}", hash.substring(0, Math.min(PluginConstants.HASH_DISPLAY_LENGTH, hash.length())));
         } catch (IOException e) {
             DebugLogger.debug(logger, templateConfig.isDebug(), 
                 "Failed to update working directory cache: {}", e.getMessage());

@@ -151,7 +151,7 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
         DebugLogger.debug(logger, templateConfig.isDebug(),
             "Extracting original templates to orig/ directory");
         
-        File origDir = new File(outputDir, "orig");
+        File origDir = new File(outputDir, PluginConstants.ORIG_DIR_NAME);
         TemplateDiscoveryService discoveryService = new TemplateDiscoveryService();
         int extractedCount = discoveryService.extractAllTemplates(templateConfig.getGeneratorName(), origDir);
         

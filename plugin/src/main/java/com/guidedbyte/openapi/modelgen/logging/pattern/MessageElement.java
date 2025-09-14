@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import com.guidedbyte.openapi.modelgen.constants.LoggingConstants;
+
 /**
  * A pattern element that represents the log message in a log pattern.
  * 
@@ -28,7 +30,7 @@ public class MessageElement implements PatternElement {
     @Override
     public int estimateMaxLength() {
         // Estimate typical log message length
-        int baseEstimate = 80; // Typical message: "Processing customization for template: pojo.mustache"
+        int baseEstimate = LoggingConstants.TYPICAL_MESSAGE_LENGTH; // Typical message: "Processing customization for template: pojo.mustache"
         
         // Apply format modifier constraints
         if (modifier.getMaxWidth() > 0) {

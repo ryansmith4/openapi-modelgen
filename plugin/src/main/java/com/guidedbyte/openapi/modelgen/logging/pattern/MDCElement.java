@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import com.guidedbyte.openapi.modelgen.constants.LoggingConstants;
+
 /**
  * A pattern element that represents an MDC variable in a log pattern.
  * 
@@ -34,16 +36,16 @@ public class MDCElement implements PatternElement {
         int baseEstimate;
         switch (key) {
             case "spec":
-                baseEstimate = 12; // Typical spec names: "spring", "orders", "users"
+                baseEstimate = LoggingConstants.TYPICAL_SPEC_NAME_LENGTH; // Typical spec names: "spring", "orders", "users"
                 break;
             case "template":
-                baseEstimate = 20; // Typical template names: "pojo.mustache", "enumClass.mustache"
+                baseEstimate = LoggingConstants.TYPICAL_TEMPLATE_NAME_LENGTH; // Typical template names: "pojo.mustache", "enumClass.mustache"
                 break;
             case "component":
-                baseEstimate = 25; // Component names: "CustomizationEngine", "PrepareTemplateDirectoryTask"
+                baseEstimate = LoggingConstants.TYPICAL_COMPONENT_NAME_LENGTH; // Component names: "CustomizationEngine", "PrepareTemplateDirectoryTask"
                 break;
             default:
-                baseEstimate = 10; // Unknown MDC keys
+                baseEstimate = LoggingConstants.DEFAULT_MDC_LENGTH; // Unknown MDC keys
         }
         
         // Apply format modifier constraints
@@ -99,6 +101,6 @@ public class MDCElement implements PatternElement {
     
     @Override
     public int hashCode() {
-        return 31 * key.hashCode() + modifier.hashCode();
+        return LoggingConstants.HASH_PRIME * key.hashCode() + modifier.hashCode();
     }
 }
