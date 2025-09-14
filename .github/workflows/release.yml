@@ -38,7 +38,9 @@ jobs:
 
       - name: Update version in gradle.properties
         run: |
-          echo "version=${{ steps.extract_version.outputs.version }}" > plugin/gradle.properties
+          # Update version while preserving other properties
+          sed -i "s/version=.*/version=${{ steps.extract_version.outputs.version }}/" plugin/gradle.properties
+          echo "Updated gradle.properties:"
           cat plugin/gradle.properties
 
       - name: Make gradlew executable
@@ -64,25 +66,38 @@ jobs:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git tag -l "v*" --sort=-version:refname | grep -v "^${GITHUB_REF#refs/tags/}$" | head -n1)
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous release found, showing all commits"
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.extract_version.outputs.version }}"
+          
+          # Generate changelog from commits
+          CHANGELOG=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD | grep -E '^- (feat|fix|refactor|docs|test|chore|perf)' | head -20)
+          
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- Initial release"
+          fi
+          
+          # Save changelog to output
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "## Changes in ${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...v${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ steps.extract_version.outputs.version }}
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
-          body: |
-            ## Changes in ${{ steps.extract_version.outputs.version }}
-            
-            ### Added
-            - New features and improvements
-            
-            ### Changed
-            - Updates and modifications
-            
-            ### Fixed
-            - Bug fixes
-            
-            ### Removed
-            - Deprecated features removed
-            
-            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.extract_version.outputs.version }}...HEAD
+          body: ${{ steps.changelog.outputs.changelog }}

@@ -1,0 +1,84 @@
+name: Update Documentation Version
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest release version
+        id: get_version
+        run: |
+          # Get the latest release version with error handling
+          RESPONSE=$(curl -s -f https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to fetch latest release"
+            exit 1
+          fi
+          
+          VERSION=$(echo "$RESPONSE" | jq -r '.tag_name' | sed 's/^v//')
+          if [ "$VERSION" = "null" ] || [ -z "$VERSION" ]; then
+            echo "Error: Could not extract version from release data"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest version: $VERSION"
+
+      - name: Update plugin data file
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # Create directory if it doesn't exist
+          mkdir -p plugin/docs/_data
+          
+          # Update the plugin.yml data file
+          cat > plugin/docs/_data/plugin.yml << EOF
+          # Plugin metadata - updated automatically by GitHub Actions
+          name: "openapi-modelgen"
+          repository: "${{ github.repository }}"
+          current_version: "$VERSION"
+          updated_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          EOF
+          
+          echo "Updated plugin.yml with version $VERSION"
+
+      - name: Update Jekyll config version
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # Update the Jekyll config fallback version
+          sed -i "s/current: \"[^\"]*\"/current: \"$VERSION\"/" plugin/docs/_config.yml
+          
+          echo "Updated _config.yml with version $VERSION"
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git add plugin/docs/_data/plugin.yml plugin/docs/_config.yml
+          git commit -m "docs: update version to ${{ steps.get_version.outputs.version }}"
+          git push
+
+      - name: Trigger GitHub Pages rebuild
+        run: |
+          # GitHub Pages will automatically rebuild when changes are pushed to main
+          # This step is optional - Pages rebuild happens automatically
+          echo "✅ Documentation version updated. GitHub Pages will rebuild automatically."

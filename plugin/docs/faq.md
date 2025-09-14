@@ -29,7 +29,7 @@ permalink: /faq/
 ```gradle
 plugins {
     id 'org.openapi.generator' version '7.14.0'    // Required first
-    id 'com.guidedbyte.openapi-modelgen' version '1.1.1'  // Then this plugin
+    id 'com.guidedbyte.openapi-modelgen' version '2.1.0'  // Then this plugin
 }
 ```
 

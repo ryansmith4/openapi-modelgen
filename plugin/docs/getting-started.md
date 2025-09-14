@@ -23,7 +23,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.1'
     id 'org.openapi.generator' version '7.14.0'    // Must be applied first
-    id 'com.guidedbyte.openapi-modelgen'           // Apply second
+    id 'com.guidedbyte.openapi-modelgen' version '{% include plugin_version.html %}'  // Apply second
 }
 ```
 

@@ -1,0 +1,36 @@
+<!-- Dynamically fetch latest plugin version from GitHub Releases API -->
+<script>
+async function fetchLatestVersion() {
+    try {
+        const response = await fetch('https://api.github.com/repos/{{ site.repository }}/releases/latest');
+        const release = await response.json();
+        const version = release.tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+        
+        // Update all elements with class 'plugin-version'
+        document.querySelectorAll('.plugin-version').forEach(element => {
+            element.textContent = version;
+        });
+        
+        // Update all elements with class 'plugin-version-with-quotes' 
+        document.querySelectorAll('.plugin-version-with-quotes').forEach(element => {
+            element.textContent = `'${version}'`;
+        });
+        
+        console.log('Plugin version updated to:', version);
+    } catch (error) {
+        console.warn('Could not fetch latest version:', error);
+        // Fallback to current version from config
+        const fallbackVersion = '{{ site.data.plugin.current_version | default: "2.1.0" }}';
+        document.querySelectorAll('.plugin-version').forEach(element => {
+            element.textContent = fallbackVersion;
+        });
+    }
+}
+
+// Fetch version when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchLatestVersion);
+} else {
+    fetchLatestVersion();
+}
+</script>

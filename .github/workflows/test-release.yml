@@ -27,8 +27,11 @@ jobs:
 
       - name: Update version for testing
         run: |
-          echo "version=${{ github.event.inputs.test_version }}" > plugin/gradle.properties
+          # Update version while preserving other properties
+          sed -i "s/version=.*/version=${{ github.event.inputs.test_version }}/" plugin/gradle.properties
           echo "Testing with version: ${{ github.event.inputs.test_version }}"
+          echo "Updated gradle.properties:"
+          cat plugin/gradle.properties
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew

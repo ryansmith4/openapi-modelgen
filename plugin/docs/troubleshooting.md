@@ -62,7 +62,7 @@ plugins {
 
 ❌ Missing OpenAPI Generator plugin entirely
 plugins {
-    id 'com.guidedbyte.openapi-modelgen' version '1.1.1'  // Will fail
+    id 'com.guidedbyte.openapi-modelgen' version '2.1.0'  // Will fail
 }
 ```
 

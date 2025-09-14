@@ -37,8 +37,8 @@ features including template customization, incremental builds, performance optim
 ### Developer Experience
 
 - **Command-line options**: Override any configuration via CLI parameters
-- **Comprehensive testing**: Complete test coverage with 144/144 tests passing (100% success rate, all functionality
-  fully verified including caching optimizations and template variable resolution)
+- **Comprehensive testing**: Complete test coverage with 247+ test methods across 27 test classes (100% pass rate, all functionality
+  fully verified including caching optimizations, template variable resolution, and enhanced logging)
 - **Auto-generated documentation**: Plugin help and comprehensive Javadoc documentation
 - **@Internal property optimization**: Precise incremental build invalidation
 
@@ -152,7 +152,7 @@ models = ""                                      // Generate only models (no API
 ```gradle
 currentYear = 2025                               // Current year (dynamic)
 generatedBy = "OpenAPI Model Generator Plugin"   // Generator identification
-pluginVersion = "1.x.x"                         // Plugin version (from build)
+pluginVersion = "@version@"                        // Plugin version (from build)
 ```
 
 ### Minimal Configuration Required

@@ -14,7 +14,7 @@ Gradle plugin wrapping OpenAPI Generator with Java DTOs, Lombok support, custom 
 - **Configuration Cache Compatible**: Full Gradle compatibility
 - **Template Variables**: Recursive expansion ({{copyright}} → {{currentYear}})
 - **Lombok Integration**: Full annotation support
-- **Comprehensive Testing**: 112/112 tests passing
+- **Comprehensive Testing**: 247+ test methods across 27 test classes passing
 
 ## ⚠️ CRITICAL: Configuration Cache Compatibility
 

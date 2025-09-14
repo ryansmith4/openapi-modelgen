@@ -1,0 +1,4 @@
+# Plugin metadata - updated automatically by GitHub Actions
+name: "openapi-modelgen"
+repository: "ryansmith4/openapi-modelgen"
+current_version: "2.1.0"  # Fallback version

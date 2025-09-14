@@ -28,20 +28,20 @@ plugins {
 
 openapiModelgen {
     defaults {
-        outputDir = "build/generated-sources/openapi"
-        modelNameSuffix = "Dto"
-        generateModelTests = false
-        validateSpec = true
+        outputDir "build/generated-sources/openapi"
+        modelNameSuffix "Dto"
+        generateModelTests false
+        validateSpec true
     }
     
     specs {
         pets {
-            inputSpec = "src/main/resources/openapi-spec/pets.yaml"
-            modelPackage = "com.example.model.pets"
+            inputSpec "src/main/resources/openapi-spec/pets.yaml"
+            modelPackage "com.example.model.pets"
         }
         orders {
-            inputSpec = "src/main/resources/openapi-spec/orders.yaml"  
-            modelPackage = "com.example.model.orders"
+            inputSpec "src/main/resources/openapi-spec/orders.yaml"  
+            modelPackage "com.example.model.orders"
         }
     }
 }
@@ -52,32 +52,32 @@ Advanced Configuration:
 ```groovy
 openapiModelgen {
     defaults {
-        outputDir = "build/generated-sources/openapi"
-        templateDir = "src/main/resources/openapi-templates"
-        configOptions = [
+        outputDir "build/generated-sources/openapi"
+        userTemplateDir "src/main/resources/openapi-templates"
+        configOptions([
             dateLibrary: "java8",
             serializationLibrary: "jackson",
             useBeanValidation: "true",
             hideGenerationTimestamp: "true"
-        ]
-        templateVariables = [
+        ])
+        templateVariables([
             copyright: "Copyright © {{currentYear}} {{companyName}}",
             currentYear: "2025", 
             companyName: "My Company Inc."
-        ]
-        globalProperties = [
+        ])
+        globalProperties([
             skipFormModel: "false",
             generateAliasAsModel: "true"
-        ]
+        ])
     }
     
     specs {
         pets {
-            inputSpec = "specs/pets-v1.yaml"
-            modelPackage = "com.example.pets.v1.model"
-            configOptions = [
+            inputSpec "specs/pets-v1.yaml"
+            modelPackage "com.example.pets.v1.model"
+            configOptions([
                 additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.SuperBuilder"
-            ]
+            ])
         }
     }
 }

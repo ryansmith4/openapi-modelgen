@@ -50,7 +50,7 @@ jobs:
 
       - name: Test integration with test-app
         run: |
-          # Use root project gradle to run test-app tasks
+          # Test integration using composite build
           ./gradlew -p test-app generateAllModels --no-daemon
           
       - name: Verify generated code
