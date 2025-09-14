@@ -20,6 +20,13 @@ import java.util.Map;
  * Configuration-cache compatible action for setting up template directories.
  * This action creates necessary template directories without capturing non-serializable references.
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP2", "REC_CATCH_EXCEPTION"},
+    justification = "EI_EXPOSE_REP2: Gradle action class stores configuration objects passed by Gradle framework for execution phase. " +
+                   "The configuration objects are immutable at execution time and are part of Gradle's configuration cache mechanism. " +
+                   "REC_CATCH_EXCEPTION: Defensive programming in template setup - catches all exceptions to prevent one spec " +
+                   "from failing template directory setup for all specs. Non-critical setup failures are logged and ignored."
+)
 public class TemplateDirectorySetupAction implements Action<Task>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

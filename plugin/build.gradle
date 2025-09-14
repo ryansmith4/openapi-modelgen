@@ -25,6 +25,9 @@ dependencies {
     // OpenAPI Generator core for CodegenConfig API - also compileOnly
     compileOnly libs.openapi.generator.compat
     
+    // Static analysis annotations for @SuppressFBWarnings - compileOnly so not bundled
+    compileOnly libs.spotbugs.annotations
+    
     // Plugin core dependencies (includes security-critical versions)
     implementation libs.bundles.plugin.core
     
@@ -512,6 +515,21 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
     withJavadocJar()
+}
+
+// Configure JAR manifest with version information
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'OpenAPI Model Generator Plugin',
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'GuidedByte Technologies Inc.',
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date().format('yyyy-MM-dd HH:mm:ss'),
+            'Built-JDK': System.getProperty('java.version'),
+            'Built-Gradle': gradle.gradleVersion
+        )
+    }
 }
 
 gradlePlugin {

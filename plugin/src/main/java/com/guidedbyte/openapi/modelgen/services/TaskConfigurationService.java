@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
@@ -67,13 +68,6 @@ public class TaskConfigurationService implements Serializable {
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
         
-        // Create setup task that ensures template directories exist
-        TaskProvider<Task> setupTemplatesTask = tasks.register(PluginConstants.TASK_SETUP_DIRS, task -> {
-            task.setDescription(PluginConstants.DESC_SETUP_DIRS);
-            task.setGroup(PluginConstants.TASK_GROUP);
-            task.doLast(new TemplateDirectorySetupAction(extension.getSpecs(), extension.getDefaults(), projectLayout));
-        });
-        
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
             String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
@@ -96,7 +90,7 @@ public class TaskConfigurationService implements Serializable {
             
             // Create the main generation task
             final TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> finalPrepareTask = prepareTask;
-            TaskProvider<GenerateTask> specTask = tasks.register(taskName, GenerateTask.class, task -> {
+            tasks.register(taskName, GenerateTask.class, task -> {
                 // Configure the task with the prepare task provider
                 configureGenerateTask(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, finalPrepareTask);
                 
@@ -105,9 +99,16 @@ public class TaskConfigurationService implements Serializable {
             });
         });
         
+        // Create setup template directories task
+        tasks.register(PluginConstants.TASK_SETUP_DIRS, task -> {
+            task.setDescription(PluginConstants.DESC_SETUP_DIRS);
+            task.setGroup(PluginConstants.TASK_GROUP);
+            task.doLast(new TemplateDirectorySetupAction(extension.getSpecs(), extension.getDefaults(), projectLayout));
+        });
+        
         // Create aggregate task that runs all spec tasks
         if (!extension.getSpecs().isEmpty()) {
-            TaskProvider<Task> aggregateTask = tasks.register(PluginConstants.TASK_ALL_MODELS, task -> {
+            tasks.register(PluginConstants.TASK_ALL_MODELS, task -> {
                 task.setDescription(PluginConstants.DESC_ALL_MODELS);
                 task.setGroup(PluginConstants.TASK_GROUP);
                 
@@ -640,25 +641,6 @@ public class TaskConfigurationService implements Serializable {
         task.getInputs().property("internal.debugProperties", debugProps).optional(true);
     }
     
-    /**
-     * Converts template variables map to string map.
-     * 
-     * @param templateVariables the template variables to convert
-     * @return the converted string map
-     */
-    private Map<String, String> convertToStringMap(Map<String, Object> templateVariables) {
-        Map<String, String> stringVariables = new HashMap<>();
-        
-        for (Map.Entry<String, Object> entry : templateVariables.entrySet()) {
-            if (entry.getValue() instanceof String) {
-                stringVariables.put(entry.getKey(), (String) entry.getValue());
-            } else if (entry.getValue() != null) {
-                stringVariables.put(entry.getKey(), String.valueOf(entry.getValue()));
-            }
-        }
-        
-        return stringVariables;
-    }
     
     /**
      * Expands template variables recursively (e.g., {{copyright}} containing {{currentYear}}).

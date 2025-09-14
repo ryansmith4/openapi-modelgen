@@ -77,6 +77,12 @@ import java.util.Map;
  * @author GuidedByte Technologies Inc.
  * @since 1.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
+    justification = "Gradle DSL configuration class intentionally exposes mutable Property objects for individual spec configuration. " +
+                   "This follows the standard Gradle pattern where configuration properties must be accessible to users for the DSL to work. " +
+                   "Each Property object manages its own state and provides thread-safe access for configuration."
+)
 public class SpecConfig {
     
     private final Property<String> inputSpec;

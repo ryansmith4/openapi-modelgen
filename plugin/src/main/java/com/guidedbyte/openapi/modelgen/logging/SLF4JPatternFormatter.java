@@ -150,6 +150,12 @@ public class SLF4JPatternFormatter {
      * @param args the arguments
      * @return the formatted message
      */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "REC_CATCH_EXCEPTION",
+        justification = "Defensive programming in logging utility: must catch all exceptions to ensure logging system " +
+                       "reliability. Any exception during message formatting should not break the logging system, " +
+                       "so we catch Exception and provide a fallback formatted message."
+    )
     private static String formatMessage(String message, Object... args) {
         if (message == null) {
             return "";
@@ -172,7 +178,7 @@ public class SLF4JPatternFormatter {
                 }
             }
             return result;
-        } catch (Exception e) {
+        } catch (Exception e) { // Defensive: catch any unexpected formatting errors
             // Fallback if formatting fails
             return message + " " + java.util.Arrays.toString(args);
         }

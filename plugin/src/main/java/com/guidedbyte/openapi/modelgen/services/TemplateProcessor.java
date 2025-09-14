@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Processes templates by applying customizations through string-based operations.
@@ -398,7 +399,7 @@ public class TemplateProcessor {
                     logger.debug("Regex pattern '{}' not found for replacement", pattern);
                     return template;
                 }
-            } catch (Exception e) {
+            } catch (PatternSyntaxException e) {
                 throw new CustomizationException("Invalid regex pattern '" + pattern + "': " + e.getMessage(), e);
             }
         }

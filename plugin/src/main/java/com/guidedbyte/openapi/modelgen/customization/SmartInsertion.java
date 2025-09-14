@@ -10,6 +10,12 @@ import java.util.List;
  * 
  * @since 2.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "EI_EXPOSE_REP2",
+    justification = "YAML configuration object designed for deserialization by SnakeYAML library. " +
+                   "Setter methods intentionally store object and collection references directly as this is the standard " +
+                   "pattern for YAML/JSON data binding objects. Objects are effectively immutable after deserialization."
+)
 public class SmartInsertion {
     private InsertionPoint findInsertionPoint;
     private String semantic;
@@ -77,6 +83,12 @@ public class SmartInsertion {
     /**
      * Configuration for finding insertion points with multiple fallback patterns
      */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "YAML configuration nested class designed for deserialization by SnakeYAML library. " +
+                       "Setter methods intentionally store collection references directly as this is the standard " +
+                       "pattern for YAML/JSON data binding objects."
+    )
     public static class InsertionPoint {
         private List<PatternLocation> patterns;
         

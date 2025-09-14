@@ -180,7 +180,13 @@ public class OpenApiTemplateExtractor {
                     
                     // Copy file from JAR entry
                     try (InputStream inputStream = jarFile.getInputStream(entry)) {
-                        Files.createDirectories(targetPath.getParent());
+                        var parentPath = targetPath.getParent();
+                        if (parentPath == null) {
+                            throw new IllegalStateException(
+                                String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from JAR '%s'", 
+                                targetPath, entryName, jarPath));
+                        }
+                        Files.createDirectories(parentPath);
                         Files.copy(inputStream, targetPath);
                     }
                     
@@ -212,10 +218,16 @@ public class OpenApiTemplateExtractor {
                     }
                     
                     Path targetPath = outputPath.resolve(relativePath);
-                    Files.createDirectories(targetPath.getParent());
+                    var parentPath = targetPath.getParent();
+                    if (parentPath == null) {
+                        throw new IllegalStateException(
+                            String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from filesystem '%s'", 
+                            targetPath, relativePath, sourceFile));
+                    }
+                    Files.createDirectories(parentPath);
                     fileSystemOperations.copy(copySpec -> {
                         copySpec.from(sourceFile);
-                        copySpec.into(targetPath.getParent().toFile());
+                        copySpec.into(parentPath.toFile());
                     });
                     
                     System.out.println("Extracted: " + relativePath);
@@ -258,7 +270,13 @@ public class OpenApiTemplateExtractor {
                     
                     // Copy file from JAR entry using legacy method
                     try (InputStream inputStream = jarFile.getInputStream(entry)) {
-                        Files.createDirectories(targetPath.getParent());
+                        var parentPath = targetPath.getParent();
+                        if (parentPath == null) {
+                            throw new IllegalStateException(
+                                String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from JAR '%s' (legacy method)", 
+                                targetPath, entryName, jarPath));
+                        }
+                        Files.createDirectories(parentPath);
                         Files.copy(inputStream, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     }
                     
@@ -290,7 +308,13 @@ public class OpenApiTemplateExtractor {
                     }
                     
                     Path targetPath = outputPath.resolve(relativePath);
-                    Files.createDirectories(targetPath.getParent());
+                    var parentPath = targetPath.getParent();
+                    if (parentPath == null) {
+                        throw new IllegalStateException(
+                            String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from filesystem '%s' (legacy method)", 
+                            targetPath, relativePath, sourceFile));
+                    }
+                    Files.createDirectories(parentPath);
                     Files.copy(sourceFile, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     
                     System.out.println("Extracted: " + relativePath);

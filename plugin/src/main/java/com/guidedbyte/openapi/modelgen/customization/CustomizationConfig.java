@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.customization;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,13 @@ import java.util.Map;
  * 
  * @since 2.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "EI_EXPOSE_REP2",
+    justification = "YAML configuration object designed for deserialization by SnakeYAML library. " +
+                   "Setter methods intentionally store collection references directly as this is the standard " +
+                   "pattern for YAML/JSON data binding objects. Collections are effectively immutable after " +
+                   "deserialization and getter methods return defensive copies via Collections.unmodifiableList/Map()."
+)
 public class CustomizationConfig {
     private CustomizationMetadata metadata;
     private List<Insertion> insertions;
@@ -46,7 +54,7 @@ public class CustomizationConfig {
      * @return the list of insertions
      */
     public List<Insertion> getInsertions() {
-        return insertions;
+        return insertions != null ? Collections.unmodifiableList(insertions) : null;
     }
     
     /**
@@ -62,7 +70,7 @@ public class CustomizationConfig {
      * @return the list of replacements
      */
     public List<Replacement> getReplacements() {
-        return replacements;
+        return replacements != null ? Collections.unmodifiableList(replacements) : null;
     }
     
     /**
@@ -78,7 +86,7 @@ public class CustomizationConfig {
      * @return the list of smart replacements
      */
     public List<SmartReplacement> getSmartReplacements() {
-        return smartReplacements;
+        return smartReplacements != null ? Collections.unmodifiableList(smartReplacements) : null;
     }
     
     /**
@@ -94,7 +102,7 @@ public class CustomizationConfig {
      * @return the list of smart insertions
      */
     public List<SmartInsertion> getSmartInsertions() {
-        return smartInsertions;
+        return smartInsertions != null ? Collections.unmodifiableList(smartInsertions) : null;
     }
     
     /**
@@ -110,7 +118,7 @@ public class CustomizationConfig {
      * @return the map of partial templates
      */
     public Map<String, String> getPartials() {
-        return partials;
+        return partials != null ? Collections.unmodifiableMap(partials) : null;
     }
     
     /**

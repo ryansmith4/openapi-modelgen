@@ -312,65 +312,7 @@ public class TemplateResolver {
         return templateConfig;
     }
     
-    /**
-     * Checks if user templates exist for the specified generator at configuration time.
-     */
-    private boolean hasUserTemplatesForGenerator(String userTemplateDir, String generatorName) {
-        if (userTemplateDir == null) {
-            return false;
-        }
-        
-        // First check generator-specific subdirectory  
-        File generatorTemplateDir = new File(userTemplateDir, generatorName);
-        if (generatorTemplateDir.exists() && generatorTemplateDir.isDirectory()) {
-            File[] mustacheFiles = generatorTemplateDir.listFiles((dir, name) -> name.endsWith(".mustache"));
-            boolean hasTemplates = mustacheFiles != null && mustacheFiles.length > 0;
-            
-            if (hasTemplates) {
-                logger.debug("Found {} user template(s) in generator directory: {}", mustacheFiles.length, generatorTemplateDir.getAbsolutePath());
-                return true;
-            }
-        }
-        
-        // Also check root template directory
-        File rootTemplateDir = new File(userTemplateDir);
-        if (rootTemplateDir.exists() && rootTemplateDir.isDirectory()) {
-            File[] mustacheFiles = rootTemplateDir.listFiles((dir, name) -> name.endsWith(".mustache"));
-            boolean hasTemplates = mustacheFiles != null && mustacheFiles.length > 0;
-            
-            if (hasTemplates) {
-                logger.debug("Found {} user template(s) in root template directory: {}", mustacheFiles.length, rootTemplateDir.getAbsolutePath());
-                return true;
-            }
-        }
-        
-        return false;
-    }
     
-    /**
-     * Checks if user customizations exist for the specified generator at configuration time.
-     */
-    private boolean hasUserCustomizationsForGenerator(String userCustomizationsDir, String generatorName) {
-        if (userCustomizationsDir == null) {
-            return false;
-        }
-        
-        File customizationsDir = new File(userCustomizationsDir, generatorName);
-        if (!customizationsDir.exists() || !customizationsDir.isDirectory()) {
-            return false;
-        }
-        
-        // Check for any .yaml or .yml files
-        File[] yamlFiles = customizationsDir.listFiles((dir, name) -> 
-            name.endsWith(".yaml") || name.endsWith(".yml"));
-        boolean hasCustomizations = yamlFiles != null && yamlFiles.length > 0;
-        
-        if (hasCustomizations) {
-            logger.debug("Found {} user customization(s) in: {}", yamlFiles.length, customizationsDir.getAbsolutePath());
-        }
-        
-        return hasCustomizations;
-    }
     
     /**
      * Checks if plugin customizations exist for the specified generator at configuration time.
@@ -378,8 +320,6 @@ public class TemplateResolver {
     private boolean hasPluginCustomizations(String generatorName) {
         try {
             // Check if plugin has any customizations for this generator
-            String resourcePath = "/templateCustomizations/" + generatorName + "/";
-            
             // Use class loader to check for resources
             var classLoader = TemplateResolver.class.getClassLoader();
             var resource = classLoader.getResource("templateCustomizations/" + generatorName);

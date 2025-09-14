@@ -1172,27 +1172,6 @@ public class CustomizationEngine {
         }
     }
     
-    /**
-     * Checks if a template needs to be extracted based on available customizations.
-     */
-    private boolean needsTemplate(TemplateConfiguration templateConfig, String templateName) {
-        // Check if this template has customizations
-        if (templateConfig.hasUserCustomizations()) {
-            File userCustomizationFile = new File(templateConfig.getUserCustomizationsDirectory(), 
-                templateConfig.getGeneratorName() + "/" + templateName + ".yaml");
-            if (userCustomizationFile.exists()) {
-                return true;
-            }
-        }
-        
-        if (templateConfig.hasPluginCustomizations()) {
-            // Check if plugin has customizations for this template
-            var resource = getClass().getClassLoader().getResource("templateCustomizations/" + templateConfig.getGeneratorName() + "/" + templateName + ".yaml");
-            return resource != null;
-        }
-        
-        return false;
-    }
     
     /**
      * Extracts a single base template from OpenAPI Generator.

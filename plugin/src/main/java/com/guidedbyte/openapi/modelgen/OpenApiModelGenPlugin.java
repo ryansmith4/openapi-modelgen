@@ -163,6 +163,12 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * Validates OpenAPI Generator version compatibility and logs warnings for untested versions.
      * This method is called from ensureOpenApiGeneratorAvailable() when a version is detected.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "REC_CATCH_EXCEPTION", 
+        justification = "Defensive programming: version parsing and comparison can fail in various ways (NumberFormatException, " +
+                       "StringIndexOutOfBoundsException, etc.) and we want to gracefully handle all parsing failures by " +
+                       "treating unknown/malformed versions as compatible rather than failing the build."
+    )
     private void validateVersionCompatibility(String version, Project project) {
         if (version == null || version.trim().isEmpty() || StringUtils.equals(version, "unknown")) {
             return; // Nothing to validate

@@ -187,7 +187,14 @@ public class TemplatePreparationAction implements Action<Task> {
                     if (Files.isDirectory(sourcePath)) {
                         Files.createDirectories(targetPath);
                     } else {
-                        Files.createDirectories(targetPath.getParent());
+                        var parentPath = targetPath.getParent();
+                        if (parentPath == null) {
+                            throw new IllegalStateException(
+                                String.format("Failed to resolve parent directory for target path '%s' when copying '%s'. " +
+                                "Source directory: '%s', Target directory: '%s'", 
+                                targetPath, sourcePath, sourceDir, targetDir));
+                        }
+                        Files.createDirectories(parentPath);
                         Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     }
                 } catch (IOException e) {

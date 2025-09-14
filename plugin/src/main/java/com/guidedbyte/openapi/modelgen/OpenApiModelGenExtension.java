@@ -53,6 +53,12 @@ import java.util.Map;
  * @author GuidedByte Technologies Inc.
  * @since 1.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
+    justification = "Gradle plugin extension class intentionally exposes mutable objects including Project and nested configuration containers. " +
+                   "This is the standard pattern for Gradle extensions where the extension acts as a configuration DSL entry point. " +
+                   "The Project reference and configuration containers must be mutable for the plugin's configuration phase to function properly."
+)
 public class OpenApiModelGenExtension {
     
     private final DefaultConfig defaults;

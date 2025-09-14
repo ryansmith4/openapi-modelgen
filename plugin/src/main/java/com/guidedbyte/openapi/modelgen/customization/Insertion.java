@@ -12,6 +12,12 @@ package com.guidedbyte.openapi.modelgen.customization;
  * 
  * @since 2.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "EI_EXPOSE_REP2",
+    justification = "YAML configuration object designed for deserialization by SnakeYAML library. " +
+                   "Setter methods intentionally store object references directly as this is the standard " +
+                   "pattern for YAML/JSON data binding objects. Objects are effectively immutable after deserialization."
+)
 public class Insertion {
     private String after;
     private String before;

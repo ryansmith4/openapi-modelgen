@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.customization;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,6 +11,13 @@ import java.util.List;
  * 
  * @since 2.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "EI_EXPOSE_REP2",
+    justification = "YAML configuration object designed for deserialization by SnakeYAML library. " +
+                   "Setter methods intentionally store collection references directly as this is the standard " +
+                   "pattern for YAML/JSON data binding objects. Collections are effectively immutable after " +
+                   "deserialization and getter methods return defensive copies via Collections.unmodifiableList()."
+)
 public class ConditionSet {
     // Version conditions
     private String generatorVersion;
@@ -97,7 +105,7 @@ public class ConditionSet {
      * @return the list of patterns that must all be present
      */
     public List<String> getTemplateContainsAll() {
-        return templateContainsAll;
+        return templateContainsAll != null ? Collections.unmodifiableList(templateContainsAll) : null;
     }
     
     /**
@@ -114,7 +122,7 @@ public class ConditionSet {
      * @return the list of patterns where at least one must be present
      */
     public List<String> getTemplateContainsAny() {
-        return templateContainsAny;
+        return templateContainsAny != null ? Collections.unmodifiableList(templateContainsAny) : null;
     }
     
     /**
@@ -148,7 +156,7 @@ public class ConditionSet {
      * @return the list of features that must all be supported
      */
     public List<String> getHasAllFeatures() {
-        return hasAllFeatures;
+        return hasAllFeatures != null ? Collections.unmodifiableList(hasAllFeatures) : null;
     }
     
     /**
@@ -165,7 +173,7 @@ public class ConditionSet {
      * @return the list of features where at least one must be supported
      */
     public List<String> getHasAnyFeatures() {
-        return hasAnyFeatures;
+        return hasAnyFeatures != null ? Collections.unmodifiableList(hasAnyFeatures) : null;
     }
     
     /**
@@ -233,7 +241,7 @@ public class ConditionSet {
      * @return the list of conditions that must all be true
      */
     public List<ConditionSet> getAllOf() {
-        return allOf;
+        return allOf != null ? Collections.unmodifiableList(allOf) : null;
     }
     
     /**
@@ -250,7 +258,7 @@ public class ConditionSet {
      * @return the list of conditions where at least one must be true
      */
     public List<ConditionSet> getAnyOf() {
-        return anyOf;
+        return anyOf != null ? Collections.unmodifiableList(anyOf) : null;
     }
     
     /**

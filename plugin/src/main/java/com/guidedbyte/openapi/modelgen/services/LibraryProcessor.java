@@ -252,10 +252,8 @@ public class LibraryProcessor implements Serializable {
         
         // Collect all generators used in specs
         Set<String> usedGenerators = new java.util.HashSet<>();
-        for (SpecConfig spec : specs.values()) {
-            String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME; // Default generator - specs don't override this currently
-            usedGenerators.add(generatorName);
-        }
+        // Since all specs currently use the default generator, add it directly
+        usedGenerators.add(PluginConstants.DEFAULT_GENERATOR_NAME);
         
         logger.debug("Library '{}' validation: supportedGenerators={}, usedGenerators={}", 
                    libraryName, metadata.getSupportedGenerators(), usedGenerators);

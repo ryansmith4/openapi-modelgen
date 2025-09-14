@@ -190,16 +190,6 @@ public class LibraryTemplateExtractor {
         return new LibraryExtractionResult(allTemplates, allCustomizations, allMetadata);
     }
     
-    /**
-     * Extracts templates and customizations from a single JAR file.
-     * 
-     * @param jarFile the JAR file to extract from
-     * @param templates map to store extracted templates
-     * @param customizations map to store extracted customizations
-     */
-    private void extractFromJar(File jarFile, Map<String, String> templates, Map<String, String> customizations) {
-        extractFromJar(jarFile, templates, customizations, new HashMap<>());
-    }
     
     /**
      * Extracts templates, customizations, and metadata from a single JAR file.

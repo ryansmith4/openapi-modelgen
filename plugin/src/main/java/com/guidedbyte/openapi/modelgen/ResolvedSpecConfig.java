@@ -3,6 +3,7 @@ package com.guidedbyte.openapi.modelgen;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,63 @@ import java.util.Map;
  * @author GuidedByte Technologies Inc.
  * @since 1.2.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "EI_EXPOSE_REP",
+    justification = "Configuration data transfer object intentionally stores collection references as final fields for immutability. " +
+                   "All getter methods return defensive copies (new HashMap) to prevent external mutation. " +
+                   "The internal collections are only modified during construction and are effectively immutable afterward."
+)
 public class ResolvedSpecConfig {
+    
+    /**
+     * Plugin version loaded lazily when first requested.
+     * This avoids static initialization failures in test environments.
+     */
+    private static volatile String PLUGIN_VERSION = null;
+    
+    /**
+     * Gets the plugin version, loading it on first access.
+     * The version should be available from JAR manifest in production environments.
+     * 
+     * @return the plugin version from build system
+     */
+    private static String getPluginVersion() {
+        if (PLUGIN_VERSION == null) {
+            synchronized (ResolvedSpecConfig.class) {
+                if (PLUGIN_VERSION == null) {
+                    PLUGIN_VERSION = loadVersionFromBuildSystem();
+                }
+            }
+        }
+        return PLUGIN_VERSION;
+    }
+    
+    /**
+     * Loads the plugin version from available sources.
+     * Prioritizes JAR manifest, with fallback to system properties for test environments.
+     * 
+     * @return the plugin version, or a development version if not available
+     */
+    private static String loadVersionFromBuildSystem() {
+        // First try JAR manifest (production environment)
+        Package pkg = ResolvedSpecConfig.class.getPackage();
+        if (pkg != null) {
+            String manifestVersion = pkg.getImplementationVersion();
+            if (manifestVersion != null && !manifestVersion.trim().isEmpty()) {
+                return manifestVersion.trim();
+            }
+        }
+        
+        // Fallback to system property (test environment or development)
+        String version = System.getProperty("plugin.version");
+        if (version != null && !version.trim().isEmpty()) {
+            return version.trim();
+        }
+        
+        // Final fallback for development/test environments
+        // This is acceptable since version is not critical for functionality
+        return "1.0.0-DEVELOPMENT";
+    }
     
     // Core required fields
     private final String specName;
@@ -255,6 +312,12 @@ public class ResolvedSpecConfig {
     /**
      * Builder for ResolvedSpecConfig that handles the configuration merging logic.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "Builder pattern intentionally accepts collection parameters and stores references after defensive copying via putAll(). " +
+                       "The original collections passed to methods like configOptions(Map) are not stored directly - " +
+                       "instead their contents are copied into the builder's internal collections using putAll(), providing proper encapsulation."
+    )
     public static class Builder {
         private final String specName;
         private String inputSpec;
@@ -304,19 +367,7 @@ public class ResolvedSpecConfig {
             }
         }
         
-        private String getPluginVersion() {
-            try {
-                java.util.Properties props = new java.util.Properties();
-                try (java.io.InputStream is = getClass().getResourceAsStream("/META-INF/gradle-plugins/com.guidedbyte.openapi-modelgen.properties")) {
-                    if (is != null) {
-                        props.load(is);
-                        return props.getProperty("version", "1.0.0");
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-            return "1.0.0";
-        }
+        // Note: getPluginVersion() method is now defined at the class level above
         
         private void applyPluginDefaults() {
             // Plugin defaults are already set as field initializers

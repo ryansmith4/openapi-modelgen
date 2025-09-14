@@ -121,11 +121,11 @@ public class TemplateConfiguration implements Serializable {
     @Optional
     public String getUserCustomizationsDirectory() { return userCustomizationsDirectory; }
     @Input
-    public Map<String, String> getTemplateVariables() { return templateVariables; }
+    public Map<String, String> getTemplateVariables() { return templateVariables != null ? Collections.unmodifiableMap(templateVariables) : null; }
     @Input
     public boolean isTemplateProcessingEnabled() { return templateProcessingEnabled; }
     @Input
-    public List<String> getTemplateSources() { return templateSources; }
+    public List<String> getTemplateSources() { return templateSources != null ? Collections.unmodifiableList(templateSources) : null; }
     @Input
     public boolean isDebug() { return debug; }
     @Input
@@ -141,11 +141,11 @@ public class TemplateConfiguration implements Serializable {
     public boolean hasLibraryTemplates() { return hasLibraryTemplates; }
     public boolean hasLibraryCustomizations() { return hasLibraryCustomizations; }
     @Input
-    public Map<String, String> getLibraryTemplates() { return libraryTemplates; }
+    public Map<String, String> getLibraryTemplates() { return libraryTemplates != null ? Collections.unmodifiableMap(libraryTemplates) : null; }
     @Input
-    public Map<String, String> getLibraryCustomizations() { return libraryCustomizations; }
+    public Map<String, String> getLibraryCustomizations() { return libraryCustomizations != null ? Collections.unmodifiableMap(libraryCustomizations) : null; }
     @Internal  // Internal metadata used for processing, not part of task inputs
-    public Map<String, com.guidedbyte.openapi.modelgen.services.LibraryMetadata> getLibraryMetadata() { return libraryMetadata; }
+    public Map<String, com.guidedbyte.openapi.modelgen.services.LibraryMetadata> getLibraryMetadata() { return libraryMetadata != null ? Collections.unmodifiableMap(libraryMetadata) : null; }
     
     public boolean hasAnyCustomizations() {
         return hasUserTemplates || hasUserCustomizations || hasLibraryTemplates || hasLibraryCustomizations || hasPluginCustomizations;
@@ -247,7 +247,7 @@ public class TemplateConfiguration implements Serializable {
         }
         
         public Builder templateVariables(Map<String, String> templateVariables) {
-            this.templateVariables = templateVariables;
+            this.templateVariables = templateVariables != null ? new HashMap<>(templateVariables) : null;
             return this;
         }
         
@@ -257,7 +257,7 @@ public class TemplateConfiguration implements Serializable {
         }
         
         public Builder templateSources(List<String> templateSources) {
-            this.templateSources = templateSources;
+            this.templateSources = templateSources != null ? new ArrayList<>(templateSources) : null;
             return this;
         }
         
@@ -282,17 +282,17 @@ public class TemplateConfiguration implements Serializable {
         }
         
         public Builder libraryTemplates(Map<String, String> libraryTemplates) {
-            this.libraryTemplates = libraryTemplates;
+            this.libraryTemplates = libraryTemplates != null ? new HashMap<>(libraryTemplates) : null;
             return this;
         }
         
         public Builder libraryCustomizations(Map<String, String> libraryCustomizations) {
-            this.libraryCustomizations = libraryCustomizations;
+            this.libraryCustomizations = libraryCustomizations != null ? new HashMap<>(libraryCustomizations) : null;
             return this;
         }
         
         public Builder libraryMetadata(Map<String, com.guidedbyte.openapi.modelgen.services.LibraryMetadata> libraryMetadata) {
-            this.libraryMetadata = libraryMetadata;
+            this.libraryMetadata = libraryMetadata != null ? new HashMap<>(libraryMetadata) : null;
             return this;
         }
         

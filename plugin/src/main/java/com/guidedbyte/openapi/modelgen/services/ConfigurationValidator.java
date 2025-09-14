@@ -90,6 +90,7 @@ public class ConfigurationValidator implements Serializable {
      * @param defaults the default configuration to validate
      * @param errors the list to collect validation errors
      */
+    // Note: SpotBugs RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE warnings are acceptable here for defensive programming
     public void validateDefaultConfiguration(DefaultConfig defaults, List<String> errors) {
         if (defaults == null) {
             return; // No defaults to validate
@@ -135,6 +136,7 @@ public class ConfigurationValidator implements Serializable {
      * @param defaults the default configuration for fallback values
      * @param errors the list to collect validation errors
      */
+    // Note: SpotBugs RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE warnings are acceptable here for defensive programming
     public void validateSpecConfiguration(ProjectLayout projectLayout, String specName, SpecConfig specConfig, 
                                         DefaultConfig defaults, List<String> errors) {
         String specPrefix = "spec '" + specName + "'";
@@ -409,10 +411,8 @@ public class ConfigurationValidator implements Serializable {
             
             // Collect all generators used in specs (default is "spring")
             // Note: SpecConfig doesn't have generatorName, so we use the default
-            for (SpecConfig spec : specs.values()) {
-                String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME; // Default generator - specs don't override this currently
-                usedGenerators.add(generatorName);
-            }
+            // Since all specs currently use the default generator, we can add it directly
+            usedGenerators.add(PluginConstants.DEFAULT_GENERATOR_NAME);
             
             // Check if library supports all used generators
             for (String generator : usedGenerators) {

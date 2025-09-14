@@ -91,6 +91,12 @@ import java.util.Map;
  * @author GuidedByte Technologies Inc.
  * @since 1.0.0
  */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
+    justification = "Gradle DSL configuration class intentionally exposes mutable Property objects for user configuration. " +
+                   "This is the standard Gradle pattern for configuration objects where properties must be settable by users. " +
+                   "The exposed Property objects are part of the public API and their mutability is required for the DSL to function."
+)
 public class DefaultConfig {
     
     private final Property<String> outputDir;
