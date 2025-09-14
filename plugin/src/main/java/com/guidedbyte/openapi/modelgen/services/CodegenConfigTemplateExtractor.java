@@ -1,13 +1,22 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import org.openapitools.codegen.CodegenConfig;
+import org.openapitools.codegen.CodegenConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * Template extractor using OpenAPI Generator's CodegenConfig API.
@@ -146,8 +155,8 @@ public class CodegenConfigTemplateExtractor {
             // Create target directory if it doesn't exist
             Files.createDirectories(targetDirectory.toPath());
             
-            // Use the OpenApiTemplateExtractor to extract all templates
-            OpenApiTemplateExtractor.extractTemplates(generatorName, targetDirectory.getAbsolutePath(), null);
+            // Extract templates using direct approach (avoiding deprecated OpenApiTemplateExtractor method)
+            extractTemplatesDirectly(generatorName, targetDirectory);
             
             // Count the extracted files
             File[] extractedFiles = targetDirectory.listFiles((dir, name) -> name.endsWith(".mustache"));
@@ -162,6 +171,96 @@ public class CodegenConfigTemplateExtractor {
         }
     }
     
+    /**
+     * Extracts templates directly without using deprecated OpenApiTemplateExtractor methods.
+     * This replicates the core functionality needed for template extraction.
+     * 
+     * @param generatorName the OpenAPI generator name
+     * @param targetDirectory the directory to extract templates to
+     * @throws Exception if extraction fails
+     */
+    private void extractTemplatesDirectly(String generatorName, File targetDirectory) throws Exception {
+        // Load the generator configuration
+        CodegenConfig config = CodegenConfigLoader.forName(generatorName);
+        
+        if (config == null) {
+            throw new IllegalArgumentException("Generator '" + generatorName + "' not found");
+        }
+        
+        // Get the embedded template directory
+        String embeddedTemplateDir = config.embeddedTemplateDir();
+        if (embeddedTemplateDir == null || embeddedTemplateDir.isEmpty()) {
+            embeddedTemplateDir = generatorName; // fallback to generator name
+        }
+        
+        // Use basic file operations for template extraction
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        String resourcePath = embeddedTemplateDir;
+        URL resourceUrl = classLoader.getResource(resourcePath);
+        
+        if (resourceUrl == null) {
+            throw new IllegalArgumentException("Template directory not found: " + resourcePath);
+        }
+        
+        Path outputPath = targetDirectory.toPath();
+        Files.createDirectories(outputPath);
+        
+        // Extract templates based on resource location (JAR vs filesystem)
+        if (resourceUrl.getProtocol().equals("jar")) {
+            extractFromJar(resourceUrl, resourcePath, outputPath);
+        } else {
+            extractFromFileSystem(Paths.get(resourceUrl.toURI()), outputPath);
+        }
+    }
+    
+    /**
+     * Extract templates from a JAR file.
+     */
+    private void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
+        String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
+        
+        try (JarFile jarFile = new JarFile(jarPath)) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+                
+                if (entryName.startsWith(resourcePath + "/") && !entry.isDirectory()) {
+                    String relativePath = entryName.substring((resourcePath + "/").length());
+                    Path targetPath = outputPath.resolve(relativePath);
+                    
+                    Files.createDirectories(targetPath.getParent());
+                    
+                    try (InputStream inputStream = jarFile.getInputStream(entry)) {
+                        Files.copy(inputStream, targetPath);
+                        logger.debug("Extracted from JAR: {}", relativePath);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Extract templates from the file system.
+     */
+    private void extractFromFileSystem(Path sourcePath, Path outputPath) throws Exception {
+        Files.walk(sourcePath)
+            .filter(Files::isRegularFile)
+            .forEach(sourceFile -> {
+                try {
+                    Path relativePath = sourcePath.relativize(sourceFile);
+                    Path targetPath = outputPath.resolve(relativePath);
+                    
+                    Files.createDirectories(targetPath.getParent());
+                    Files.copy(sourceFile, targetPath);
+                    
+                    logger.debug("Extracted from filesystem: {}", relativePath);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to copy file: " + sourceFile, e);
+                }
+            });
+    }
     
     /**
      * Saves a template to a file in the working directory.
