@@ -7,6 +7,8 @@ import org.slf4j.MDC;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -144,7 +146,7 @@ public class RichFileLogger {
     
     private boolean initializeLogFile() {
         try {
-            writer = new FileWriter(logFile, false); // Overwrite existing file
+            writer = new FileWriter(logFile, StandardCharsets.UTF_8, false); // Overwrite existing file
             writeRawLine("OpenAPI Model Generator Rich Debug Log");
             writeRawLine("Started: " + LocalDateTime.now().format(TIMESTAMP_FORMAT));
             writeRawLine("Log file: " + logFile.getAbsolutePath());

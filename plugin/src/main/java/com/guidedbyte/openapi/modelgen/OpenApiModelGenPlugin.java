@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen;
 
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.*;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -163,7 +164,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * This method is called from ensureOpenApiGeneratorAvailable() when a version is detected.
      */
     private void validateVersionCompatibility(String version, Project project) {
-        if (version == null || version.trim().isEmpty() || "unknown".equals(version)) {
+        if (version == null || version.trim().isEmpty() || StringUtils.equals(version, "unknown")) {
             return; // Nothing to validate
         }
         
@@ -269,7 +270,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      */
     private void validateLibraryVersionCompatibility(String libraryName, LibraryMetadata metadata, 
                                                    String detectedGeneratorVersion, List<String> errors) {
-        if (metadata == null || detectedGeneratorVersion == null || "unknown".equals(detectedGeneratorVersion)) {
+        if (metadata == null || detectedGeneratorVersion == null || StringUtils.equals(detectedGeneratorVersion, "unknown")) {
             return; // Cannot validate without proper inputs
         }
         
@@ -326,7 +327,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             // Detect current OpenAPI Generator version
             String detectedVersion = detectOpenApiGeneratorVersion(project);
             
-            if (detectedVersion == null || "unknown".equals(detectedVersion)) {
+            if (detectedVersion == null || StringUtils.equals(detectedVersion, "unknown")) {
                 logger.debug("Cannot validate library version compatibility - OpenAPI Generator version unknown");
                 return errors;
             }
@@ -365,7 +366,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         try {
             String detectedVersion = detectOpenApiGeneratorVersion(project);
             
-            if (detectedVersion != null && !"unknown".equals(detectedVersion)) {
+            if (detectedVersion != null && !StringUtils.equals(detectedVersion, "unknown")) {
                 project.getLogger().info("Using OpenAPI Generator version: {}", detectedVersion);
                 validateVersionCompatibility(detectedVersion, project);
             } else {

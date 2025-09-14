@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -144,7 +145,7 @@ public class OpenApiGeneratorVersionDetector {
         logger.debug("Searching project dependencies for OpenAPI Generator...");
         
         return project.getConfigurations().stream()
-            .filter(config -> !config.getName().toLowerCase().contains("test"))
+            .filter(config -> !StringUtils.toRootLowerCase(config.getName()).contains("test"))
             .flatMap(config -> {
                 try {
                     return config.getResolvedConfiguration()

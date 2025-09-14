@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine.CustomizationException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,11 +137,11 @@ public class YamlValidator {
             errors.add(path + ": can only specify one insertion point (after, before, or at)");
         }
         
-        // Validate 'at' values
+        // Validate 'at' values (case-insensitive)
         if (insertion.getAt() != null) {
-            String at = insertion.getAt().trim().toLowerCase();
-            if (!at.equals("start") && !at.equals("end")) {
-                errors.add(path + ".at: must be 'start' or 'end', got: " + insertion.getAt());
+            String at = insertion.getAt().trim();
+            if (!StringUtils.equalsIgnoreCase(at, "start") && !StringUtils.equalsIgnoreCase(at, "end")) {
+                errors.add(path + ".at: must be 'start' or 'end' (case-insensitive), got: " + insertion.getAt());
             }
         }
         
@@ -179,15 +180,15 @@ public class YamlValidator {
             errors.add(path + ".replace: replace content is required (can be empty string)");
         }
         
-        // Validate replacement type
+        // Validate replacement type (case-insensitive)
         if (replacement.getType() != null) {
-            String type = replacement.getType().toLowerCase();
-            if (!type.equals("string") && !type.equals("regex")) {
-                errors.add(path + ".type: must be 'string' or 'regex', got: " + replacement.getType());
+            String type = replacement.getType().trim();
+            if (!StringUtils.equalsIgnoreCase(type, "string") && !StringUtils.equalsIgnoreCase(type, "regex")) {
+                errors.add(path + ".type: must be 'string' or 'regex' (case-insensitive), got: " + replacement.getType());
             }
             
             // Validate regex if specified
-            if (type.equals("regex")) {
+            if (StringUtils.equalsIgnoreCase(type, "regex")) {
                 try {
                     Pattern.compile(replacement.getFind());
                 } catch (Exception e) {
@@ -500,9 +501,9 @@ public class YamlValidator {
             "exec(",             // Command execution
         };
         
-        String lowerContent = content.toLowerCase();
+        String lowerContent = StringUtils.toRootLowerCase(content);
         for (String pattern : dangerousPatterns) {
-            if (lowerContent.contains(pattern.toLowerCase())) {
+            if (lowerContent.contains(StringUtils.toRootLowerCase(pattern))) {
                 errors.add(path + ": potentially dangerous content detected: " + pattern);
             }
         }

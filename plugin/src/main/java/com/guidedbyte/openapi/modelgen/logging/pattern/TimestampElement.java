@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.logging.pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -59,7 +61,7 @@ public class TimestampElement implements PatternElement {
             return DateTimeFormatter.ofPattern("HH:mm:ss");
         }
         
-        switch (pattern.toUpperCase()) {
+        switch (StringUtils.toRootUpperCase(pattern)) {
             case "ISO8601":
                 return DateTimeFormatter.ISO_LOCAL_DATE_TIME;
             case "ABSOLUTE":
@@ -81,7 +83,7 @@ public class TimestampElement implements PatternElement {
             return 8; // HH:mm:ss
         }
         
-        switch (pattern.toUpperCase()) {
+        switch (StringUtils.toRootUpperCase(pattern)) {
             case "ISO8601":
                 return 23; // 2023-12-25T14:30:45.123
             case "ABSOLUTE":

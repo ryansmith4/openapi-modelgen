@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.actions;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.slf4j.Logger;
@@ -29,9 +30,9 @@ public class ParallelExecutionLoggingAction implements Action<Task>, Serializabl
     
     @Override
     public void execute(Task task) {
-        if ("start".equals(phase)) {
+        if (StringUtils.equalsIgnoreCase(phase, "start")) {
             logExecutionStart();
-        } else if ("end".equals(phase)) {
+        } else if (StringUtils.equalsIgnoreCase(phase, "end")) {
             logExecutionEnd();
         }
     }

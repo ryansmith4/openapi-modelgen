@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine.CustomizationException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,14 +203,13 @@ public class TemplateProcessor {
      * Applies insertion at special locations (start/end).
      */
     private String applyAtInsertion(String template, String at, String content) {
-        switch (at.toLowerCase()) {
-            case "start":
-                return content + template;
-            case "end":
-                return template + content;
-            default:
-                logger.warn("Unknown insertion location: {}", at);
-                return template;
+        if (StringUtils.equalsIgnoreCase(at, "start")) {
+            return content + template;
+        } else if (StringUtils.equalsIgnoreCase(at, "end")) {
+            return template + content;
+        } else {
+            logger.warn("Unknown insertion location: {}", at);
+            return template;
         }
     }
     

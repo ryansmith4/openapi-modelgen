@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -121,9 +123,9 @@ public class EvaluationContext {
             String actualValue = projectProperties.get(key);
             return expectedValue.equals(actualValue);
         } else {
-            // Property existence: "enableFeature"
+            // Property existence: "enableFeature" (case-insensitive false check)
             return projectProperties.containsKey(propertySpec.trim()) && 
-                   !"false".equals(projectProperties.get(propertySpec.trim()));
+                   !StringUtils.equalsIgnoreCase(projectProperties.get(propertySpec.trim()), "false");
         }
     }
     
@@ -145,9 +147,9 @@ public class EvaluationContext {
             String actualValue = environmentVariables.get(key);
             return expectedValue.equals(actualValue);
         } else {
-            // Variable existence: "NODE_ENV"
+            // Variable existence: "NODE_ENV" (case-insensitive false check)
             String value = environmentVariables.get(variableSpec.trim());
-            return value != null && !value.isEmpty() && !"false".equals(value);
+            return value != null && !value.isEmpty() && !StringUtils.equalsIgnoreCase(value, "false");
         }
     }
     

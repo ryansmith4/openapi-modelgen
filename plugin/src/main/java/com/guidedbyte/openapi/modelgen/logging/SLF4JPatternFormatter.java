@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.logging;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import java.util.concurrent.ConcurrentHashMap;
@@ -120,7 +121,7 @@ public class SLF4JPatternFormatter {
         }
         
         // Check for predefined pattern names
-        switch (pattern.toLowerCase().trim()) {
+        switch (StringUtils.toRootLowerCase(pattern).trim()) {
             case "default":
                 return DEFAULT_PATTERN;
             case "minimal":

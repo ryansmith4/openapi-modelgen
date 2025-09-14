@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.Map;
 
@@ -179,6 +181,6 @@ public class FeatureDetector {
         if (str == null || str.isEmpty()) {
             return str;
         }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        return StringUtils.toRootUpperCase(str.substring(0, 1)) + str.substring(1);
     }
 }

@@ -7,6 +7,7 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.actions.ParallelExecutionLoggingAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
@@ -724,6 +725,6 @@ public class TaskConfigurationService implements Serializable {
         if (str == null || str.isEmpty()) {
             return str;
         }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        return StringUtils.toRootUpperCase(str.substring(0, 1)) + str.substring(1);
     }
 }

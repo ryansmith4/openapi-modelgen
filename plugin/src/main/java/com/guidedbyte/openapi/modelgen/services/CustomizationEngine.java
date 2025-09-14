@@ -6,6 +6,7 @@ import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
 import com.guidedbyte.openapi.modelgen.services.RichFileLogger;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -177,9 +178,9 @@ public class CustomizationEngine {
     public String applyCustomizations(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
         LoggingContext.setComponent("CustomizationEngine");
         
-        // Check if debug is enabled from context
+        // Check if debug is enabled from context (case-insensitive)
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && "true".equals(context.getProjectProperties().get("debug"));
+            && StringUtils.equalsIgnoreCase(context.getProjectProperties().get("debug"), "true");
         
         try {
             // Enhanced debug logging for troubleshooting
@@ -236,9 +237,9 @@ public class CustomizationEngine {
      * @throws CustomizationException if customization application fails
      */
     private String applyCustomizationsInternal(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
-        // Check if debug is enabled from context
+        // Check if debug is enabled from context (case-insensitive)
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && "true".equals(context.getProjectProperties().get("debug"));
+            && StringUtils.equalsIgnoreCase(context.getProjectProperties().get("debug"), "true");
         
         // Use ErrorHandlingUtils for consistent validation
         try {
@@ -554,14 +555,14 @@ public class CustomizationEngine {
             
             for (String key : insertion.keySet()) {
                 if (!allowedInsertionProps.contains(key)) {
-                    // Provide helpful error messages for common mistakes
-                    if ("pattern".equals(key)) {
+                    // Provide helpful error messages for common mistakes (case-insensitive)
+                    if (StringUtils.equalsIgnoreCase(key, "pattern")) {
                         throw new CustomizationException(
                             "Invalid property 'pattern' in insertions[" + i + "] in " + sourceName + 
                             ". Use 'after' or 'before' instead of 'pattern'"
                         );
                     }
-                    if ("position".equals(key)) {
+                    if (StringUtils.equalsIgnoreCase(key, "position")) {
                         throw new CustomizationException(
                             "Invalid property 'position' in insertions[" + i + "] in " + sourceName + 
                             ". Use 'after', 'before', or 'at' instead of 'position'"
@@ -1161,7 +1162,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            name.endsWith(".yaml") || name.endsWith(".yml"));
+            StringUtils.endsWithIgnoreCase(name, ".yaml") || StringUtils.endsWithIgnoreCase(name, ".yml"));
         
         if (yamlFiles != null) {
             for (File yamlFile : yamlFiles) {
@@ -1327,8 +1328,8 @@ public class CustomizationEngine {
                 if (entryName.startsWith(searchPrefix) && !entry.isDirectory()) {
                     String fileName = entryName.substring(searchPrefix.length());
                     
-                    // Only include direct files (no subdirectories) that are YAML files
-                    if (!fileName.contains("/") && (fileName.endsWith(".yaml") || fileName.endsWith(".yml"))) {
+                    // Only include direct files (no subdirectories) that are YAML files (case-insensitive)
+                    if (!fileName.contains("/") && StringUtils.endsWithIgnoreCase(fileName, ".yaml") || StringUtils.endsWithIgnoreCase(fileName, ".yml")) {
                         customizations.add(fileName);
                     }
                 }
@@ -1348,7 +1349,7 @@ public class CustomizationEngine {
         
         if (dir.exists() && dir.isDirectory()) {
             java.io.File[] files = dir.listFiles((file) -> 
-                file.isFile() && (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")));
+                file.isFile() && StringUtils.endsWithIgnoreCase(file.getName(), ".yaml") || StringUtils.endsWithIgnoreCase(file.getName(), ".yml"));
             
             if (files != null) {
                 for (java.io.File file : files) {
@@ -1408,7 +1409,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            name.endsWith(".yaml") || name.endsWith(".yml"));
+            StringUtils.endsWithIgnoreCase(name, ".yaml") || StringUtils.endsWithIgnoreCase(name, ".yml"));
         
         if (yamlFiles == null) {
             return;

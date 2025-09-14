@@ -5,6 +5,7 @@ import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
@@ -162,10 +163,12 @@ public class ConfigurationValidator implements Serializable {
             } else if (!inputSpecFile.canRead()) {
                 errors.add(String.format("%s: inputSpec file is not readable: %s", specPrefix, inputSpecPath));
             } else {
-                // Validate file extension
-                String fileName = inputSpecFile.getName().toLowerCase();
-                if (!fileName.endsWith(".yaml") && !fileName.endsWith(".yml") && !fileName.endsWith(".json")) {
-                    errors.add(specPrefix + ": inputSpec should be a YAML (.yaml/.yml) or JSON (.json) file: " + inputSpecPath);
+                // Validate file extension (case-insensitive)
+                String fileName = inputSpecFile.getName();
+                if (!StringUtils.endsWithIgnoreCase(fileName, ".yaml") && 
+                    !StringUtils.endsWithIgnoreCase(fileName, ".yml") && 
+                    !StringUtils.endsWithIgnoreCase(fileName, ".json")) {
+                    errors.add(specPrefix + ": inputSpec should be a YAML (.yaml/.yml) or JSON (.json) file (case-insensitive): " + inputSpecPath);
                 }
             }
         }
@@ -245,9 +248,10 @@ public class ConfigurationValidator implements Serializable {
             }
         }
         
-        // Validate Spring Boot 3 and Jakarta EE compatibility
-        if ("false".equals(configOptions.get("useSpringBoot3")) && "true".equals(configOptions.get("useJakartaEe"))) {
-            errors.add(context + ".configOptions: useJakartaEe=true requires useSpringBoot3=true");
+        // Validate Spring Boot 3 and Jakarta EE compatibility (case-insensitive)
+        if (StringUtils.equalsIgnoreCase(configOptions.get("useSpringBoot3"), "false") && 
+            StringUtils.equalsIgnoreCase(configOptions.get("useJakartaEe"), "true")) {
+            errors.add(context + ".configOptions: useJakartaEe=true requires useSpringBoot3=true (case-insensitive)");
         }
         
         // Validate date library
@@ -275,7 +279,7 @@ public class ConfigurationValidator implements Serializable {
             }
             
             // Check for duplicates (case-insensitive)
-            String lowerName = specName.toLowerCase();
+            String lowerName = StringUtils.toRootLowerCase(specName);
             if (seenNames.contains(lowerName)) {
                 errors.add(String.format("Duplicate spec name (case-insensitive): %s", specName));
             } else {
