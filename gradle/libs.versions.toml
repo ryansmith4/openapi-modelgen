@@ -1,0 +1,156 @@
+# OpenAPI Model Generator Plugin - Version Catalog
+# This file centralizes all dependency and plugin versions for consistent management
+# Especially important for security-critical dependencies
+
+[versions]
+# ===============================================================================================
+# GRADLE PLUGINS
+# ===============================================================================================
+gradle-plugin-publish = "1.3.1"
+spotbugs = "6.3.0"
+owasp-dependencycheck = "12.1.3"
+spring-boot = "3.2.1"
+spring-dependency-management = "1.1.4"
+
+# ===============================================================================================
+# OPENAPI GENERATOR - CORE DEPENDENCIES
+# ===============================================================================================
+# Note: We maintain two versions for compatibility testing
+openapi-generator-plugin = "7.14.0"          # Latest for test-app and testing
+openapi-generator-plugin-compat = "7.10.0"   # Minimum supported for compileOnly
+
+# ===============================================================================================
+# SECURITY-CRITICAL DEPENDENCIES
+# ===============================================================================================
+# These versions are specifically chosen to address known CVEs:
+# - snakeyaml: 2.3 (fixes CVE-2022-1471 - CRITICAL)
+# - commons-lang3: 3.18.0 (fixes CVE-2025-48924 - MEDIUM)
+snakeyaml = "2.3"
+commons-lang3 = "3.18.0"
+
+# ===============================================================================================
+# PLUGIN CORE DEPENDENCIES
+# ===============================================================================================
+semver4j = "3.1.0"
+
+# ===============================================================================================
+# TEST FRAMEWORK
+# ===============================================================================================
+junit-jupiter = "5.9.2"
+mockito = "5.1.1"
+
+# ===============================================================================================
+# SPRING BOOT & WEB DEPENDENCIES (test-app)
+# ===============================================================================================
+swagger-annotations = "2.2.19"
+jsr305 = "3.0.2"
+lombok = "1.18.38"
+jakarta-validation-api = "3.0.2"
+hibernate-validator = "8.0.1.Final"
+spring-core = "6.0.10"
+jakarta-annotation-api = "2.1.1"
+
+[libraries]
+# ===============================================================================================
+# PLUGIN DEPENDENCIES
+# ===============================================================================================
+# OpenAPI Generator (compileOnly - consumer provides version)
+openapi-generator-gradle-plugin-compat = { module = "org.openapitools:openapi-generator-gradle-plugin", version.ref = "openapi-generator-plugin-compat" }
+openapi-generator-compat = { module = "org.openapitools:openapi-generator", version.ref = "openapi-generator-plugin-compat" }
+
+# OpenAPI Generator (latest for testing)
+openapi-generator-gradle-plugin = { module = "org.openapitools:openapi-generator-gradle-plugin", version.ref = "openapi-generator-plugin" }
+openapi-generator = { module = "org.openapitools:openapi-generator", version.ref = "openapi-generator-plugin" }
+
+# Security-critical dependencies
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+
+# Plugin utilities
+semver4j = { module = "org.semver4j:semver4j", version.ref = "semver4j" }
+
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+
+# ===============================================================================================
+# TEST-APP DEPENDENCIES
+# ===============================================================================================
+# Spring Boot dependencies (versions managed by Spring Boot BOM)
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+# OpenAPI & Swagger
+swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger-annotations" }
+
+# Annotations & Validation
+jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation-api" }
+hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
+spring-core = { module = "org.springframework:spring-core", version.ref = "spring-core" }
+jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api", version.ref = "jakarta-annotation-api" }
+
+# Jackson (versions managed by Spring Boot BOM)
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" }
+
+[plugins]
+# ===============================================================================================
+# GRADLE PLUGINS
+# ===============================================================================================
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
+spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
+owasp-dependencycheck = { id = "org.owasp.dependencycheck", version.ref = "owasp-dependencycheck" }
+
+# Spring Boot plugins
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+
+# OpenAPI Generator
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator-plugin" }
+
+# Our plugin (no version - local)
+openapi-modelgen = { id = "com.guidedbyte.openapi-modelgen" }
+
+[bundles]
+# ===============================================================================================
+# DEPENDENCY BUNDLES FOR COMMON USE CASES
+# ===============================================================================================
+# Plugin core dependencies
+plugin-core = [
+    "snakeyaml",
+    "semver4j", 
+    "commons-lang3"
+]
+
+# Plugin test dependencies  
+plugin-test = [
+    "openapi-generator-gradle-plugin",
+    "openapi-generator",
+    "junit-jupiter",
+    "mockito-core"
+]
+
+# Test-app annotation processing
+test-app-annotations = [
+    "lombok",
+    "jsr305",
+    "jakarta-annotation-api"
+]
+
+# Test-app validation
+test-app-validation = [
+    "jakarta-validation-api",
+    "hibernate-validator"
+]
+
+# Test-app web dependencies
+test-app-web = [
+    "spring-boot-starter-web",
+    "spring-boot-starter-validation",
+    "swagger-annotations",
+    "jackson-databind",
+    "jackson-datatype-jsr310"
+]

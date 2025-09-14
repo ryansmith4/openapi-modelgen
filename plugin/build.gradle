@@ -1,8 +1,9 @@
 plugins {
-    id("com.gradle.plugin-publish") version "1.3.1"
+    alias(libs.plugins.gradle.plugin.publish)
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'com.github.spotbugs' version '6.3.0'
+    alias(libs.plugins.spotbugs)
+    alias(libs.plugins.owasp.dependencycheck)
 }
 
 import com.github.spotbugs.snom.Effort
@@ -19,21 +20,19 @@ dependencies {
     
     // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled
     // Consumer projects must provide their own version (7.10.0+)
-    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.10.0'
+    compileOnly libs.openapi.generator.gradle.plugin.compat
     
     // OpenAPI Generator core for CodegenConfig API - also compileOnly
-    compileOnly 'org.openapitools:openapi-generator:7.10.0'
+    compileOnly libs.openapi.generator.compat
     
-    // YAML processing for template customizations
-    implementation 'org.yaml:snakeyaml:1.33'
-    implementation 'org.semver4j:semver4j:3.1.0'
+    // Plugin core dependencies (includes security-critical versions)
+    implementation libs.bundles.plugin.core
     
     // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime
-    testRuntimeOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
-    testImplementation 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
-    testImplementation 'org.openapitools:openapi-generator:7.14.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
-    testImplementation 'org.mockito:mockito-core:5.1.1'
+    testRuntimeOnly libs.openapi.generator.gradle.plugin
+    testImplementation libs.openapi.generator.gradle.plugin
+    testImplementation libs.openapi.generator
+    testImplementation libs.bundles.plugin.test
     testImplementation gradleTestKit()
 }
 
@@ -98,6 +97,218 @@ spotbugsTest {
 
 // Make check task depend on SpotBugs
 check.dependsOn spotbugsMain
+
+// OWASP Dependency Check configuration for security scanning
+dependencyCheck {
+    analyzedTypes = ['jar']
+    skipConfigurations = ['testImplementation', 'testCompileOnly']
+    
+    formats = ['HTML', 'XML', 'JSON']
+    outputDirectory = file("$buildDir/reports/security")
+    
+    suppressionFile = file('owasp-suppressions.xml')
+    
+    failBuildOnCVSS = 7.0  // Fail on HIGH severity or above
+    
+    // Disable problematic analyzers - we only care about Java JAR dependencies
+    analyzers {
+        assemblyEnabled = false
+        nodeEnabled = false
+    }
+    
+    nvd {
+        // NVD API configuration - use environment variable or gradle property
+        apiKey = providers.gradleProperty('nvdApiKey').orElse(
+            providers.environmentVariable('NVD_API_KEY')
+        ).getOrNull()
+        delay = 2000  // Delay between API calls (milliseconds)
+    }
+    
+    // Cache directory configuration
+    data {
+        directory = file("${System.getProperty('user.home')}/.gradle/dependency-check-data")
+    }
+    
+    // Auto-update settings
+    autoUpdate = true
+}
+
+// Manual security scanning - NOT integrated into build lifecycle
+// Run manually before releases: ./gradlew preReleaseSecurityScan
+tasks.register('preReleaseSecurityScan') {
+    group = 'release'
+    description = 'Run security scan before preparing release'
+    
+    doFirst {
+        // Check API key availability and provide clear feedback
+        def apiKeyFromGradleProps = providers.gradleProperty('nvdApiKey').getOrNull()
+        def apiKeyFromEnv = providers.environmentVariable('NVD_API_KEY').getOrNull()
+        def cacheDir = file("${System.getProperty('user.home')}/.gradle/dependency-check-data")
+        
+        println "🔍 Starting OWASP Dependency Check Security Scan"
+        println "=" * 60
+        
+        // API Key Status with validation
+        def effectiveKey = null
+        def effectiveSource = null
+        
+        if (apiKeyFromGradleProps != null && !apiKeyFromGradleProps.trim().isEmpty()) {
+            effectiveKey = apiKeyFromGradleProps.trim()
+            effectiveSource = "Gradle property"
+        } else if (apiKeyFromEnv != null && !apiKeyFromEnv.trim().isEmpty()) {
+            effectiveKey = apiKeyFromEnv.trim()
+            effectiveSource = "Environment variable"
+        }
+        
+        if (effectiveKey != null) {
+            println "✅ NVD API Key: FOUND from ${effectiveSource}"
+            println "   Expected performance: 5-10 minutes first run, <30 seconds cached"
+            
+            // Log precedence if both are available
+            if (apiKeyFromGradleProps != null && !apiKeyFromGradleProps.trim().isEmpty() && 
+                apiKeyFromEnv != null && !apiKeyFromEnv.trim().isEmpty()) {
+                println "   Note: Both sources available - Gradle property takes precedence"
+            }
+        } else {
+            println "⚠️  NVD API Key: NOT FOUND or BLANK"
+            println "   Expected performance: 15-30 minutes (may timeout on slow connections)"
+            println "   💡 Get an API key: https://nvd.nist.gov/developers/request-an-api-key"
+            println "   💡 Add Gradle property: -PnvdApiKey=your-key OR gradle.properties: nvdApiKey=your-key"
+            println "   💡 Or set environment variable: export NVD_API_KEY=your-key"
+            
+            // Specific warnings for blank keys
+            if (apiKeyFromGradleProps != null && apiKeyFromGradleProps.trim().isEmpty()) {
+                println "   ⚠️  Note: Gradle property 'nvdApiKey' is set but blank"
+            }
+            if (apiKeyFromEnv != null && apiKeyFromEnv.trim().isEmpty()) {
+                println "   ⚠️  Note: Environment variable 'NVD_API_KEY' is set but blank"
+            }
+        }
+        
+        // Cache Status
+        if (cacheDir.exists()) {
+            def cacheSize = cacheDir.listFiles()?.length ?: 0
+            def lastModified = new Date(cacheDir.lastModified())
+            println "📦 NVD Cache: Found at ${cacheDir.absolutePath}"
+            println "   Files: ${cacheSize}, Last updated: ${lastModified.format('yyyy-MM-dd HH:mm:ss')}"
+        } else {
+            println "📦 NVD Cache: Not found - will be created during first run"
+        }
+        
+        println "=" * 60
+        println ""
+    }
+    
+    dependsOn dependencyCheckAnalyze
+    
+    doLast {
+        println ""
+        println "=" * 60
+        println "✅ Security scan completed"
+        println "📊 Report: $buildDir/reports/security/dependency-check-report.html"
+        println "🔍 Review findings before proceeding with release"
+        println "=" * 60
+    }
+}
+
+// Validate NVD API key configuration without running full scan
+tasks.register('checkNvdApiKey') {
+    group = 'verification'
+    description = 'Check NVD API key configuration and cache status'
+    
+    doLast {
+        def apiKeyFromGradleProps = providers.gradleProperty('nvdApiKey').getOrNull()
+        def apiKeyFromEnv = providers.environmentVariable('NVD_API_KEY').getOrNull()
+        def cacheDir = file("${System.getProperty('user.home')}/.gradle/dependency-check-data")
+        
+        println "🔍 NVD API Key Configuration Check"
+        println "=" * 50
+        
+        // Check gradle property (could be from multiple sources)
+        if (apiKeyFromGradleProps != null) {
+            if (apiKeyFromGradleProps.trim().isEmpty()) {
+                println "⚠️  Gradle property: nvdApiKey found but is BLANK"
+            } else {
+                println "✅ Gradle property: nvdApiKey found"
+            }
+        } else {
+            println "❌ Gradle property: nvdApiKey not found"
+        }
+        
+        // Check environment variable
+        if (apiKeyFromEnv != null) {
+            if (apiKeyFromEnv.trim().isEmpty()) {
+                println "⚠️  Environment variable: NVD_API_KEY found but is BLANK"
+            } else {
+                println "✅ Environment variable: NVD_API_KEY found"
+            }
+        } else {
+            println "❌ Environment variable: NVD_API_KEY not found"
+        }
+        
+        // Effective configuration with precedence and validation
+        def effectiveKey = null
+        def effectiveSource = null
+        
+        if (apiKeyFromGradleProps != null && !apiKeyFromGradleProps.trim().isEmpty()) {
+            effectiveKey = apiKeyFromGradleProps.trim()
+            effectiveSource = "Gradle property"
+        } else if (apiKeyFromEnv != null && !apiKeyFromEnv.trim().isEmpty()) {
+            effectiveKey = apiKeyFromEnv.trim()
+            effectiveSource = "Environment variable"
+        }
+        
+        if (effectiveKey != null) {
+            println "✅ Effective configuration: API key will be used"
+            println "   Source: ${effectiveSource}"
+            
+            // Log precedence if both are available
+            if (apiKeyFromGradleProps != null && !apiKeyFromGradleProps.trim().isEmpty() && 
+                apiKeyFromEnv != null && !apiKeyFromEnv.trim().isEmpty()) {
+                println "   Note: Both sources found - Gradle property takes precedence"
+            }
+        } else {
+            println "⚠️  Effective configuration: No valid API key available"
+            println "   ⚡ Scans will be slower due to rate limiting"
+            
+            if (apiKeyFromGradleProps != null && apiKeyFromGradleProps.trim().isEmpty()) {
+                println "   💡 Gradle property 'nvdApiKey' is blank - please set a valid key"
+            }
+            if (apiKeyFromEnv != null && apiKeyFromEnv.trim().isEmpty()) {
+                println "   💡 Environment variable 'NVD_API_KEY' is blank - please set a valid key"
+            }
+        }
+        
+        // Cache status
+        if (cacheDir.exists()) {
+            def files = cacheDir.listFiles()
+            def cacheSize = files?.length ?: 0
+            if (cacheSize > 0) {
+                def lastModified = new Date(cacheDir.lastModified())
+                def totalSizeMB = files.collect { it.length() }.sum() / (1024 * 1024)
+                println "📦 NVD Cache: ${cacheSize} files (${String.format('%.1f', totalSizeMB)} MB)"
+                println "   Location: ${cacheDir.absolutePath}"
+                println "   Last updated: ${lastModified.format('yyyy-MM-dd HH:mm:ss')}"
+            } else {
+                println "📦 NVD Cache: Directory exists but empty"
+            }
+        } else {
+            println "📦 NVD Cache: Not found - will be created on first scan"
+        }
+        
+        println "=" * 50
+        
+        // Recommendations
+        if (effectiveKey == null) {
+            println "💡 Recommendations:"
+            println "   1. Get API key: https://nvd.nist.gov/developers/request-an-api-key"
+            println "   2. Add to ~/.gradle/gradle.properties: nvdApiKey=your-key-here"
+            println "   3. Or set environment variable: export NVD_API_KEY=your-key-here"
+        } else if (apiKeyFromGradleProps == null && apiKeyFromEnv != null) {
+            println "💡 Recommendation: Consider adding to ~/.gradle/gradle.properties for convenience"
+        }
+    }
+}
 
 // Generate plugin documentation automatically
 tasks.register('generatePluginDocs') {

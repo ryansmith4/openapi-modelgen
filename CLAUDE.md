@@ -33,11 +33,17 @@ Breaking compatibility = critical regression requiring immediate fix.
 
 ```text
 openapi-modelgen/
+├── gradle/
+│   └── libs.versions.toml           # Version catalog (shared)
 ├── plugin/                          # Main plugin
+│   ├── gradle/
+│   │   └── libs.versions.toml       # Version catalog (plugin copy)
 │   ├── src/main/java/.../           # Core classes
 │   ├── src/main/resources/templateCustomizations/  # YAML customizations
 │   └── src/test/java/.../           # Test suite
 └── test-app/                        # STANDALONE test project
+    ├── gradle/
+    │   └── libs.versions.toml       # Version catalog (test-app copy)
     ├── build.gradle                 # Configuration example
     └── src/main/resources/openapi-spec/  # API specs
 ```
@@ -94,13 +100,38 @@ Templates processed in spec-specific working directories (`build/template-work/{
 ## Key Technical Details
 
 - **Composite build**: Plugin separate from test-app
+- **Version catalogs**: Centralized dependency management in `gradle/libs.versions.toml`
+- **Security-critical versions**: SnakeYAML 2.3, Commons Lang3 3.18.0 (CVE fixes)
 - **Caching**: SHA-256 hashing, global persistence in `~/.gradle/caches/openapi-modelgen/`
 - **Parallel processing**: Thread-safe multi-spec generation
 - **Incremental builds**: Only regenerates on actual changes
 - **Method-call DSL**: No `=` assignment syntax
 
+## Version Management
+
+**Version Catalogs** (`gradle/libs.versions.toml`):
+- **Centralized**: All dependency versions in one place
+- **Security tracking**: Documents security-critical version choices
+- **Composite build**: Shared via `dependencyResolutionManagement` in settings.gradle
+- **Categories**: Plugins, security-critical dependencies, core libraries, test frameworks
+
+**Security-Critical Dependencies**:
+```toml
+[versions]
+# Security fixes - DO NOT downgrade
+snakeyaml = "2.3"                    # Fixes CVE-2022-1471 (CRITICAL)
+commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
+```
+
+**Bundles** for common use cases:
+- `plugin-core`: Essential plugin dependencies
+- `plugin-test`: Testing framework dependencies  
+- `test-app-web`: Spring Boot web stack
+- `test-app-validation`: Jakarta validation stack
+
 ## File Locations
 
+- **Version catalog**: `gradle/libs.versions.toml` (shared across composite build)
 - **Plugin**: `plugin/src/main/java/.../OpenApiModelGenPlugin.java`
 - **Services**: `plugin/src/main/java/.../services/`
 - **Tests**: `plugin/src/test/java/.../`
