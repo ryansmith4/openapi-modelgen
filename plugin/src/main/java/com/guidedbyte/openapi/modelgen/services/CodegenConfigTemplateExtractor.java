@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,7 +19,7 @@ import java.util.jar.JarFile;
 
 /**
  * Template extractor using OpenAPI Generator's CodegenConfig API.
- * 
+ * <p>
  * This approach uses the APIs that are available when users include
  * the OpenAPI Generator plugin, without requiring additional dependencies.
  * 
@@ -134,7 +133,7 @@ public class CodegenConfigTemplateExtractor {
             }
             
         } catch (IOException e) {
-            logger.debug("Failed to load template resource '{}': {}", templatePath, e.getMessage());
+            logger.warn("Failed to load template resource '{}': {}", templatePath, e.getMessage());
         }
         
         return null;
@@ -248,41 +247,26 @@ public class CodegenConfigTemplateExtractor {
      * Extract templates from the file system.
      */
     private void extractFromFileSystem(Path sourcePath, Path outputPath) throws Exception {
-        Files.walk(sourcePath)
-            .filter(Files::isRegularFile)
-            .forEach(sourceFile -> {
-                try {
-                    Path relativePath = sourcePath.relativize(sourceFile);
-                    Path targetPath = outputPath.resolve(relativePath);
-                    
-                    Path parentPath = targetPath.getParent();
-                    if (parentPath != null) {
-                        Files.createDirectories(parentPath);
+        try (var pathStream = Files.walk(sourcePath)) {
+            pathStream
+                .filter(Files::isRegularFile)
+                .forEach(sourceFile -> {
+                    try {
+                        Path relativePath = sourcePath.relativize(sourceFile);
+                        Path targetPath = outputPath.resolve(relativePath);
+
+                        Path parentPath = targetPath.getParent();
+                        if (parentPath != null) {
+                            Files.createDirectories(parentPath);
+                        }
+                        Files.copy(sourceFile, targetPath);
+
+                        logger.debug("Extracted from filesystem: {}", relativePath);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to copy file: " + sourceFile, e);
                     }
-                    Files.copy(sourceFile, targetPath);
-                    
-                    logger.debug("Extracted from filesystem: {}", relativePath);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to copy file: " + sourceFile, e);
-                }
-            });
+                });
+        }
     }
     
-    /**
-     * Saves a template to a file in the working directory.
-     * 
-     * @param templateName the name of the template file
-     * @param content the template content to save
-     * @param workingDirectory the working directory to save the template in
-     * @throws IOException if file writing fails
-     */
-    public void saveTemplate(String templateName, String content, File workingDirectory) throws IOException {
-        File templateFile = new File(workingDirectory, templateName);
-        File parentFile = templateFile.getParentFile();
-        if (parentFile != null) {
-            Files.createDirectories(parentFile.toPath());
-        }
-        Files.writeString(templateFile.toPath(), content);
-        logger.debug("Saved template to: {}", templateFile.getAbsolutePath());
-    }
 }

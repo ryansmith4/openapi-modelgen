@@ -16,14 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for TemplateProcessor.
  */
 class TemplateProcessorTest {
-    
-    private Project project;
+
     private TemplateProcessor templateProcessor;
     private EvaluationContext context;
     
     @BeforeEach
     void setUp() {
-        project = ProjectBuilder.builder().build();
+        Project project = ProjectBuilder.builder().build();
         ConditionEvaluator conditionEvaluator = new ConditionEvaluator();
         templateProcessor = new TemplateProcessor(conditionEvaluator);
         

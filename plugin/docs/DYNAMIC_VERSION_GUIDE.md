@@ -9,9 +9,9 @@ The version is stored in `_data/plugin.yml` and automatically updated by GitHub 
 
 ### 2. Multiple Version Sources (Priority Order)
 1. **`site.data.version.current`** - Updated by GitHub Actions from latest release
-2. **`site.data.plugin.current_version`** - Fallback in plugin data file
-3. **`site.version.current`** - Fallback in Jekyll config
-4. **`"2.1.0"`** - Hard-coded fallback
+1. **`site.data.plugin.current_version`** - Fallback in plugin data file
+1. **`site.version.current`** - Fallback in Jekyll config
+1. **`"2.1.0"`** - Hard-coded fallback
 
 ### 3. Usage in Documentation
 
@@ -63,10 +63,10 @@ Current plugin version: **{% include plugin_version.html %}**
 ### GitHub Actions Workflow
 The `update-docs-version.yml` workflow automatically:
 1. Triggers on new releases
-2. Fetches the latest version from GitHub Releases API
-3. Updates `_data/plugin.yml` with the new version
-4. Commits and pushes the changes
-5. Triggers GitHub Pages rebuild
+1. Fetches the latest version from GitHub Releases API
+1. Updates `_data/plugin.yml` with the new version
+1. Commits and pushes the changes
+1. Triggers GitHub Pages rebuild
 
 ### Manual Update
 You can manually trigger version updates:
@@ -80,9 +80,9 @@ gh workflow run update-docs-version.yml
 The system is designed to be robust with multiple fallbacks:
 
 1. **GitHub Actions fails**: Falls back to data file version
-2. **Data file missing**: Falls back to Jekyll config version  
-3. **All dynamic sources fail**: Falls back to hard-coded version
-4. **Client-side fetch fails**: Falls back to server-side rendered version
+1. **Data file missing**: Falls back to Jekyll config version
+1. **All dynamic sources fail**: Falls back to hard-coded version
+1. **Client-side fetch fails**: Falls back to server-side rendered version
 
 ## Files Involved
 
@@ -96,17 +96,17 @@ The system is designed to be robust with multiple fallbacks:
 ## Best Practices
 
 1. **Always use includes**: `{% include plugin_version.html %}` instead of direct variables
-2. **Test locally**: Jekyll will use fallback versions during local development
-3. **Monitor automation**: Check that GitHub Actions workflow completes successfully
-4. **Validate updates**: Verify documentation renders correctly after version updates
+1. **Test locally**: Jekyll will use fallback versions during local development
+1. **Monitor automation**: Check that GitHub Actions workflow completes successfully
+1. **Validate updates**: Verify documentation renders correctly after version updates
 
 ## Troubleshooting
 
 ### Version Not Updating
 1. Check GitHub Actions workflow logs
-2. Verify `_data/plugin.yml` was updated
-3. Ensure GitHub Pages rebuild completed
-4. Clear browser cache
+1. Verify `_data/plugin.yml` was updated
+1. Ensure GitHub Pages rebuild completed
+1. Clear browser cache
 
 ### Local Development
 During local development with `jekyll serve`, the system will use fallback versions from the config file since GitHub API may not be accessible.

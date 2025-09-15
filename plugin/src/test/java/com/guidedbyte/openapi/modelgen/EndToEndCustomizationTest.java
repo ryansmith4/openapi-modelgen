@@ -1,18 +1,17 @@
 package com.guidedbyte.openapi.modelgen;
 
-import com.guidedbyte.openapi.modelgen.services.TemplateResolver;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
 import com.guidedbyte.openapi.modelgen.services.TemplateDiscoveryService;
+import com.guidedbyte.openapi.modelgen.services.TemplateResolver;
+import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.gradle.api.Project;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * End-to-end integration test for template customization pipeline.
- * 
+ * <p>
  * Tests the full flow:
  * 1. Plugin detects missing embedded template (pojo.mustache)
  * 2. Plugin extracts OpenAPI Generator base template 
@@ -30,8 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class EndToEndCustomizationTest {
     
     private Project project;
-    private OpenApiModelGenPlugin plugin;
-    
+
     @TempDir
     Path tempDir;
     
@@ -42,7 +40,7 @@ class EndToEndCustomizationTest {
             .build();
         
         // Apply our plugin
-        plugin = new OpenApiModelGenPlugin();
+        OpenApiModelGenPlugin plugin = new OpenApiModelGenPlugin();
         plugin.apply(project);
     }
     
@@ -91,7 +89,8 @@ class EndToEndCustomizationTest {
             
             // Create a temporary work directory for testing
             File workDir = tempDir.resolve("template-work").toFile();
-            workDir.mkdirs();
+            assertTrue(workDir.mkdirs() || workDir.exists(),
+                      "Failed to create work directory: " + workDir);
             
             // This should not throw an exception even with minimal setup
             assertDoesNotThrow(() -> {

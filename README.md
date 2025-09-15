@@ -361,11 +361,11 @@ The `userTemplateDir` and `userTemplateCustomizationsDir` are **source directori
 The plugin follows a strict precedence hierarchy when resolving templates:
 
 1. **Explicit User Templates** (highest precedence) - Complete `.mustache` files in `userTemplateDir`
-2. **User YAML Customizations** - Modifications defined in `userTemplateCustomizationsDir`
-3. **Library Templates** - Templates from template library JARs (if enabled)
-4. **Library YAML Customizations** - YAML customizations from template library JARs (if enabled)
-5. **Plugin YAML Customizations** - Built-in optimizations (if any configured)
-6. **OpenAPI Generator Defaults** (lowest precedence) - Standard OpenAPI Generator templates
+1. **User YAML Customizations** - Modifications defined in `userTemplateCustomizationsDir`
+1. **Library Templates** - Templates from template library JARs (if enabled)
+1. **Library YAML Customizations** - YAML customizations from template library JARs (if enabled)
+1. **Plugin YAML Customizations** - Built-in optimizations (if any configured)
+1. **OpenAPI Generator Defaults** (lowest precedence) - Standard OpenAPI Generator templates
 
 ### Template Libraries
 
@@ -409,7 +409,6 @@ dependencies {
     openapiCustomizations files('libs/local-templates.jar')
 }
 ```
-
 2. **Configure library usage** in your plugin configuration:
 
 ```gradle
@@ -919,16 +918,16 @@ Common normalizer rules:
 
 All mapping properties follow the same merge pattern:
 1. **Default-level mappings** are applied first
-2. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
-3. **Final merged mappings** are passed to OpenAPI Generator
+1. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
+1. **Final merged mappings** are passed to OpenAPI Generator
 
 ### Best Practices
 
 1. **Use YAML customizations** for small modifications and additions
-2. **Use explicit templates** only when you need complete control over the template structure
-3. **Organize by generator** - always use generator-specific subdirectories (e.g., `spring/`)
-4. **Test precedence** - remember that explicit templates override all customizations
-5. **Version compatibility** - test customizations with your target OpenAPI Generator version
+1. **Use explicit templates** only when you need complete control over the template structure
+1. **Organize by generator** - always use generator-specific subdirectories (e.g., `spring/`)
+1. **Test precedence** - remember that explicit templates override all customizations
+1. **Version compatibility** - test customizations with your target OpenAPI Generator version
 
 ### Troubleshooting Template Customization
 
@@ -1194,9 +1193,9 @@ The plugin uses semantic versioning with automated git-based version detection:
 ### Release Process
 
 1. **Development**: Work on `SNAPSHOT` versions
-2. **Testing**: Validate with `./gradlew validatePlugin`
-3. **Release**: Create tag with `./gradlew createRelease`
-4. **Publish**: Push tag and run `./gradlew publishPlugins`
+1. **Testing**: Validate with `./gradlew validatePlugin`
+1. **Release**: Create tag with `./gradlew createRelease`
+1. **Publish**: Push tag and run `./gradlew publishPlugins`
 
 ### Version Override Options
 

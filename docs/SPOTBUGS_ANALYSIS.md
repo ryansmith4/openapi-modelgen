@@ -69,8 +69,8 @@ All suppressions are documented in `plugin/spotbugs-exclude.xml` with detailed j
 
 ### Regular Reviews
 1. **New code** - Run SpotBugs on changes
-2. **Dependency updates** - Re-evaluate exclusions  
-3. **Annual audit** - Review suppression justifications
+1. **Dependency updates** - Re-evaluate exclusions  
+1. **Annual audit** - Review suppression justifications
 
 ### Monitoring  
 - SpotBugs integrated in build pipeline

@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -10,7 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for configuration validation functionality.
@@ -32,11 +32,10 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create basic settings.gradle
@@ -338,7 +337,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
     private void createValidSpec(String filename) throws IOException {
         // Create spec directory
         File specDir = new File(testProjectDir, "src/main/resources/openapi-spec");
-        specDir.mkdirs();
+        assertTrue(specDir.mkdirs() || specDir.exists());
         
         String specContent = """
             openapi: 3.0.0

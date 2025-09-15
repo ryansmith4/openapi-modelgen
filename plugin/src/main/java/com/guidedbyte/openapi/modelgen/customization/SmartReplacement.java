@@ -1,11 +1,10 @@
 package com.guidedbyte.openapi.modelgen.customization;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a version-agnostic smart replacement that tries multiple patterns.
- * 
+ * <p>
  * Smart replacements adapt to different template structures across generator versions
  * by trying multiple find patterns and using the first one that matches.
  * 

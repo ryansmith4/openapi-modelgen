@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.ConditionSet;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.semver4j.Semver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,7 +183,7 @@ public class ConditionEvaluator {
     
     /**
      * Evaluates a semantic version constraint against an actual version.
-     * 
+     * <p>
      * Supports operators: &gt;=, &gt;, &lt;=, &lt;, ~&gt;, ^
      * 
      * @param constraint the version constraint to evaluate
@@ -237,8 +238,8 @@ public class ConditionEvaluator {
      */
     private boolean evaluateVersionOperation(String actualVersion, String operator, String constraintVersion) {
         try {
-            Semver actual = Semver.parse(normalizeVersion(actualVersion));
-            Semver constraint = Semver.parse(normalizeVersion(constraintVersion));
+            Semver actual = Semver.parse(VersionUtils.normalizeVersion(actualVersion));
+            Semver constraint = Semver.parse(VersionUtils.normalizeVersion(constraintVersion));
             
             switch (operator) {
                 case ">=":
@@ -272,27 +273,6 @@ public class ConditionEvaluator {
         }
     }
     
-    /**
-     * Normalizes a version string for semver parsing.
-     */
-    private String normalizeVersion(String version) {
-        if (version == null) {
-            return "0.0.0";
-        }
-        
-        // Remove 'v' prefix if present
-        String normalized = version.startsWith("v") ? version.substring(1) : version;
-        
-        // Ensure at least three parts (major.minor.patch)
-        String[] parts = normalized.split("\\.");
-        if (parts.length == 1) {
-            return parts[0] + ".0.0";
-        } else if (parts.length == 2) {
-            return parts[0] + "." + parts[1] + ".0";
-        }
-        
-        return normalized;
-    }
     
     /**
      * Fallback string comparison for non-semver versions.

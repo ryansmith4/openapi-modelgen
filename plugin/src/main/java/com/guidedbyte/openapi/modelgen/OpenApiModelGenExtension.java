@@ -178,37 +178,140 @@ public class OpenApiModelGenExtension {
      * }</pre>
      */
     public class SpecsContainer {
-        
-        // Generic method for any spec name
-        public Object methodMissing(String name, Object args) {
-            if (args instanceof Object[]) {
-                Object[] argsArray = (Object[]) args;
+
+        /**
+         * Groovy dynamic method dispatch for OpenAPI specification configuration.
+         *
+         * <p>This method enables users to define OpenAPI specifications using any valid identifier
+         * as the specification name through Groovy's {@code methodMissing} feature. When a user
+         * calls a method that doesn't exist on this class, Groovy automatically invokes this
+         * method, allowing for flexible, declarative specification naming.</p>
+         *
+         * <h3>How it works:</h3>
+         * <ol>
+         *   <li>User writes: {@code pets { inputSpec "pets.yaml" }}</li>
+         *   <li>Groovy looks for a {@code pets()} method on SpecsContainer</li>
+         *   <li>Method not found, so Groovy calls {@code methodMissing("pets", [closure])}</li>
+         *   <li>This method creates a new {@link SpecConfig} named "pets"</li>
+         *   <li>The closure is applied to configure the specification</li>
+         *   <li>The configured spec is stored in the parent's specs map</li>
+         * </ol>
+         *
+         * <h3>Supported syntax patterns:</h3>
+         * <pre>{@code
+         * specs {
+         *     // Groovy closure syntax (most common)
+         *     pets {
+         *         inputSpec "specs/pets.yaml"
+         *         modelPackage "com.example.pets"
+         *     }
+         *
+         *     // Kotlin/Java Action syntax
+         *     orders(Action<SpecConfig> { spec ->
+         *         spec.inputSpec("specs/orders.yaml")
+         *         spec.modelPackage("com.example.orders")
+         *     })
+         * }
+         * }</pre>
+         *
+         * <h3>Naming flexibility:</h3>
+         * <p>Any valid Java/Groovy identifier can be used as a specification name:</p>
+         * <ul>
+         *   <li>{@code userApi}, {@code productCatalog}, {@code authService}</li>
+         *   <li>{@code api_v1}, {@code legacy_system}, {@code new_features}</li>
+         *   <li>{@code microserviceA}, {@code clientSDK}, {@code internalTools}</li>
+         * </ul>
+         *
+         * @param name the specification name (method name that was called)
+         * @param args the arguments passed to the method call (expected to be a single closure or action)
+         * @return always {@code null} - this method performs configuration as a side effect and doesn't return meaningful values
+         * @throws IllegalArgumentException if the method call doesn't match expected patterns
+         *
+         * @see <a href="https://groovy-lang.org/metaprogramming.html#_methodmissing">Groovy methodMissing Documentation</a>
+         */
+        public Void methodMissing(String name, Object args) {
+            // Groovy passes method arguments as an Object array
+            if (args instanceof Object[] argsArray) {
+                // We expect exactly one argument: either a Closure or an Action
                 if (argsArray.length == 1) {
                     Object arg = argsArray[0];
+
+                    // Handle Groovy closure syntax: specName { ... }
                     if (arg instanceof Closure) {
                         createSpec(name, (Closure<?>) arg);
-                        return null;
-                    } else if (arg instanceof Action) {
+                        return null; // methodMissing must return a value, null indicates success
+                    }
+                    // Handle Kotlin/Java Action syntax: specName(Action<SpecConfig> { ... })
+                    else if (arg instanceof Action) {
                         @SuppressWarnings("unchecked")
                         Action<? super SpecConfig> action = (Action<? super SpecConfig>) arg;
                         createSpec(name, action);
-                        return null;
+                        return null; // methodMissing must return a value, null indicates success
+                    }
+                    // Unknown argument type - this shouldn't happen in normal usage
+                    else {
+                        throw new IllegalArgumentException(
+                            String.format("Unsupported argument type for spec '%s': %s. Expected Closure or Action.",
+                                name, arg.getClass().getSimpleName()));
                     }
                 }
+                // Wrong number of arguments - user likely made a syntax error
+                else {
+                    throw new IllegalArgumentException(
+                        String.format("Invalid method call for spec '%s': expected 1 argument (closure or action), got %d",
+                            name, argsArray.length));
+                }
             }
-            throw new IllegalArgumentException("Unknown method: " + name);
+            // This shouldn't happen - Groovy always passes args as Object[]
+            else {
+                throw new IllegalArgumentException(
+                    String.format("Unexpected argument structure for method '%s': %s",
+                        name, args != null ? args.getClass().getSimpleName() : "null"));
+            }
         }
         
+        /**
+         * Creates and configures a new OpenAPI specification using Groovy closure syntax.
+         *
+         * <p>This method is called by {@link #methodMissing(String, Object)} when a user
+         * defines a specification using Groovy closure syntax like:</p>
+         * <pre>{@code
+         * specName {
+         *     inputSpec "path/to/spec.yaml"
+         *     modelPackage "com.example.model"
+         *     // ... other configuration
+         * }
+         * }</pre>
+         *
+         * @param name the name of the specification (becomes task name and identifier)
+         * @param closure the Groovy closure containing the specification configuration
+         */
         private void createSpec(String name, Closure<?> closure) {
             SpecConfig specConfig = new SpecConfig(project);
-            ConfigureUtil.configure(closure, specConfig);
-            specs.put(name, specConfig);
+            ConfigureUtil.configure(closure, specConfig); // Apply Groovy closure to SpecConfig
+            specs.put(name, specConfig); // Store in parent extension's specs map
         }
-        
+
+        /**
+         * Creates and configures a new OpenAPI specification using Gradle Action syntax.
+         *
+         * <p>This method is called by {@link #methodMissing(String, Object)} when a user
+         * defines a specification using Kotlin/Java Action syntax like:</p>
+         * <pre>{@code
+         * specName(Action<SpecConfig> { spec ->
+         *     spec.inputSpec("path/to/spec.yaml")
+         *     spec.modelPackage("com.example.model")
+         *     // ... other configuration
+         * })
+         * }</pre>
+         *
+         * @param name the name of the specification (becomes task name and identifier)
+         * @param action the Gradle Action containing the specification configuration
+         */
         private void createSpec(String name, Action<? super SpecConfig> action) {
             SpecConfig specConfig = new SpecConfig(project);
-            action.execute(specConfig);
-            specs.put(name, specConfig);
+            action.execute(specConfig); // Apply Action to SpecConfig
+            specs.put(name, specConfig); // Store in parent extension's specs map
         }
     }
     

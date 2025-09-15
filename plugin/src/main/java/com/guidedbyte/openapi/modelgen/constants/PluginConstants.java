@@ -84,7 +84,7 @@ public final class PluginConstants {
     /** Default hash display length for debugging (does not limit functionality). */
     public static final int HASH_DISPLAY_LENGTH = 16;
     /** Base retry delay in milliseconds for error handling. */
-    public static final int BASE_RETRY_DELAY_MS = 100;
+    public static final long BASE_RETRY_DELAY_MS = 100;
     
     // Task descriptions
     /** Description for setup template directories task. */

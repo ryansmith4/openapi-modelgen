@@ -12,11 +12,11 @@
 
 **What it does:**
 1. Clean plugin build artifacts
-2. Build plugin with configuration cache validation
-3. Clean build test-app with configuration cache validation  
-4. Run all plugin tests (247+ test methods) with configuration cache
-5. Test code generation functionality with configuration cache
-6. Confirm successful completion
+1. Build plugin with configuration cache validation
+1. Clean build test-app with configuration cache validation  
+1. Run all plugin tests (247+ test methods) with configuration cache
+1. Test code generation functionality with configuration cache
+1. Confirm successful completion
 
 **Usage:** Copy and paste the command when you need a full build cycle.
 

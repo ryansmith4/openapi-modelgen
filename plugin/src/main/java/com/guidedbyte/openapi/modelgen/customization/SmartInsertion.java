@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * Represents a semantic insertion point that adapts to template structure.
- * 
+ * <p>
  * Smart insertions find logical insertion points in templates that may vary
  * across generator versions, using semantic understanding of template structure.
  * 

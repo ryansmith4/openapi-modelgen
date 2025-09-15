@@ -4,7 +4,6 @@ import com.guidedbyte.openapi.modelgen.constants.OpenApiConfigDefaults;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class ResolvedSpecConfig {
      * 
      * @return the plugin version from build system
      */
-    private static String getPluginVersion() {
+    public static String getPluginVersion() {
         if (PLUGIN_VERSION == null) {
             synchronized (ResolvedSpecConfig.class) {
                 if (PLUGIN_VERSION == null) {

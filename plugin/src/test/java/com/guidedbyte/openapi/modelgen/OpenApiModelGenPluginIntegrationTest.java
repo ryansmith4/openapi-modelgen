@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,13 +9,13 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for OpenAPI Model Generator Plugin using Gradle TestKit
- * 
+ * <p>
  * NOTE: These tests use ${project.projectDir} for inputSpec paths due to TestKit's temporary directory setup.
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
@@ -27,17 +26,17 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
     private File specFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create spec directory
         File specDir = new File(testProjectDir, "src/main/resources/openapi-spec");
-        specDir.mkdirs();
+        assertTrue(specDir.mkdirs() || specDir.exists(),
+                  "Failed to create directory: " + specDir);
         specFile = new File(specDir, "pets.yaml");
         
         // Create basic settings.gradle
@@ -105,7 +104,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Task should succeed and generate files
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
@@ -189,12 +188,13 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: First run should succeed, second should succeed or be up-to-date
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        // Note: Due to template precedence detection improvements, incremental builds may 
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
+        // Note: Due to template precedence detection improvements, incremental builds may
         // run as SUCCESS instead of UP_TO_DATE, but this doesn't affect correctness
-        assertTrue(secondResult.task(":generatePets").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generatePets").getOutcome() == TaskOutcome.SUCCESS,
-                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generatePets").getOutcome());
+        TaskOutcome secondOutcome = Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome();
+        assertTrue(secondOutcome == TaskOutcome.UP_TO_DATE ||
+                   secondOutcome == TaskOutcome.SUCCESS,
+                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondOutcome);
     }
 
     @Test
@@ -238,9 +238,9 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Both tasks should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateOrders").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateAllModels").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateOrders")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateAllModels")).getOutcome());
     }
 
     @Test
@@ -250,7 +250,8 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         
         // Create custom template directory and file
         File templateDir = new File(testProjectDir, "src/main/resources/templates");
-        templateDir.mkdirs();
+        assertTrue(templateDir.mkdirs() || templateDir.exists(),
+                  "Failed to create directory: " + templateDir);
         
         File customTemplate = new File(templateDir, "pojo.mustache");
         Files.write(customTemplate.toPath(), 
@@ -288,7 +289,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Task should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify custom template was used (check for custom comment in generated files)
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
@@ -329,7 +330,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Help should be displayed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateHelp").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateHelp")).getOutcome());
         assertTrue(result.getOutput().contains("OpenAPI Model Generator Plugin"));
         assertTrue(result.getOutput().contains("generatePets"));
         assertTrue(result.getOutput().contains("Configuration Example"));
@@ -373,7 +374,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Generated files should contain Lombok annotations
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -425,7 +426,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Template variables should be resolved
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));

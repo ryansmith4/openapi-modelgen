@@ -6,7 +6,6 @@ import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
-import org.gradle.api.file.FileSystemOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,7 @@ import java.nio.file.Files;
  * Configuration-cache compatible task action that prepares template working directory
  * using pre-resolved template configuration. This action operates without any project references,
  * making it fully compatible with Gradle's configuration cache.
- * 
+ * <p>
  * This action also sets the OpenAPI Generator's templateDir property at execution time
  * after creating the working directory, ensuring configuration cache compatibility.
  */

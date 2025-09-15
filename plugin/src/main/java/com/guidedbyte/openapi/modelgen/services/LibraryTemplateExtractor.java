@@ -317,7 +317,7 @@ public class LibraryTemplateExtractor {
             // At least one should be present
             return hasTemplates || hasCustomizations || hasMetadata;
         } catch (IOException e) {
-            logger.debug("Failed to validate JAR as template library: {}", jarFile.getName(), e);
+            logger.warn("Failed to validate JAR as template library: {}", jarFile.getName(), e);
             return false;
         }
     }

@@ -59,9 +59,9 @@ The plugin has achieved excellent adoption with comprehensive test coverage (21 
 
 ### Primary Goals
 1. **Fix Critical Infrastructure** - Robust version detection for conditional customizations
-2. **Improve Developer Experience** - Better logging, debugging, and error messages
-3. **Standardize Error Handling** - Consistent patterns across all services
-4. **Enhance Code Maintainability** - Remove hardcoded values and improve structure
+1. **Improve Developer Experience** - Better logging, debugging, and error messages
+1. **Standardize Error Handling** - Consistent patterns across all services
+1. **Enhance Code Maintainability** - Remove hardcoded values and improve structure
 
 ### Success Metrics
 - ✅ **ACHIEVED:** Version-conditional customizations work reliably (OpenApiGeneratorVersionDetector implemented)
@@ -253,7 +253,7 @@ Our implementation follows **standard SLF4J MDC patterns** at the core while add
    LoggingContext.clear();
    ```
 
-2. **Standard Logback Configuration** - Works with any SLF4J-compliant logger
+1. **Standard Logback Configuration** - Works with any SLF4J-compliant logger
    ```xml
    <!-- 100% standard logback configuration -->
    <configuration>
@@ -272,7 +272,7 @@ Our implementation follows **standard SLF4J MDC patterns** at the core while add
 
 **Our Solution:** Add a compatibility layer that preserves standard MDC while providing enhanced console output.
 
-3. **ContextAwareLogger** - Gradle-compatible console enhancement
+1. **ContextAwareLogger** - Gradle-compatible console enhancement
    ```java
    // This is our NON-STANDARD extension to work around Gradle limitations
    public class ContextAwareLogger {
@@ -299,7 +299,7 @@ Our implementation follows **standard SLF4J MDC patterns** at the core while add
 
 ### User Configuration System (Our Extension)
 
-4. **LoggingContextFormatter** - User-configurable context display
+1. **LoggingContextFormatter** - User-configurable context display
    ```java
    // This provides user customization of how MDC context appears in console
    public class LoggingContextFormatter {
@@ -372,8 +372,8 @@ logger.debug(message, args); // Just use standard logging - MDC works automatica
 
 **Migration Path:**
 1. **Phase 1 (Today):** Use our compatibility layer + standard MDC
-2. **Phase 2 (Future Gradle):** Detect MDC support, prefer standard logging
-3. **Phase 3 (Long-term):** Deprecate compatibility layer, pure SLF4J
+1. **Phase 2 (Future Gradle):** Detect MDC support, prefer standard logging
+1. **Phase 3 (Long-term):** Deprecate compatibility layer, pure SLF4J
 
 **Code Required for Future Compatibility:**
 ```java
@@ -413,11 +413,11 @@ public static void debug(Logger logger, boolean debugEnabled, String message, Ob
 ### Design Benefits
 
 1. **✅ Standards Compliant:** Core logging follows SLF4J patterns exactly
-2. **✅ Future Compatible:** Easy migration when Gradle improves
-3. **✅ User Friendly:** Gradle console shows context despite limitations  
-4. **✅ Flexible:** Users control presentation without changing logging code
-5. **✅ No Lock-in:** Remove our layer anytime, standard logging remains
-6. **✅ Testable:** Standard MDC testing patterns work unchanged
+1. **✅ Future Compatible:** Easy migration when Gradle improves
+1. **✅ User Friendly:** Gradle console shows context despite limitations  
+1. **✅ Flexible:** Users control presentation without changing logging code
+1. **✅ No Lock-in:** Remove our layer anytime, standard logging remains
+1. **✅ Testable:** Standard MDC testing patterns work unchanged
 
 ### 🤔 DESIGN CONSIDERATION: SLF4J-Compatible `logPattern`
 
@@ -452,7 +452,7 @@ logPattern "%d{HH:mm:ss} [%X{spec}:%X{template}] - %msg"
    loggingContextFormat "[{{spec}}:{{template}}]"  // New syntax to learn
    ```
 
-2. **✅ Future-Proof Migration**
+1. **✅ Future-Proof Migration**
    ```xml
    <!-- When Gradle supports MDC, users can copy-paste directly to logback.xml -->
    <pattern>[%X{spec}:%X{template}] - %msg%n</pattern>
@@ -461,7 +461,7 @@ logPattern "%d{HH:mm:ss} [%X{spec}:%X{template}] - %msg"
    <pattern>[{{spec}}:{{template}}] - %msg%n</pattern> <!-- This won't work in logback -->
    ```
 
-3. **✅ Conditional Logic with Standard SLF4J**
+1. **✅ Conditional Logic with Standard SLF4J**
    ```gradle
    // Standard SLF4J approach (works in logback.xml too)
    logPattern "[%X{spec}]%X{template:+:%X{template}}"  // SLF4J conditional syntax
@@ -860,10 +860,10 @@ logPattern "%d{HH:mm:ss.SSS} [%thread] %-5level [%X{spec}:%X{template}] - %msg%n
 **Why SimpleSLF4JFormatter is the better choice:**
 
 1. **✅ Faster Implementation**: Can complete Phase 2B quickly and reliably
-2. **✅ Lower Risk**: Simple implementation reduces chance of bugs
-3. **✅ Meets Real Needs**: Covers 95% of actual user requirements
-4. **✅ Better UX**: Clear predefined options are easier for users
-5. **✅ Future Extensible**: Easy to add new predefined formats based on user feedback
+1. **✅ Lower Risk**: Simple implementation reduces chance of bugs
+1. **✅ Meets Real Needs**: Covers 95% of actual user requirements
+1. **✅ Better UX**: Clear predefined options are easier for users
+1. **✅ Future Extensible**: Easy to add new predefined formats based on user feedback
 
 ### Future Evolution Path:
 
@@ -1072,11 +1072,11 @@ public class EnhancedPatternParser {
 ### Benefits of This Enhanced Approach:
 
 1. **✅ Global Simplicity** - One format configuration for entire plugin
-2. **✅ Format Modifier Support** - Professional log alignment and formatting  
-3. **✅ High Performance** - Compiled patterns with minimal runtime overhead
-4. **✅ Real SLF4J Compatibility** - Supports the formatting users expect
-5. **✅ Spec Differentiation** - Context naturally shows which spec is processing
-6. **✅ Debug Control** - Users enable/disable debug per spec as needed
+1. **✅ Format Modifier Support** - Professional log alignment and formatting  
+1. **✅ High Performance** - Compiled patterns with minimal runtime overhead
+1. **✅ Real SLF4J Compatibility** - Supports the formatting users expect
+1. **✅ Spec Differentiation** - Context naturally shows which spec is processing
+1. **✅ Debug Control** - Users enable/disable debug per spec as needed
 
 ### Migration from Phase 1:
 
@@ -1131,12 +1131,12 @@ openapiModelgen {
 #### Benefits of Property-Based Approach:
 
 1. **✅ Explicit Control** - No guessing about Gradle capabilities
-2. **✅ Simple Implementation** - No runtime detection logic needed
-3. **✅ Future-Proof** - Users can opt into native formatting when ready
-4. **✅ Standards Compliant** - Single SLF4J pattern format
-5. **✅ Zero Custom Parsing** - Leverage Logback's PatternLayout
-6. **✅ Testable** - Clear behavior based on configuration
-7. **✅ Performance** - No runtime capability detection overhead
+1. **✅ Simple Implementation** - No runtime detection logic needed
+1. **✅ Future-Proof** - Users can opt into native formatting when ready
+1. **✅ Standards Compliant** - Single SLF4J pattern format
+1. **✅ Zero Custom Parsing** - Leverage Logback's PatternLayout
+1. **✅ Testable** - Clear behavior based on configuration
+1. **✅ Performance** - No runtime capability detection overhead
 
 #### Migration Strategy:
 
@@ -1158,10 +1158,10 @@ openapiModelgen {
 
 **Final Recommendation:**
 1. **Property control:** `logPatternSrc` with `"plugin"` (default) and `"native"` options
-2. **Single format:** Standard SLF4J patterns only (`%X{key}`, `%msg`, etc.)
-3. **Leverage SLF4J:** Use Logback's PatternLayout (no custom parsing)
-4. **Predefined shortcuts:** Map common names to SLF4J patterns
-5. **Clean migration:** Deprecate `loggingContextFormat` custom syntax
+1. **Single format:** Standard SLF4J patterns only (`%X{key}`, `%msg`, etc.)
+1. **Leverage SLF4J:** Use Logback's PatternLayout (no custom parsing)
+1. **Predefined shortcuts:** Map common names to SLF4J patterns
+1. **Clean migration:** Deprecate `loggingContextFormat` custom syntax
 
 #### Implementation Impact
 - **✅ Production logs** remain clean (INFO level shows only major operations)
@@ -1223,10 +1223,10 @@ public class ErrorHandlingUtils {
 
 **Applied Across All Key Services:**
 1. **ConfigurationValidator** - Using `validateOrThrow()` for consistent validation error handling
-2. **LibraryProcessor** - Enhanced with `createConfigurationError()` and `formatLibraryError()`  
-3. **TemplateProcessor** - Applied `formatTemplateError()` for consistent template error messaging
-4. **CustomizationEngine** - File operations using `handleFileOperation()` with actionable guidance
-5. **TemplateCacheManager** - Improved file operations and validation with consistent error handling
+1. **LibraryProcessor** - Enhanced with `createConfigurationError()` and `formatLibraryError()`  
+1. **TemplateProcessor** - Applied `formatTemplateError()` for consistent template error messaging
+1. **CustomizationEngine** - File operations using `handleFileOperation()` with actionable guidance
+1. **TemplateCacheManager** - Improved file operations and validation with consistent error handling
 
 **Implementation Benefits Achieved:**
 - ✅ **Consistent error message formats** across all services
@@ -1356,13 +1356,13 @@ public class OpenApiGeneratorVersionDetector {
    // Fail-fast if version cannot be detected
    ```
 
-2. **Updated TemplateCacheManager** - Uses detector instead of hardcoded fallback
+1. **Updated TemplateCacheManager** - Uses detector instead of hardcoded fallback
    ```java
    // BEFORE: String detectedVersion = "7.14.0"; // Hardcoded fallback
    // AFTER: String detectedVersion = versionDetector.detectVersionOrFail(project);
    ```
 
-3. **Comprehensive Test Suite** - `OpenApiGeneratorVersionDetectorTest`
+1. **Comprehensive Test Suite** - `OpenApiGeneratorVersionDetectorTest`
    - Tests all three detection strategies
    - Validates fail-fast behavior when version unavailable
    - Uses real project configurations for testing
@@ -1520,8 +1520,8 @@ open plugin/build/reports/security/dependency-check-report.html
 
 ##### API Key Setup Steps:
 1. **Register:** Go to https://nvd.nist.gov/developers/request-an-api-key
-2. **Request:** Fill out form (usually approved within 24-48 hours)
-3. **Configure:** Set environment variable in your shell profile:
+1. **Request:** Fill out form (usually approved within 24-48 hours)
+1. **Configure:** Set environment variable in your shell profile:
    ```bash
    # Add to ~/.bashrc, ~/.zshrc, or ~/.profile
    export NVD_API_KEY="your-api-key-here"
@@ -1530,7 +1530,7 @@ open plugin/build/reports/security/dependency-check-report.html
    export NVD_API_KEY="your-api-key-here"
    ./gradlew preReleaseSecurityScan
    ```
-4. **Gradle Properties Alternative:**
+1. **Gradle Properties Alternative:**
    ```properties
    # ~/.gradle/gradle.properties (user home - secure)
    nvdApiKey=your-api-key-here
@@ -1579,9 +1579,9 @@ Add to release checklist:
 #### Approach
 Before implementing any optimizations:
 1. **Profile current memory usage** during large builds
-2. **Analyze heap dumps** for actual leak patterns
-3. **Benchmark cache effectiveness** with realistic workloads
-4. **Only optimize if evidence supports the need**
+1. **Analyze heap dumps** for actual leak patterns
+1. **Benchmark cache effectiveness** with realistic workloads
+1. **Only optimize if evidence supports the need**
 
 #### Potential Solutions (if needed)
 - Built-in Java collections with size limits (no Guava dependency)
@@ -1765,9 +1765,9 @@ public class BatchFileOperations {
 
 #### CVE Resolution Strategy:
 1. **Immediate Action Required** - CRITICAL/HIGH severity CVEs affecting production usage
-2. **Evaluate & Update** - MEDIUM severity CVEs, update dependencies if feasible
-3. **Document & Suppress** - LOW severity or false positive CVEs with clear justification
-4. **Monitor** - Establish process for ongoing CVE monitoring post-release
+1. **Evaluate & Update** - MEDIUM severity CVEs, update dependencies if feasible
+1. **Document & Suppress** - LOW severity or false positive CVEs with clear justification
+1. **Monitor** - Establish process for ongoing CVE monitoring post-release
 
 **✅ Phase 4 Deliverables - COMPLETED:**
 - ✅ **Security scan report** - Zero vulnerabilities found (reduced from 12 initial findings)
@@ -1783,17 +1783,17 @@ public class BatchFileOperations {
    - **Resolution:** Upgraded SnakeYAML from 1.33 → 2.3
    - **Status:** ✅ **RESOLVED** - Vulnerability eliminated
 
-2. **CVE-2025-48924, CVE-2025-53864** - Commons Lang3 & Gson  
+1. **CVE-2025-48924, CVE-2025-53864** - Commons Lang3 & Gson  
    - **Assessment:** Future-dated CVEs (2025) - identified as false positives/test data
    - **Resolution:** Suppressed with documentation 
    - **Status:** ✅ **SUPPRESSED** - Not real vulnerabilities
 
-3. **jQuery CVEs (Multiple)** - In OpenAPI Generator embedded resources
+1. **jQuery CVEs (Multiple)** - In OpenAPI Generator embedded resources
    - **Assessment:** Not exploitable in build-time plugin context
    - **Resolution:** Suppressed - transitive dependency in compile-only scope
    - **Status:** ✅ **SUPPRESSED** - No production impact
 
-4. **CVE-2024-23081** - ThreeTen Backport
+1. **CVE-2024-23081** - ThreeTen Backport
    - **Assessment:** Transitive dependency, minimal risk in build context  
    - **Resolution:** Temporary suppression with expiration date for review
    - **Status:** ✅ **SUPPRESSED** - Scheduled for future review
@@ -1917,8 +1917,8 @@ loggingContextFormat "spec={{spec}}{{#template}} template={{template}}{{/templat
 
 #### Configuration Priority (Inheritance Rules)
 1. **Spec-level `loggingContextFormat`** (highest priority)
-2. **Global defaults `loggingContextFormat`** 
-3. **Built-in default** (`"default"` format)
+1. **Global defaults `loggingContextFormat`** 
+1. **Built-in default** (`"default"` format)
 
 ```gradle
 openapiModelgen {
@@ -1946,16 +1946,16 @@ openapiModelgen {
 
 #### ✅ Phase 1 Completed Changes:
 1. **Logging Levels:** Debug information moved from INFO to DEBUG level
-2. **Log Context:** All debug logs now include configurable spec/template context  
-3. **Console Logging:** Enhanced context display that works around Gradle MDC limitations
-4. **File Logging:** Rich debug logs created at `build/logs/openapi-modelgen-debug.log`
-5. **Configurable Context:** Users can customize logging format via `loggingContextFormat`
-6. **Debug Experience:** Rich template resolution visibility with `--debug` flag
-7. **Production Logs:** Cleaner with only major operations at INFO level
-8. **Version Detection:** Robust multi-strategy detection replaces hardcoded fallback
+1. **Log Context:** All debug logs now include configurable spec/template context  
+1. **Console Logging:** Enhanced context display that works around Gradle MDC limitations
+1. **File Logging:** Rich debug logs created at `build/logs/openapi-modelgen-debug.log`
+1. **Configurable Context:** Users can customize logging format via `loggingContextFormat`
+1. **Debug Experience:** Rich template resolution visibility with `--debug` flag
+1. **Production Logs:** Cleaner with only major operations at INFO level
+1. **Version Detection:** Robust multi-strategy detection replaces hardcoded fallback
 
 #### ✅ Phase 2 Completed Changes:
-9. **SLF4J-Compatible Logging:** ✅ **COMPLETED** - Full `SLF4JPatternFormatter` implementation with pattern compilation
+1. **SLF4J-Compatible Logging:** ✅ **COMPLETED** - Full `SLF4JPatternFormatter` implementation with pattern compilation
 10. **Pattern Source Control:** ✅ **COMPLETED** - `logPatternSrc` property (`"plugin"` default, `"native"` for future)
 11. **Enhanced Error Context:** ✅ **COMPLETED** - Better error messages with actionable guidance via `ErrorHandlingUtils`
 12. **Standardized Error Handling:** ✅ **COMPLETED** - Consistent exception patterns across all services
@@ -1992,9 +1992,9 @@ openapiModelgen {
 
 ### Mitigation Strategies
 1. **Conservative Approach:** Focus on proven issues first
-2. **Incremental Testing:** Validate each change independently
-3. **Rollback Plan:** Version 2.0.3 remains available
-4. **Evidence-Based:** Only implement changes that address real problems
+1. **Incremental Testing:** Validate each change independently
+1. **Rollback Plan:** Version 2.0.3 remains available
+1. **Evidence-Based:** Only implement changes that address real problems
 
 ## Success Criteria
 

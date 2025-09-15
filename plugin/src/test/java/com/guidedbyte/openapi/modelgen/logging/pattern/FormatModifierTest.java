@@ -96,8 +96,8 @@ class FormatModifierTest {
         assertEquals(modifier1.hashCode(), modifier2.hashCode());
         assertNotEquals(modifier1, modifier3);
         assertNotEquals(modifier1, modifier4);
-        assertNotEquals(modifier1, null);
-        assertNotEquals(modifier1, "string");
+        assertNotEquals(null, modifier1);
+        assertNotEquals("string", modifier1);
     }
 
     @Test

@@ -2,7 +2,7 @@ package com.guidedbyte.openapi.modelgen.customization;
 
 /**
  * Represents a find/replace operation in template customization.
- * 
+ * <p>
  * Replacements modify existing content in templates, supporting:
  * - Simple string replacement
  * - Multi-line replacement

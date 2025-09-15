@@ -1,6 +1,5 @@
 package com.guidedbyte.openapi.modelgen.services;
 
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;

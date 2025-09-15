@@ -60,6 +60,7 @@ public class PluginFunctionalTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring extension
+        assertNotNull(extension);
         extension.getDefaults().outputDir("build/custom-output");
         extension.getDefaults().modelNameSuffix("Entity");
         extension.getDefaults().validateSpec(true);
@@ -81,6 +82,7 @@ public class PluginFunctionalTest {
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.inputSpec("src/main/resources/pets.yaml");
         specConfig.modelPackage("com.example.model");
+        assertNotNull(extension);
         extension.getSpecs().put("pets", specConfig);
 
         // Then: Spec should be configured
@@ -99,6 +101,7 @@ public class PluginFunctionalTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: No specs are configured
+        assertNotNull(extension);
         assertTrue(extension.getSpecs().isEmpty(), "Specs should be empty initially");
 
         // Then: Extension should be registered but no generation tasks exist yet
@@ -130,6 +133,7 @@ public class PluginFunctionalTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // Then: Default values should not be set initially
+        assertNotNull(extension);
         assertFalse(extension.getDefaults().getOutputDir().isPresent());
         assertFalse(extension.getDefaults().getModelNameSuffix().isPresent());
         assertFalse(extension.getDefaults().getValidateSpec().isPresent());
@@ -163,7 +167,8 @@ public class PluginFunctionalTest {
         SpecConfig ordersSpec = new SpecConfig(project);
         ordersSpec.inputSpec("orders.yaml");
         ordersSpec.modelPackage("com.example.orders");
-        
+
+        assertNotNull(extension);
         extension.getSpecs().put("pets", petsSpec);
         extension.getSpecs().put("orders", ordersSpec);
 

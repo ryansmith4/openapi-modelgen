@@ -453,26 +453,26 @@ The plugin performs comprehensive validation on customization files:
 ### Organization
 
 1. **Use metadata** - Document your customizations with metadata
-2. **Version your schemas** - Track customization versions
-3. **Group related changes** - Keep related customizations together
+1. **Version your schemas** - Track customization versions
+1. **Group related changes** - Keep related customizations together
 
 ### Conditions
 
 1. **Prefer specific conditions** - Use precise patterns and version constraints
-2. **Provide fallbacks** - Handle edge cases with fallback insertions/replacements
-3. **Test thoroughly** - Validate customizations across OpenAPI Generator versions
+1. **Provide fallbacks** - Handle edge cases with fallback insertions/replacements
+1. **Test thoroughly** - Validate customizations across OpenAPI Generator versions
 
 ### Content
 
 1. **Preserve formatting** - Match existing template indentation and style
-2. **Use template variables** - Leverage existing variables when possible  
-3. **Document patterns** - Comment complex patterns and logic
+1. **Use template variables** - Leverage existing variables when possible  
+1. **Document patterns** - Comment complex patterns and logic
 
 ### Performance
 
 1. **Minimize conditions** - Simple conditions evaluate faster
-2. **Cache-friendly patterns** - Use consistent patterns across files
-3. **Avoid redundant customizations** - Don't duplicate existing functionality
+1. **Cache-friendly patterns** - Use consistent patterns across files
+1. **Avoid redundant customizations** - Don't duplicate existing functionality
 
 ## Troubleshooting
 
@@ -518,10 +518,10 @@ Version 2.0 introduced breaking changes:
 Converting from `.mustache` files to YAML customizations:
 
 1. Identify differences from base template
-2. Extract additions as insertions
-3. Extract modifications as replacements  
-4. Add appropriate conditions
-5. Test thoroughly
+1. Extract additions as insertions
+1. Extract modifications as replacements  
+1. Add appropriate conditions
+1. Test thoroughly
 
 ## Schema Changelog
 

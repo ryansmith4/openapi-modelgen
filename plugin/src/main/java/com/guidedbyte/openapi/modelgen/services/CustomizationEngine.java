@@ -1,33 +1,24 @@
 package com.guidedbyte.openapi.modelgen.services;
 
-import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
-import com.guidedbyte.openapi.modelgen.util.DebugLogger;
-import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
-import com.guidedbyte.openapi.modelgen.services.RichFileLogger;
-import org.apache.commons.lang3.StringUtils;
+import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.constructor.ConstructorException;
 import org.yaml.snakeyaml.nodes.Node;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -68,39 +59,6 @@ public class CustomizationEngine {
         this.yamlValidator = new YamlValidator();
     }
     
-    /**
-     * Parses a YAML customization file safely and validates its structure.
-     * 
-     * @param yamlFile the customization YAML file to parse
-     * @return parsed and validated customization configuration
-     * @throws CustomizationException if parsing or validation fails
-     */
-    public CustomizationConfig parseCustomizationYaml(File yamlFile) throws CustomizationException {
-        LoggingContext.setComponent("CustomizationEngine");
-        try {
-            // Use ErrorHandlingUtils for consistent file validation
-            ErrorHandlingUtils.validateFileExists(yamlFile.toPath(), "Customization file", logger);
-            
-            // Use ErrorHandlingUtils for file operations with proper error context
-            return ErrorHandlingUtils.handleFileOperation(
-                () -> {
-                    try (InputStream inputStream = new FileInputStream(yamlFile)) {
-                        return parseCustomizationYaml(inputStream, yamlFile.getName());
-                    } catch (CustomizationException e) {
-                        throw new RuntimeException(e.getMessage(), e);
-                    }
-                },
-                "Failed to read customization file: " + yamlFile.getPath(),
-                ErrorHandlingUtils.PERMISSION_GUIDANCE,
-                logger
-            );
-        } catch (RuntimeException e) {
-            // Convert RuntimeException from ErrorHandlingUtils back to CustomizationException
-            throw new CustomizationException(e.getMessage(), e.getCause());
-        } finally {
-            LoggingContext.clear();
-        }
-    }
     
     /**
      * Parses YAML content from an input stream.
@@ -205,22 +163,23 @@ public class CustomizationEngine {
         
         // Check cache first
         String cacheKey = computeCustomizationCacheKey(baseTemplate, config, context);
+        String cacheKeyPreview = cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...";
         String cachedResult = customizationResultCache.get(cacheKey);
-        
+
         if (cachedResult != null) {
             DebugLogger.debug(logger, debugEnabled,
-                "Using cached customization result (key: {})", 
-                cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...");
+                "Using cached customization result (key: {})",
+                cacheKeyPreview);
             return cachedResult;
         }
-        
+
             // Apply customizations and cache result
             String result = applyCustomizationsInternal(baseTemplate, config, context);
             customizationResultCache.put(cacheKey, result);
-            
+
             DebugLogger.debug(logger, debugEnabled,
-                "Cached customization result (key: {}, cache size: {})", 
-                cacheKey.substring(0, Math.min(16, cacheKey.length())) + "...", customizationResultCache.size());
+                "Cached customization result (key: {}, cache size: {})",
+                cacheKeyPreview, customizationResultCache.size());
             
             return result;
         } finally {
@@ -367,8 +326,7 @@ public class CustomizationEngine {
         try {
             // Parse the raw YAML again to get the expected structure
             Yaml basicYaml = new Yaml();
-            @SuppressWarnings("unchecked")
-            Map<String, Object> rawYaml = (Map<String, Object>) basicYaml.load(yamlContent);
+            Map<String, Object> rawYaml = basicYaml.load(yamlContent);
             
             if (rawYaml == null) {
                 return; // Empty YAML is handled elsewhere
@@ -467,52 +425,66 @@ public class CustomizationEngine {
      */
     private void validateYamlStructure(String yamlContent, String sourceName) throws CustomizationException {
         try {
-            // Create a basic YAML loader for structural validation (no type binding)
-            Yaml yaml = new Yaml();
-            Object parsed = yaml.load(yamlContent);
-            
-            if (parsed == null) {
-                throw new CustomizationException("Empty YAML content in: " + sourceName);
-            }
-            
-            if (!(parsed instanceof java.util.Map)) {
-                throw new CustomizationException("YAML root must be an object/map in: " + sourceName);
-            }
-            
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> root = (java.util.Map<String, Object>) parsed;
-            
+            java.util.Map<String, Object> root = parseAndValidateYamlRoot(yamlContent, sourceName);
+
             // Validate root-level properties
             validateRootProperties(root, sourceName);
-            
+
             // Validate insertions structure
             if (root.containsKey("insertions")) {
                 validateInsertionsStructure(root.get("insertions"), sourceName);
             }
-            
-            // Validate replacements structure  
+
+            // Validate replacements structure
             if (root.containsKey("replacements")) {
                 validateReplacementsStructure(root.get("replacements"), sourceName);
             }
-            
+
             // Validate smart replacements structure
             if (root.containsKey("smartReplacements")) {
                 validateSmartReplacementsStructure(root.get("smartReplacements"), sourceName);
             }
-            
+
             // Validate smart insertions structure
             if (root.containsKey("smartInsertions")) {
                 validateSmartInsertionsStructure(root.get("smartInsertions"), sourceName);
             }
-            
+
             logger.debug("YAML structure validation passed");
-            
+
         } catch (Exception e) {
             if (e instanceof CustomizationException) {
                 throw e;
             }
             throw new CustomizationException("YAML structure validation failed for " + sourceName + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Parses YAML content and validates the root structure.
+     *
+     * @param yamlContent the raw YAML content to parse
+     * @param sourceName the source name for error reporting
+     * @return the validated root map object
+     * @throws CustomizationException if parsing or root validation fails
+     */
+    private java.util.Map<String, Object> parseAndValidateYamlRoot(String yamlContent, String sourceName) throws CustomizationException {
+        // Create a basic YAML loader for structural validation (no type binding)
+        Yaml yaml = new Yaml();
+        Object parsed = yaml.load(yamlContent);
+
+        if (parsed == null) {
+            throw new CustomizationException("Empty YAML content in: " + sourceName);
+        }
+
+        if (!(parsed instanceof java.util.Map)) {
+            throw new CustomizationException("YAML root must be an object/map in: " + sourceName);
+        }
+
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> root = (java.util.Map<String, Object>) parsed;
+
+        return root;
     }
     
     private void validateRootProperties(java.util.Map<String, Object> root, String sourceName) throws CustomizationException {
@@ -582,39 +554,51 @@ public class CustomizationEngine {
         if (!(replacements instanceof java.util.List)) {
             throw new CustomizationException("'replacements' must be a list/array in: " + sourceName);
         }
-        
+
         @SuppressWarnings("unchecked")
         java.util.List<Object> replacementList = (java.util.List<Object>) replacements;
-        
+
         for (int i = 0; i < replacementList.size(); i++) {
             Object item = replacementList.get(i);
             if (!(item instanceof java.util.Map)) {
                 throw new CustomizationException("replacements[" + i + "] must be an object in: " + sourceName);
             }
-            
+
             @SuppressWarnings("unchecked")
             java.util.Map<String, Object> replacement = (java.util.Map<String, Object>) item;
-            
-            // Check for required properties
-            if (!replacement.containsKey("find")) {
-                throw new CustomizationException("replacements[" + i + "] must have 'find' property in: " + sourceName);
-            }
-            if (!replacement.containsKey("replace")) {
-                throw new CustomizationException("replacements[" + i + "] must have 'replace' property in: " + sourceName);
-            }
-            
-            // Check for invalid property names
-            java.util.Set<String> allowedReplacementProps = java.util.Set.of(
-                "find", "replace", "type", "conditions", "fallback"
-            );
-            
-            for (String key : replacement.keySet()) {
-                if (!allowedReplacementProps.contains(key)) {
-                    throw new CustomizationException(
-                        "Unknown property '" + key + "' in replacements[" + i + "] in " + sourceName + 
-                        ". Allowed properties: " + allowedReplacementProps
-                    );
-                }
+
+            validateSingleReplacement(replacement, i, sourceName);
+        }
+    }
+
+    /**
+     * Validates the structure and properties of a single replacement object.
+     *
+     * @param replacement the replacement map to validate
+     * @param index the index of this replacement in the list (for error reporting)
+     * @param sourceName the source name for error reporting
+     * @throws CustomizationException if the replacement structure is invalid
+     */
+    private void validateSingleReplacement(java.util.Map<String, Object> replacement, int index, String sourceName) throws CustomizationException {
+        // Check for required properties
+        if (!replacement.containsKey("find")) {
+            throw new CustomizationException("replacements[" + index + "] must have 'find' property in: " + sourceName);
+        }
+        if (!replacement.containsKey("replace")) {
+            throw new CustomizationException("replacements[" + index + "] must have 'replace' property in: " + sourceName);
+        }
+
+        // Check for invalid property names
+        java.util.Set<String> allowedReplacementProps = java.util.Set.of(
+            "find", "replace", "type", "conditions", "fallback"
+        );
+
+        for (String key : replacement.keySet()) {
+            if (!allowedReplacementProps.contains(key)) {
+                throw new CustomizationException(
+                    "Unknown property '" + key + "' in replacements[" + index + "] in " + sourceName +
+                    ". Allowed properties: " + allowedReplacementProps
+                );
             }
         }
     }
@@ -760,24 +744,7 @@ public class CustomizationEngine {
         }
     }
     
-    /**
-     * Clears the customization result cache. Useful for memory management and testing.
-     */
-    public void clearCustomizationCache() {
-        int cacheSize = customizationResultCache.size();
-        customizationResultCache.clear();
-        if (cacheSize > 0) {
-            logger.debug("Cleared customization result cache ({} entries)", cacheSize);
-        }
-    }
     
-    /**
-     * Returns the current size of the customization result cache.
-     * @return the number of cached customization results
-     */
-    public int getCacheSize() {
-        return customizationResultCache.size();
-    }
     
     /**
      * High-level method to process template customizations for a complete template working directory.
@@ -794,7 +761,7 @@ public class CustomizationEngine {
         LoggingContext.setComponent("CustomizationEngine");
         
         // Optional: Enable rich file logging for power users
-        RichFileLogger richLogger = null;
+        RichFileLogger richLogger;
         if (templateConfig.isDebug()) {
             File buildDir = templateWorkDir.getParentFile().getParentFile(); // Navigate up from template-work/spring-pets to build
             richLogger = RichFileLogger.forBuildDir(buildDir);
@@ -1322,7 +1289,7 @@ public class CustomizationEngine {
     /**
      * Discovers customizations from the file system (development mode).
      */
-    private java.util.Set<String> discoverCustomizationsFromFileSystem(java.net.URL dirUrl) throws java.io.IOException {
+    private java.util.Set<String> discoverCustomizationsFromFileSystem(java.net.URL dirUrl) {
         java.util.Set<String> customizations = new java.util.HashSet<>();
         
         java.io.File dir = new java.io.File(dirUrl.getPath());
@@ -1505,8 +1472,12 @@ public class CustomizationEngine {
             
             // Try alternative approach using manifest
             Class<?> codegenClass = org.openapitools.codegen.CodegenConfig.class;
-            String classPath = codegenClass.getResource(
-                codegenClass.getSimpleName() + ".class").toString();
+            java.net.URL resourceUrl = codegenClass.getResource(codegenClass.getSimpleName() + ".class");
+            if (resourceUrl == null) {
+                logger.debug("Could not find CodegenConfig class resource for version detection");
+                return PluginConstants.UNKNOWN_VERSION;
+            }
+            String classPath = resourceUrl.toString();
             
             if (classPath.startsWith("jar:")) {
                 // Extract version from JAR path if possible
@@ -1526,7 +1497,7 @@ public class CustomizationEngine {
                 }
             }
         } catch (Exception e) {
-            logger.debug("Failed to detect OpenAPI Generator version: {}", e.getMessage());
+            logger.warn("Failed to detect OpenAPI Generator version: {}", e.getMessage());
         }
         
         // Fallback to a reasonable default

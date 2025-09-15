@@ -2,6 +2,8 @@ package com.guidedbyte.openapi.modelgen.logging.pattern;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * High-performance parser for SLF4J log patterns that converts them into compiled elements.
@@ -20,6 +22,8 @@ import java.util.List;
  * @since 2.1.0
  */
 public class EnhancedPatternParser {
+
+    private static final Logger logger = LoggerFactory.getLogger(EnhancedPatternParser.class);
     
     /**
      * Parses an SLF4J pattern string into a list of pattern elements for high-performance formatting.
@@ -44,7 +48,7 @@ public class EnhancedPatternParser {
                 char nextChar = pattern.charAt(i + 1);
                 if (isValidPatternStart(nextChar) || Character.isDigit(nextChar) || nextChar == '-' || nextChar == '.') {
                     // Flush any accumulated literal text
-                    if (literal.length() > 0) {
+                    if (!literal.isEmpty()) {
                         elements.add(new LiteralElement(literal.toString()));
                         literal.setLength(0);
                     }
@@ -61,7 +65,7 @@ public class EnhancedPatternParser {
         }
         
         // Flush remaining literal
-        if (literal.length() > 0) {
+        if (!literal.isEmpty()) {
             elements.add(new LiteralElement(literal.toString()));
         }
         
@@ -107,7 +111,7 @@ public class EnhancedPatternParser {
                 
             case 'm':
                 // Parse %msg or %m
-                if (i + 2 < pattern.length() && pattern.substring(i, i + 3).equals("msg")) {
+                if (i + 2 < pattern.length() && pattern.startsWith("msg", i)) {
                     elements.add(new MessageElement(modifier));
                     return i + 3;
                 } else {
@@ -135,7 +139,7 @@ public class EnhancedPatternParser {
         int closeIndex = pattern.indexOf('}', i);
         if (closeIndex == -1) {
             // No closing brace - treat as literal
-            elements.add(new LiteralElement(pattern.substring(start - (modifier.isNone() ? 1 : 2), pattern.length())));
+            elements.add(new LiteralElement(pattern.substring(start - (modifier.isNone() ? 1 : 2))));
             return pattern.length();
         }
         
@@ -190,12 +194,11 @@ public class EnhancedPatternParser {
             widthStr.append(pattern.charAt(i));
             i++;
         }
-        if (widthStr.length() > 0) {
+        if (!widthStr.isEmpty()) {
             try {
                 minWidth = Integer.parseInt(widthStr.toString());
             } catch (NumberFormatException e) {
-                // Invalid number - ignore modifier
-                minWidth = 0;
+                logger.warn("Invalid minimum width in pattern: '{}'. Ignoring width modifier.", widthStr);
             }
         }
         
@@ -207,12 +210,11 @@ public class EnhancedPatternParser {
                 maxWidthStr.append(pattern.charAt(i));
                 i++;
             }
-            if (maxWidthStr.length() > 0) {
+            if (!maxWidthStr.isEmpty()) {
                 try {
                     maxWidth = Integer.parseInt(maxWidthStr.toString());
                 } catch (NumberFormatException e) {
-                    // Invalid number - ignore modifier
-                    maxWidth = 0;
+                    logger.warn("Invalid maximum width in pattern: '{}'. Ignoring width modifier.", maxWidthStr);
                 }
             }
         }

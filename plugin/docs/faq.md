@@ -156,7 +156,7 @@ Use YAML customizations for most cases - they're easier to maintain and survive 
 
 1. **Explicit template exists**: If you have both an explicit template AND YAML customization for the same template, the explicit template takes precedence and YAML is ignored.
 
-2. **Wrong directory structure**: Templates must be in generator-specific subdirectories:
+1. **Wrong directory structure**: Templates must be in generator-specific subdirectories:
    ```text
    ✅ Correct
    src/main/resources/template-customizations/spring/pojo.mustache.yaml
@@ -165,7 +165,7 @@ Use YAML customizations for most cases - they're easier to maintain and survive 
    src/main/resources/template-customizations/pojo.mustache.yaml
    ```
 
-3. **Pattern not found**: Insertion patterns must exist in the base template. Check the working directory: `build/template-work/spring-{specName}/`
+1. **Pattern not found**: Insertion patterns must exist in the base template. Check the working directory: `build/template-work/spring-{specName}/`
 
 ### Q: Do multiple specs with the same generator interfere with each other?
 
@@ -182,14 +182,14 @@ This prevents template cross-contamination and allows each spec to have differen
 
 1. **Create a library JAR** with templates in `META-INF/openapi-templates/` and customizations in `META-INF/openapi-customizations/`
 
-2. **Add as dependency:**
+1. **Add as dependency:**
    ```gradle
    dependencies {
        openapiCustomizations 'com.company:api-templates:1.0.0'
    }
    ```
 
-3. **Enable library support:**
+1. **Enable library support:**
    ```gradle
    openapiModelgen {
        defaults {
@@ -238,7 +238,7 @@ ls -la build/template-work/spring-{specName}/
    ./gradlew generateAllModels --configuration-cache
    ```
 
-2. **Use parallel processing** (enabled by default):
+1. **Use parallel processing** (enabled by default):
    ```gradle
    openapiModelgen {
        defaults {
@@ -247,7 +247,7 @@ ls -la build/template-work/spring-{specName}/
    }
    ```
 
-3. **Skip unnecessary generation:**
+1. **Skip unnecessary generation:**
    ```gradle
    openapiModelgen {
        defaults {
@@ -258,7 +258,7 @@ ls -la build/template-work/spring-{specName}/
    }
    ```
 
-4. **Optimize gradle.properties:**
+1. **Optimize gradle.properties:**
    ```properties
    org.gradle.daemon=true
    org.gradle.parallel=true
@@ -271,16 +271,16 @@ ls -la build/template-work/spring-{specName}/
 **A:** This is normal! The plugin uses multi-level caching:
 
 1. **First build**: Extracts templates, processes customizations, builds cache
-2. **Subsequent builds**: Uses cached templates and processing results
-3. **No-change builds**: 90% faster due to global cache persistence
+1. **Subsequent builds**: Uses cached templates and processing results
+1. **No-change builds**: 90% faster due to global cache persistence
 
 ### Q: How does caching work?
 
 **A:** The plugin uses a three-level cache hierarchy:
 
 1. **Session cache**: Eliminates redundant work within single build
-2. **Working directory cache**: Local project cache with SHA-256 validation
-3. **Global cache**: Cross-project cache in `~/.gradle/caches/openapi-modelgen/`
+1. **Working directory cache**: Local project cache with SHA-256 validation
+1. **Global cache**: Cross-project cache in `~/.gradle/caches/openapi-modelgen/`
 
 Cache automatically invalidates when specs, templates, or plugin version changes.
 
@@ -302,8 +302,8 @@ plugins {
 **A:** Common causes:
 
 1. **Empty OpenAPI spec**: Ensure your spec has `components.schemas`
-2. **Wrong global properties**: Default generates models only (not APIs)
-3. **Invalid spec**: Enable validation to check: `validateSpec true`
+1. **Wrong global properties**: Default generates models only (not APIs)
+1. **Invalid spec**: Enable validation to check: `validateSpec true`
 
 ### Q: Why do generated models have compilation errors?
 
@@ -361,10 +361,10 @@ conditions:
 **A:** Migration steps:
 
 1. **Keep existing OpenAPI Generator plugin** - don't remove it
-2. **Add this plugin** after the OpenAPI Generator plugin
-3. **Convert configuration** to method-call syntax (no `=` signs)
-4. **Update task names** if needed (e.g., `openApiGenerate` → `generateApiName`)
-5. **Test thoroughly** and leverage new features like multi-spec support
+1. **Add this plugin** after the OpenAPI Generator plugin
+1. **Convert configuration** to method-call syntax (no `=` signs)
+1. **Update task names** if needed (e.g., `openApiGenerate` → `generateApiName`)
+1. **Test thoroughly** and leverage new features like multi-spec support
 
 ### Q: Can I contribute to this plugin?
 
@@ -378,9 +378,9 @@ conditions:
 **A:** Multiple support channels:
 
 1. **Documentation**: [GitHub Pages Documentation](https://guidedbyte.github.io/openapi-modelgen/)
-2. **Issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues) for bugs
-3. **Discussions**: GitHub Discussions for usage questions
-4. **Plugin help**: `./gradlew generateHelp` for configuration reference
+1. **Issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues) for bugs
+1. **Discussions**: GitHub Discussions for usage questions
+1. **Plugin help**: `./gradlew generateHelp` for configuration reference
 
 ## Version and Migration Questions
 

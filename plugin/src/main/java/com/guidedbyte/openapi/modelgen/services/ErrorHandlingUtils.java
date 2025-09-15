@@ -235,7 +235,8 @@ public class ErrorHandlingUtils {
         }
         
         String message = "Failed to " + operationDescription + " after " + maxAttempts + " attempts";
-        ContextAwareLogger.error(logger, message + ". Last error: {}", lastException.getMessage());
+        String lastErrorMessage = lastException != null ? lastException.getMessage() : "Unknown error (possibly interrupted)";
+        ContextAwareLogger.error(logger, message + ". Last error: {}", lastErrorMessage);
         throw new RuntimeException(message, lastException);
     }
     

@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * Root configuration class for template customizations loaded from YAML.
- * 
+ * <p>
  * Represents the complete structure of a .yaml customization file that defines
  * surgical modifications to OpenAPI Generator templates.
  * 

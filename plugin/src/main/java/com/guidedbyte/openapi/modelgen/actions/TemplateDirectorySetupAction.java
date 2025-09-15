@@ -62,7 +62,7 @@ public class TemplateDirectorySetupAction implements Action<Task>, Serializable 
                     }
                 }
             } catch (Exception e) {
-                logger.debug("Error creating template directory for spec '{}': {}", specName, e.getMessage());
+                logger.warn("Error creating template directory for spec '{}': {}", specName, e.getMessage());
             }
         });
     }

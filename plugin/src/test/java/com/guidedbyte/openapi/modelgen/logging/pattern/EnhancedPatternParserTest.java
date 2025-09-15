@@ -25,7 +25,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("literal text");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
         
         // Test formatting
         StringBuilder sb = new StringBuilder();
@@ -38,7 +38,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%X{spec}");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof MDCElement);
+        assertInstanceOf(MDCElement.class, elements.get(0));
         
         MDCElement mdcElement = (MDCElement) elements.get(0);
         assertEquals("spec", mdcElement.getKey());
@@ -50,7 +50,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%-10X{spec}");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof MDCElement);
+        assertInstanceOf(MDCElement.class, elements.get(0));
         
         MDCElement mdcElement = (MDCElement) elements.get(0);
         assertEquals("spec", mdcElement.getKey());
@@ -92,7 +92,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%msg");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof MessageElement);
+        assertInstanceOf(MessageElement.class, elements.get(0));
         
         MessageElement msgElement = (MessageElement) elements.get(0);
         assertTrue(msgElement.getModifier().isNone());
@@ -103,7 +103,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%m");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof MessageElement);
+        assertInstanceOf(MessageElement.class, elements.get(0));
     }
 
     @Test
@@ -123,7 +123,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%d");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof TimestampElement);
+        assertInstanceOf(TimestampElement.class, elements.get(0));
     }
 
     @Test
@@ -131,12 +131,12 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%d{HH:mm:ss}");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof TimestampElement);
+        assertInstanceOf(TimestampElement.class, elements.get(0));
         
         // Test that it formats without throwing exception
         StringBuilder sb = new StringBuilder();
         elements.get(0).append(sb, "msg", "spec", "template", "component");
-        assertTrue(sb.length() > 0);
+        assertFalse(sb.isEmpty());
         assertTrue(sb.toString().matches("\\d{2}:\\d{2}:\\d{2}"));
     }
 
@@ -158,16 +158,16 @@ class EnhancedPatternParserTest {
         
         // Should have: timestamp, literal, MDC, literal, MDC, literal, MDC, literal, message
         assertEquals(9, elements.size());
-        
-        assertTrue(elements.get(0) instanceof TimestampElement);
-        assertTrue(elements.get(1) instanceof LiteralElement);
-        assertTrue(elements.get(2) instanceof MDCElement);
-        assertTrue(elements.get(3) instanceof LiteralElement);
-        assertTrue(elements.get(4) instanceof MDCElement);
-        assertTrue(elements.get(5) instanceof LiteralElement);
-        assertTrue(elements.get(6) instanceof MDCElement);
-        assertTrue(elements.get(7) instanceof LiteralElement);
-        assertTrue(elements.get(8) instanceof MessageElement);
+
+        assertInstanceOf(TimestampElement.class, elements.get(0));
+        assertInstanceOf(LiteralElement.class, elements.get(1));
+        assertInstanceOf(MDCElement.class, elements.get(2));
+        assertInstanceOf(LiteralElement.class, elements.get(3));
+        assertInstanceOf(MDCElement.class, elements.get(4));
+        assertInstanceOf(LiteralElement.class, elements.get(5));
+        assertInstanceOf(MDCElement.class, elements.get(6));
+        assertInstanceOf(LiteralElement.class, elements.get(7));
+        assertInstanceOf(MessageElement.class, elements.get(8));
         
         // Test MDC elements have correct modifiers
         MDCElement specElement = (MDCElement) elements.get(2);
@@ -192,7 +192,7 @@ class EnhancedPatternParserTest {
         
         // Should be treated as literal
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
     }
 
     @Test
@@ -202,8 +202,8 @@ class EnhancedPatternParserTest {
         
         // Should create timestamp with partial format and literal remainder
         assertEquals(2, elements.size());
-        assertTrue(elements.get(0) instanceof TimestampElement);
-        assertTrue(elements.get(1) instanceof LiteralElement);
+        assertInstanceOf(TimestampElement.class, elements.get(0));
+        assertInstanceOf(LiteralElement.class, elements.get(1));
     }
 
     @Test
@@ -212,7 +212,7 @@ class EnhancedPatternParserTest {
         
         // Should be treated as literal
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
     }
 
     @Test
@@ -221,7 +221,7 @@ class EnhancedPatternParserTest {
         
         // Should be treated as literal
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
     }
 
     @Test
@@ -229,7 +229,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("test % end");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
         
         StringBuilder sb = new StringBuilder();
         elements.get(0).append(sb, "msg", "spec", "template", "component");
@@ -241,7 +241,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("test%");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof LiteralElement);
+        assertInstanceOf(LiteralElement.class, elements.get(0));
         
         StringBuilder sb = new StringBuilder();
         elements.get(0).append(sb, "msg", "spec", "template", "component");
@@ -254,7 +254,7 @@ class EnhancedPatternParserTest {
         List<PatternElement> elements = EnhancedPatternParser.parsePattern("%999999999999999999999X{spec}");
         
         assertEquals(1, elements.size());
-        assertTrue(elements.get(0) instanceof MDCElement);
+        assertInstanceOf(MDCElement.class, elements.get(0));
         
         // Should still work even if number parsing fails
         MDCElement element = (MDCElement) elements.get(0);
@@ -269,13 +269,13 @@ class EnhancedPatternParserTest {
         assertEquals(7, elements.size());
         
         // Verify element types
-        assertTrue(elements.get(0) instanceof LiteralElement);  // "Start ["
-        assertTrue(elements.get(1) instanceof MDCElement);     // spec
-        assertTrue(elements.get(2) instanceof LiteralElement); // "] middle "
-        assertTrue(elements.get(3) instanceof MDCElement);     // template with modifier
-        assertTrue(elements.get(4) instanceof LiteralElement); // " "
-        assertTrue(elements.get(5) instanceof MessageElement); // msg
-        assertTrue(elements.get(6) instanceof LiteralElement); // " end"
+        assertInstanceOf(LiteralElement.class, elements.get(0));  // "Start ["
+        assertInstanceOf(MDCElement.class, elements.get(1));     // spec
+        assertInstanceOf(LiteralElement.class, elements.get(2)); // "] middle "
+        assertInstanceOf(MDCElement.class, elements.get(3));     // template with modifier
+        assertInstanceOf(LiteralElement.class, elements.get(4)); // " "
+        assertInstanceOf(MessageElement.class, elements.get(5)); // msg
+        assertInstanceOf(LiteralElement.class, elements.get(6)); // " end"
         
         // Test that the complete pattern formats correctly
         StringBuilder sb = new StringBuilder();

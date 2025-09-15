@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Represents conditional logic for determining when customizations apply.
- * 
+ * <p>
  * Conditions support version constraints, template content checks, feature detection,
  * build environment checks, and complex logical operations.
  * 

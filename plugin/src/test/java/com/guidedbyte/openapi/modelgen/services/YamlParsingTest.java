@@ -3,13 +3,11 @@ package com.guidedbyte.openapi.modelgen.services;
 import com.guidedbyte.openapi.modelgen.customization.CustomizationConfig;
 import com.guidedbyte.openapi.modelgen.customization.Replacement;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.representer.Representer;
-import org.yaml.snakeyaml.LoaderOptions;
 
-import java.io.InputStream;
-import java.io.StringReader;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,14 +27,13 @@ public class YamlParsingTest {
         
         // Test raw YAML parsing first
         Yaml basicYaml = new Yaml();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> rawParsed = (Map<String, Object>) basicYaml.load(yamlContent);
+        Map<String, Object> rawParsed = basicYaml.load(yamlContent);
         
         assertNotNull(rawParsed);
         assertTrue(rawParsed.containsKey("replacements"));
         
         Object replacements = rawParsed.get("replacements");
-        assertTrue(replacements instanceof java.util.List);
+        assertInstanceOf(List.class, replacements);
         
         @SuppressWarnings("unchecked")
         java.util.List<Object> replacementList = (java.util.List<Object>) replacements;
@@ -89,8 +86,7 @@ public class YamlParsingTest {
         
         // Test raw YAML parsing
         Yaml basicYaml = new Yaml();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> rawParsed = (Map<String, Object>) basicYaml.load(yamlContent);
+        Map<String, Object> rawParsed = basicYaml.load(yamlContent);
         
         assertNotNull(rawParsed);
         assertTrue(rawParsed.containsKey("replacements"));
@@ -144,14 +140,13 @@ public class YamlParsingTest {
         
         // Test raw YAML parsing first
         Yaml basicYaml = new Yaml();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> rawParsed = (Map<String, Object>) basicYaml.load(yamlWithCRLF);
+        Map<String, Object> rawParsed = basicYaml.load(yamlWithCRLF);
         
         assertNotNull(rawParsed);
         assertTrue(rawParsed.containsKey("replacements"));
         
         Object replacements = rawParsed.get("replacements");
-        assertTrue(replacements instanceof java.util.List);
+        assertInstanceOf(List.class, replacements);
         
         @SuppressWarnings("unchecked")
         java.util.List<Object> replacementList = (java.util.List<Object>) replacements;

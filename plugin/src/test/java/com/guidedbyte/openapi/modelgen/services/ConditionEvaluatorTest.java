@@ -17,13 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for ConditionEvaluator.
  */
 class ConditionEvaluatorTest {
-    
-    private Project project;
+
     private ConditionEvaluator conditionEvaluator;
     
     @BeforeEach
     void setUp() {
-        project = ProjectBuilder.builder().build();
+        Project project = ProjectBuilder.builder().build();
         conditionEvaluator = new ConditionEvaluator();
     }
     

@@ -74,7 +74,7 @@ public class TaskConfigurationService implements Serializable {
             
             // Create resolved config to determine if we need template preparation
             ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
-            TemplateConfiguration templateConfig = resolveTemplateConfiguration(extension, specConfig, specName, project, projectLayout);
+            TemplateConfiguration templateConfig = resolveTemplateConfiguration(resolvedConfig, projectLayout);
             
             // Create template preparation task if needed
             TaskProvider<com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask> prepareTask = null;
@@ -150,13 +150,32 @@ public class TaskConfigurationService implements Serializable {
         // Use TemplateResolver to create proper template configuration
         TemplateResolver templateResolver = new TemplateResolver();
         return templateResolver.resolveTemplateConfiguration(
-            projectLayout, 
-            resolvedConfig, 
+            projectLayout,
+            resolvedConfig,
             resolvedConfig.getGeneratorName(),
             resolvedConfig.getTemplateVariables()
         );
     }
-    
+
+    /**
+     * Resolves template configuration using an already-created ResolvedSpecConfig.
+     * This avoids duplicate resolution when the ResolvedSpecConfig is already available.
+     *
+     * @param resolvedConfig the already-resolved spec configuration
+     * @param projectLayout the project layout for path resolution
+     * @return resolved template configuration
+     */
+    private TemplateConfiguration resolveTemplateConfiguration(ResolvedSpecConfig resolvedConfig, ProjectLayout projectLayout) {
+        // Use TemplateResolver to create proper template configuration
+        TemplateResolver templateResolver = new TemplateResolver();
+        return templateResolver.resolveTemplateConfiguration(
+            projectLayout,
+            resolvedConfig,
+            resolvedConfig.getGeneratorName(),
+            resolvedConfig.getTemplateVariables()
+        );
+    }
+
     /**
      * Configures a GenerateTask for a specific OpenAPI specification.
      * 
@@ -229,27 +248,27 @@ public class TaskConfigurationService implements Serializable {
         }
         task.getModelNameSuffix().set(resolvedConfig.getModelNameSuffix());
         
-        /**
-         * Template Directory Configuration Strategy:
-         * 
-         * The plugin uses a sophisticated template orchestration system where:
-         * 1. User's templateDir is a SOURCE directory containing their custom templates
-         * 2. build/template-work/{generator} is the ORCHESTRATION directory where all template processing happens
-         * 3. The template-work directory is what gets passed to OpenAPI Generator
-         * 
-         * Flow:
-         * - User templates from templateDir are copied to template-work
-         * - Plugin YAML customizations are applied to template-work
-         * - User YAML customizations are applied to template-work
-         * - Library templates/customizations are applied to template-work
-         * - OpenAPI Generator uses the fully orchestrated template-work directory
-         * 
-         * This ensures clean separation between user source files and build outputs,
-         * while allowing multiple layers of template customization to be combined.
-         * 
-         * For configuration cache compatibility, we set the templateDir to the expected
-         * working directory path, even if it doesn't exist yet. The TemplatePreparationAction
-         * will create it before OpenAPI Generator runs.
+        /*
+          Template Directory Configuration Strategy:
+
+          The plugin uses a sophisticated template orchestration system where:
+          1. User's templateDir is a SOURCE directory containing their custom templates
+          2. build/template-work/{generator} is the ORCHESTRATION directory where all template processing happens
+          3. The template-work directory is what gets passed to OpenAPI Generator
+
+          Flow:
+          - User templates from templateDir are copied to template-work
+          - Plugin YAML customizations are applied to template-work
+          - User YAML customizations are applied to template-work
+          - Library templates/customizations are applied to template-work
+          - OpenAPI Generator uses the fully orchestrated template-work directory
+
+          This ensures clean separation between user source files and build outputs,
+          while allowing multiple layers of template customization to be combined.
+
+          For configuration cache compatibility, we set the templateDir to the expected
+          working directory path, even if it doesn't exist yet. The TemplatePreparationAction
+          will create it before OpenAPI Generator runs.
          */
         
         // Template directory handling - Proper Gradle Solution:

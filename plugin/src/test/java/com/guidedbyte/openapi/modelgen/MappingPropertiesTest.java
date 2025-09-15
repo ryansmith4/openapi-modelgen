@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -10,7 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for importMappings, typeMappings, additionalProperties, and openapiNormalizer configuration properties.
@@ -31,18 +31,17 @@ public class MappingPropertiesTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
-    private File specFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create specs directory
         File specsDir = new File(testProjectDir, "src/main/resources/openapi");
-        specsDir.mkdirs();
-        specFile = new File(specsDir, "test.yaml");
+        assertTrue(specsDir.mkdirs() || specsDir.exists(),
+                  "Failed to create directory: " + specsDir);
+        File specFile = new File(specsDir, "test.yaml");
         
         // Create basic settings.gradle
         Files.write(settingsFile.toPath(), "rootProject.name = 'test-project'".getBytes());

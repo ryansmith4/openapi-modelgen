@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,7 +72,7 @@ public class TemplateCacheManager implements Serializable {
             return isValid;
             
         } catch (IOException e) {
-            logger.debug("Error reading template cache file: {}", e.getMessage());
+            logger.warn("Error reading template cache file: {}", e.getMessage());
             return false;
         }
     }
@@ -196,7 +197,7 @@ public class TemplateCacheManager implements Serializable {
             return true;
             
         } catch (IOException e) {
-            logger.debug("Error validating template hashes: {}", e.getMessage());
+            logger.warn("Error validating template hashes: {}", e.getMessage());
             return false;
         }
     }
@@ -278,7 +279,7 @@ public class TemplateCacheManager implements Serializable {
         
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(content.getBytes("UTF-8"));
+            byte[] hashBytes = digest.digest(content.getBytes(StandardCharsets.UTF_8));
             
             StringBuilder sb = new StringBuilder();
             for (byte b : hashBytes) {
@@ -312,16 +313,13 @@ public class TemplateCacheManager implements Serializable {
         
         // Detect OpenAPI Generator version for cache key
         String openapiVersion = detectOpenApiGeneratorVersion(project);
-        
-        StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append("generator:").append(generatorName).append(";");
-        keyBuilder.append("plugin:").append(pluginVersion).append(";");
-        keyBuilder.append("openapi:").append(openapiVersion).append(";");
-        keyBuilder.append("pluginCustomizations:").append(pluginCustomizationHash).append(";");
-        keyBuilder.append("userTemplates:").append(userTemplateHash).append(";");
-        keyBuilder.append("userCustomizations:").append(userCustomizationHash);
-        
-        String fullKey = keyBuilder.toString();
+
+        String fullKey = "generator:" + generatorName + ";" +
+                "plugin:" + pluginVersion + ";" +
+                "openapi:" + openapiVersion + ";" +
+                "pluginCustomizations:" + pluginCustomizationHash + ";" +
+                "userTemplates:" + userTemplateHash + ";" +
+                "userCustomizations:" + userCustomizationHash;
         return computeStringHash(fullKey);
     }
     
@@ -388,7 +386,7 @@ public class TemplateCacheManager implements Serializable {
             logger.debug("Updated working directory cache: {}", workingDir.getAbsolutePath());
             
         } catch (IOException e) {
-            logger.debug("Error updating working directory cache: {}", e.getMessage());
+            logger.warn("Error updating working directory cache: {}", e.getMessage());
         }
     }
     
@@ -484,7 +482,7 @@ public class TemplateCacheManager implements Serializable {
         try {
             File globalCacheDir = getGlobalCacheDir(project);
             if (!globalCacheDir.exists() && !globalCacheDir.mkdirs()) {
-                logger.debug("Failed to create global cache directory: {}", globalCacheDir.getAbsolutePath());
+                logger.error("Failed to create global cache directory: {}", globalCacheDir.getAbsolutePath());
                 return;
             }
             

@@ -2,7 +2,7 @@ package com.guidedbyte.openapi.modelgen.customization;
 
 /**
  * Represents a content insertion operation in template customization.
- * 
+ * <p>
  * Insertions add content at specific locations in templates, supporting:
  * - Insert after a pattern
  * - Insert before a pattern  

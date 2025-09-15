@@ -50,6 +50,7 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring template directory precedence
+        assertNotNull(extension);
         extension.getDefaults().userTemplateDir("src/main/resources/user-templates");
 
         // Then: User template directory should be configured
@@ -66,6 +67,7 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring both default and spec-specific template directories
+        assertNotNull(extension);
         extension.getDefaults().userTemplateDir("src/main/resources/default-templates");
         
         SpecConfig specConfig = new SpecConfig(project);
@@ -87,6 +89,7 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring template variables at different levels
+        assertNotNull(extension);
         extension.getDefaults().getTemplateVariables().put("copyright", "Default Copyright");
         extension.getDefaults().getTemplateVariables().put("company", "Default Company");
         
@@ -114,6 +117,7 @@ public class TemplatePrecedenceUnitTest {
         specConfig.inputSpec("test.yaml");
         specConfig.modelPackage("com.example.test");
         // Note: No templateDir configured - should fall back to plugin templates
+        assertNotNull(extension);
         extension.getSpecs().put("test", specConfig);
 
         // Then: Template directory should not be present (will use plugin defaults)
@@ -129,6 +133,7 @@ public class TemplatePrecedenceUnitTest {
                 .findByType(OpenApiModelGenExtension.class);
 
         // When: Configuring multiple specs with different template sources
+        assertNotNull(extension);
         extension.getDefaults().userTemplateDir("src/main/resources/common-templates");
         
         SpecConfig petsSpec = new SpecConfig(project);
@@ -161,6 +166,7 @@ public class TemplatePrecedenceUnitTest {
 
         // When: Setting up template variable hierarchy
         // Default level
+        assertNotNull(extension);
         extension.getDefaults().getTemplateVariables().put("copyright", "Copyright © {{currentYear}} {{companyName}}");
         extension.getDefaults().getTemplateVariables().put("currentYear", "2025");
         extension.getDefaults().getTemplateVariables().put("companyName", "Default Corp");
@@ -199,7 +205,7 @@ public class TemplatePrecedenceUnitTest {
         String expectedPrecedence = """
             Template Resolution Hierarchy (Highest to Lowest Precedence):
             1. User Templates (spec-specific templateDir)
-            2. User Templates (default templateDir) 
+            2. User Templates (default templateDir)
             3. Plugin Templates (built-in JAR resources)
             4. OpenAPI Generator Defaults
             
@@ -231,7 +237,7 @@ public class TemplatePrecedenceUnitTest {
         
         // Given: User template directory structure
         File userTemplateDir = new File(testProjectDir, "src/main/resources/user-templates");
-        userTemplateDir.mkdirs();
+        assertTrue( userTemplateDir.mkdirs() );
         
         // When: Creating user template files that override plugin templates
         createUserTemplate(userTemplateDir, "pojo.mustache", 

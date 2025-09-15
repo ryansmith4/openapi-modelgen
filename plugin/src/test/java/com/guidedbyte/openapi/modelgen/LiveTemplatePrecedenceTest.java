@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,13 +10,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Live template precedence test that uses the existing test-app structure
  * to validate template resolution in a real environment
- * 
+ * <p>
  * NOTE: These tests use ${project.projectDir} for inputSpec paths due to TestKit's temporary directory setup.
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
@@ -28,11 +28,10 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         Files.write(settingsFile.toPath(), List.of("rootProject.name = 'template-precedence-live-test'"));
@@ -59,7 +58,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                     validateSpec false
                     userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
-                
+            
                 specs {
                     minimal {
                         inputSpec "${project.projectDir}/src/main/resources/minimal-spec.yaml"
@@ -76,7 +75,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Should succeed using plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateMinimal")).getOutcome());
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         
         // Verify template processing occurred (no plugin templates, but OpenAPI Generator templates are used)
@@ -124,7 +123,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                         customTitle: "Custom User Template"
                     ])
                 }
-                
+            
                 specs {
                     minimal {
                         inputSpec "${project.projectDir}/src/main/resources/minimal-spec.yaml"
@@ -141,7 +140,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Should succeed using plugin templates with custom variables
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateMinimal")).getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/minimal");
@@ -178,7 +177,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                     validateSpec false
                     userTemplateDir "src/main/templates/custom" // Trigger plugin template extraction
                 }
-                
+            
                 specs {
                     minimal {
                         inputSpec "${project.projectDir}/src/main/resources/minimal-spec.yaml"
@@ -199,11 +198,12 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: First run should extract templates, second should be up-to-date or success
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generateMinimal")).getOutcome());
         // Note: Template precedence detection may cause tasks to run as SUCCESS instead of UP_TO_DATE
-        assertTrue(secondResult.task(":generateMinimal").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generateMinimal").getOutcome() == TaskOutcome.SUCCESS,
-                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generateMinimal").getOutcome());
+        TaskOutcome secondOutcome = Objects.requireNonNull(secondResult.task(":generateMinimal")).getOutcome();
+        assertTrue(secondOutcome == TaskOutcome.UP_TO_DATE ||
+                   secondOutcome == TaskOutcome.SUCCESS,
+                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondOutcome);
         
         // Verify template cache structure (may be in plugin-templates or template-work)
         File templateCacheDir = new File(testProjectDir, "build/plugin-templates/spring");
@@ -211,19 +211,8 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
         assertTrue(templateCacheDir.exists() || templateWorkDir.exists(), 
             "Either plugin-templates or template-work should exist");
         
-        // Check for hash file in whichever directory exists (optional - may not exist with no plugin templates)
-        File hashFile = templateCacheDir.exists() ? 
-            new File(templateCacheDir, ".template-hashes") : 
-            new File(templateWorkDir, ".template-hashes");
-        // Hash file may not exist if no plugin templates are present - this is OK
-        
-        // Check for template files in whichever directory exists
-        File templatesDir = templateCacheDir.exists() ? templateCacheDir : templateWorkDir;
-        if (templatesDir.exists()) {
-            File[] templateFiles = templatesDir.listFiles((dir, name) -> name.endsWith(".mustache"));
-            // Templates may or may not be cached depending on whether customizations were needed
-            // This is OK - the important thing is that generation succeeded
-        }
+        // Hash files and template files may not exist if no plugin templates are present - this is OK
+        // The important thing is that generation succeeded
     }
 
     @Test
@@ -251,7 +240,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                         companyName: "Template Test Corp"
                     ])
                 }
-                
+            
                 specs {
                     minimal {
                         inputSpec "${project.projectDir}/src/main/resources/minimal-spec.yaml"
@@ -268,7 +257,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Template variables should be expanded in generated files
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateMinimal").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateMinimal")).getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/minimal");
         assertTrue(generatedDir.exists());
@@ -287,8 +276,8 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
 
     private void createMinimalValidSpec() throws IOException {
         File resourcesDir = new File(testProjectDir, "src/main/resources");
-        resourcesDir.mkdirs();
-        
+        assertTrue(resourcesDir.mkdirs());
+
         String specContent = """
             openapi: 3.0.0
             info:
@@ -313,33 +302,4 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
         Files.write(specFile.toPath(), List.of(specContent.split("\\n")));
     }
 
-    private void createUserTemplateOverride() throws IOException {
-        File templateDir = new File(testProjectDir, "src/main/resources/user-templates");
-        templateDir.mkdirs();
-        
-        // Create user template that overrides plugin template
-        String userPojoTemplate = """
-            /**
-             * Custom User Template - USER_TEMPLATE_OVERRIDE_MARKER
-             * This template demonstrates user template precedence over plugin templates
-             */
-            {{>additionalModelTypeAnnotations}}public class {{classname}} {
-                // Custom user template implementation
-                {{#vars}}
-                private {{{datatypeWithEnum}}} {{name}};
-                
-                public {{{datatypeWithEnum}}} get{{nameInPascalCase}}() {
-                    return {{name}};
-                }
-                
-                public void set{{nameInPascalCase}}({{{datatypeWithEnum}}} {{name}}) {
-                    this.{{name}} = {{name}};
-                }
-                {{/vars}}
-            }
-            """;
-        
-        File pojoTemplate = new File(templateDir, "pojo.mustache");
-        Files.write(pojoTemplate.toPath(), List.of(userPojoTemplate.split("\\n")));
-    }
 }

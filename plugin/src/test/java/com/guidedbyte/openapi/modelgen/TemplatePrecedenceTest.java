@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 1. User templates (highest precedence)
  * 2. Plugin templates (built-in overrides)
  * 3. OpenAPI generator defaults (lowest precedence)
- * 
+ * <p>
  * NOTE: These tests use ${project.projectDir} for inputSpec paths due to TestKit's temporary directory setup.
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
@@ -30,11 +30,10 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create basic settings.gradle
@@ -82,7 +81,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Generation should succeed (using OpenAPI Generator templates since no plugin templates exist)
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         // Should either extract OpenAPI Generator templates or use defaults
         assertTrue(result.getOutput().contains("Extracting ALL OpenAPI Generator templates") ||
                   result.getOutput().contains("Extracted") ||
@@ -138,7 +137,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Generation should succeed using plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
         // Verify generated files exist
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
@@ -191,7 +190,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Should succeed despite defaults having validateSpec true
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
@@ -245,11 +244,12 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: First run should extract templates, second should use cache or run successfully
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generateTest")).getOutcome());
         // Note: Template precedence detection may cause tasks to run as SUCCESS instead of UP_TO_DATE
-        assertTrue(secondResult.task(":generateTest").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generateTest").getOutcome() == TaskOutcome.SUCCESS,
-                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generateTest").getOutcome());
+        TaskOutcome secondOutcome = Objects.requireNonNull(secondResult.task(":generateTest")).getOutcome();
+        assertTrue(secondOutcome == TaskOutcome.UP_TO_DATE ||
+                   secondOutcome == TaskOutcome.SUCCESS,
+                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondOutcome);
         
         // Verify template cache directory exists (may be in plugin-templates or template-work)
         File templateCacheDir = new File(testProjectDir, "build/plugin-templates/spring");
@@ -309,7 +309,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Generated files should contain expanded variables
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
@@ -361,7 +361,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 .build();
 
         // Then: Should succeed with fallback to plugin templates
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         assertTrue(result.getOutput().contains("User-specified template directory does not exist") ||
                   result.getOutput().contains("Falling back to plugin templates") ||
                   result.getOutput().contains("template") ||
@@ -372,7 +372,8 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
 
     private void createValidOpenApiSpec() throws IOException {
         File resourcesDir = new File(testProjectDir, "src/main/resources");
-        resourcesDir.mkdirs();
+        assertTrue(resourcesDir.mkdirs() || resourcesDir.exists(),
+                  "Failed to create directory: " + resourcesDir);
         
         String specContent = """
             openapi: 3.0.0
@@ -413,7 +414,8 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
     private void createCustomUserTemplate() throws IOException {
         // Create custom template directory
         File templateDir = new File(testProjectDir, "src/main/resources/custom-templates");
-        templateDir.mkdirs();
+        assertTrue(templateDir.mkdirs() || templateDir.exists(),
+                  "Failed to create directory: " + templateDir);
         
         // Custom pojo.mustache that should override plugin template
         String customPojoTemplate = """
@@ -427,13 +429,13 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                 {{#vars}}
                 private {{{datatypeWithEnum}}} {{name}};
                 {{/vars}}
-                
+            
                 // Custom getter/setter methods
                 {{#vars}}
                 public {{{datatypeWithEnum}}} get{{nameInPascalCase}}() {
                     return {{name}};
                 }
-                
+            
                 public void set{{nameInPascalCase}}({{{datatypeWithEnum}}} {{name}}) {
                     this.{{name}} = {{name}};
                 }
@@ -460,7 +462,8 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
     private void createPartialUserTemplate() throws IOException {
         // Create partial template directory (only overrides specific templates)
         File templateDir = new File(testProjectDir, "src/main/resources/partial-templates");
-        templateDir.mkdirs();
+        assertTrue(templateDir.mkdirs() || templateDir.exists(),
+                  "Failed to create directory: " + templateDir);
         
         // Only override additionalModelTypeAnnotations.mustache, not pojo.mustache
         String partialAnnotationsTemplate = """
@@ -479,7 +482,11 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
     
     private void createAllTemplateDirectories() throws IOException {
         // Create all template directories that tests might reference
-        new File(testProjectDir, "src/main/resources/custom-templates").mkdirs();
-        new File(testProjectDir, "src/main/resources/partial-templates").mkdirs();
+        File customTemplatesDir = new File(testProjectDir, "src/main/resources/custom-templates");
+        assertTrue(customTemplatesDir.mkdirs() || customTemplatesDir.exists(),
+                  "Failed to create directory: " + customTemplatesDir);
+        File partialTemplatesDir = new File(testProjectDir, "src/main/resources/partial-templates");
+        assertTrue(partialTemplatesDir.mkdirs() || partialTemplatesDir.exists(),
+                  "Failed to create directory: " + partialTemplatesDir);
     }
 }

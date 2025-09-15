@@ -60,7 +60,7 @@ openapiModelgen {
 | `generateApiTests` | Boolean | `false` | Generate unit tests for APIs |
 | `generateApiDocumentation` | Boolean | `false` | Generate API documentation |
 | `generateModelDocumentation` | Boolean | `false` | Generate model documentation |
-| `saveOriginalTemplates` | Boolean | `false` | Save original OpenAPI Generator templates to orig/ subdirectory for debugging |
+| `saveOriginalTemplates` | Boolean | `false` | Save original templates to orig/ subdirectory for debugging |
 
 ```gradle
 openapiModelgen {
@@ -77,8 +77,10 @@ openapiModelgen {
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `templateSources` | List\<String\> | `["user-templates", "user-customizations", "library-templates", "library-customizations", "plugin-customizations", "openapi-generator"]` | Template resolution order |
+| `templateSources` | List&lt;String&gt; | See below | Template resolution order |
 | `debug` | Boolean | `false` | Enable comprehensive debug logging throughout the plugin |
+
+**Default `templateSources`:** `["user-templates", "user-customizations", "library-templates", "library-customizations", "plugin-customizations", "openapi-generator"]`
 
 ```gradle
 openapiModelgen {
@@ -265,8 +267,8 @@ openapiModelgen {
 
 All mapping properties follow the same merge pattern:
 1. **Default-level mappings** are applied first
-2. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
-3. **Final merged mappings** are passed to OpenAPI Generator
+1. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
+1. **Final merged mappings** are passed to OpenAPI Generator
 
 ## Specification Configuration
 
@@ -351,11 +353,11 @@ The plugin performs comprehensive validation of configuration:
 ### Validation Rules
 
 1. **Required properties** must be specified
-2. **Package names** must be valid Java package names
-3. **Directory paths** must be valid and accessible
-4. **Boolean values** must be true/false
-5. **Template sources** must include valid source types
-6. **Template sources** must be ordered from highest to lowest priority
+1. **Package names** must be valid Java package names
+1. **Directory paths** must be valid and accessible
+1. **Boolean values** must be true/false
+1. **Template sources** must include valid source types
+1. **Template sources** must be ordered from highest to lowest priority
 
 ### Validation Examples
 

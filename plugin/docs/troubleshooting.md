@@ -118,7 +118,7 @@ openapiModelgen {
    }
    ```
 
-2. **Invalid package names:**
+1. **Invalid package names:**
    ```gradle
    ❌ Problem: Invalid Java package name
    specs {
@@ -137,7 +137,7 @@ openapiModelgen {
    }
    ```
 
-3. **File not found errors:**
+1. **File not found errors:**
    ```gradle
    ❌ Problem: OpenAPI spec file doesn't exist
    specs {
@@ -172,13 +172,13 @@ openapiModelgen {
    ./gradlew generateApi --validate-spec=true --info
    ```
 
-2. **Verify output directory:**
+1. **Verify output directory:**
    ```bash
    # Check if output directory is created
    ls -la build/generated/sources/openapi/src/main/java/
    ```
 
-3. **Enable debug logging:**
+1. **Enable debug logging:**
    ```bash
    ./gradlew generateApi --debug | grep -i "generating"
    ```
@@ -210,7 +210,7 @@ openapiModelgen {
              type: string
    ```
 
-2. **Wrong global properties:**
+1. **Wrong global properties:**
    ```gradle
    ❌ Problem: APIs generated instead of models
    globalProperties([
@@ -246,7 +246,7 @@ openapiModelgen {
    }
    ```
 
-2. **Lombok configuration issues:**
+1. **Lombok configuration issues:**
    ```gradle
    ✅ Verify Lombok annotations are correctly configured
    openapiModelgen {
@@ -258,7 +258,7 @@ openapiModelgen {
    }
    ```
 
-3. **Spring Boot version compatibility:**
+1. **Spring Boot version compatibility:**
    ```gradle
    ✅ Ensure Spring Boot 3.x configuration (default)
    openapiModelgen {
@@ -306,7 +306,7 @@ openapiModelgen {
    find src/main/resources -name "*.mustache" -type f
    ```
 
-2. **Verify directory structure:**
+1. **Verify directory structure:**
    ```text
    ✅ Correct structure (generator-specific directories)
    src/main/resources/template-customizations/
@@ -320,7 +320,7 @@ openapiModelgen {
    └── model.mustache.yaml
    ```
 
-3. **Enable debug logging:**
+1. **Enable debug logging:**
    ```gradle
    openapiModelgen {
        defaults {
@@ -341,7 +341,7 @@ openapiModelgen {
    src/main/resources/template-customizations/spring/pojo.mustache.yaml  # YAML used
    ```
 
-2. **Wrong generator directory:**
+1. **Wrong generator directory:**
    ```gradle
    ❌ Problem: Templates in wrong directory for your generator
    # Your configuration uses 'spring' generator
@@ -381,7 +381,7 @@ openapiModelgen {
          Some content
    ```
 
-2. **Missing quotes:**
+1. **Missing quotes:**
    ```yaml
    ❌ Unquoted Mustache patterns
    conditions:
@@ -392,7 +392,7 @@ openapiModelgen {
      templateContains: "{{#description}}"  # Correct
    ```
 
-3. **Invalid YAML characters:**
+1. **Invalid YAML characters:**
    ```yaml
    ❌ Unescaped special characters
    content: |
@@ -420,7 +420,7 @@ openapiModelgen {
    cat build/template-work/spring-{specName}/pojo.mustache
    ```
 
-2. **Verify patterns exist:**
+1. **Verify patterns exist:**
    ```bash
    # Search for pattern in base template
    grep -n "{{#description}}" build/template-work/spring-{specName}/pojo.mustache
@@ -439,7 +439,7 @@ openapiModelgen {
      - after: "{{#description}}"            # Pattern exists in base template
    ```
 
-2. **Case sensitivity:**
+1. **Case sensitivity:**
    ```yaml
    ❌ Wrong case
    insertions:
@@ -469,7 +469,7 @@ openapiModelgen {
    time ./gradlew generateAllModels
    ```
 
-2. **Check cache effectiveness:**
+1. **Check cache effectiveness:**
    ```bash
    # Enable configuration cache
    ./gradlew generateAllModels --configuration-cache
@@ -489,7 +489,7 @@ openapiModelgen {
    }
    ```
 
-2. **Use configuration cache:**
+1. **Use configuration cache:**
    ```bash
    # Add to gradle.properties
    org.gradle.configuration-cache=true
@@ -498,7 +498,7 @@ openapiModelgen {
    ./gradlew generateAllModels --configuration-cache
    ```
 
-3. **Optimize template customizations:**
+1. **Optimize template customizations:**
    ```yaml
    ✅ Use specific patterns for faster processing
    insertions:
@@ -541,7 +541,7 @@ org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
    }
    ```
 
-2. **Check for custom extensions:**
+1. **Check for custom extensions:**
    ```gradle
    ❌ Custom closures may break configuration cache
    openapiModelgen {
@@ -555,7 +555,7 @@ org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
    }
    ```
 
-3. **Report configuration cache issues:**
+1. **Report configuration cache issues:**
    If you encounter configuration cache problems with the latest version, please report them with:
    ```bash
    ./gradlew generateAllModels --configuration-cache --stacktrace > cache-issue.log
@@ -577,7 +577,7 @@ org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
    Tested with: 7.11.0, 7.14.0, 7.16.0+
    ```
 
-2. **Update OpenAPI Generator:**
+1. **Update OpenAPI Generator:**
    ```gradle
    plugins {
        id 'org.openapi.generator' version '7.14.0'  // Recommended version
@@ -585,7 +585,7 @@ org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
    }
    ```
 
-3. **Override dependency if needed:**
+1. **Override dependency if needed:**
    ```gradle
    dependencies {
        implementation 'org.openapitools:openapi-generator:7.14.0'
@@ -686,12 +686,12 @@ When reporting issues, include:
    ./gradlew dependencyInsight --dependency org.openapitools
    ```
 
-2. **Configuration details:**
+1. **Configuration details:**
    ```bash
    ./gradlew generateHelp > config-help.txt
    ```
 
-3. **Template working directory:**
+1. **Template working directory:**
    ```bash
    find build/template-work -name "*.mustache" -exec echo "=== {} ===" \; -exec cat {} \;
    ```

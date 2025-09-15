@@ -1,15 +1,17 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.GradleRunner;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Base class for TestKit integration tests that provides proper plugin classpath configuration
  * for compileOnly OpenAPI Generator plugin dependency.
- * 
+ * <p>
  * This class ensures TestKit tests have access to both our plugin and the OpenAPI Generator
  * plugin classes when using compileOnly dependency structure.
  */
@@ -26,7 +28,7 @@ public abstract class BaseTestKitTest {
     
     /**
      * Gets a stable classpath for TestKit that's configuration cache compatible.
-     * 
+     * <p>
      * The key insight is that we cache the classpath result to avoid recomputation
      * which can vary between test runs and break configuration cache.
      */
@@ -54,11 +56,20 @@ public abstract class BaseTestKitTest {
         String[] classpathEntries = classpathProperty.split(File.pathSeparator);
         
         // Use a TreeSet to ensure consistent ordering for configuration cache
-        java.util.Set<String> stableEntries = new java.util.TreeSet<>();
+        Set<String> stableEntries = extractStableEntries(classpathEntries);
+
+        // Convert to File objects in stable order
+        for (String entry : stableEntries) {
+            classpath.add(new File(entry));
+        }
         
+        return classpath;
+    }
+
+    private static @NotNull Set<String> extractStableEntries(String[] classpathEntries) {
+        Set<String> stableEntries = new java.util.TreeSet<>();
+
         for (String entry : classpathEntries) {
-            File file = new File(entry);
-            
             // Include ALL JAR files from test classpath to ensure we have complete dependencies
             // This is necessary because OpenAPI Generator has many transitive dependencies
             if (entry.endsWith(".jar")) {
@@ -69,12 +80,6 @@ public abstract class BaseTestKitTest {
                 stableEntries.add(entry);
             }
         }
-        
-        // Convert to File objects in stable order
-        for (String entry : stableEntries) {
-            classpath.add(new File(entry));
-        }
-        
-        return classpath;
+        return stableEntries;
     }
 }

@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,14 +9,14 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Performance and incremental build tests for the OpenAPI Model Generator Plugin
- * 
+ * <p>
  * NOTE: These tests use ${project.projectDir} for inputSpec paths due to TestKit's temporary directory setup.
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
@@ -28,17 +27,17 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
     private File specFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create spec directory
         File specDir = new File(testProjectDir, "src/main/resources/openapi-spec");
-        specDir.mkdirs();
+        assertTrue(specDir.mkdirs() || specDir.exists(),
+                  "Failed to create directory: " + specDir);
         specFile = new File(specDir, "pets.yaml");
         
         // Create basic settings.gradle
@@ -60,12 +59,13 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         BuildResult thirdResult = runGenerationTask();
 
         // Then: First run SUCCESS, second UP-TO-DATE or SUCCESS, third SUCCESS due to spec change
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
         // Note: Template precedence detection may cause tasks to run as SUCCESS instead of UP_TO_DATE
-        assertTrue(secondResult.task(":generatePets").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generatePets").getOutcome() == TaskOutcome.SUCCESS,
-                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, thirdResult.task(":generatePets").getOutcome());
+        TaskOutcome secondOutcome = Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome();
+        assertTrue(secondOutcome == TaskOutcome.UP_TO_DATE ||
+                   secondOutcome == TaskOutcome.SUCCESS,
+                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondOutcome);
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(thirdResult.task(":generatePets")).getOutcome());
     }
 
     @Test
@@ -79,8 +79,8 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         BuildResult secondResult = runGenerationTask();
 
         // Then: Both runs should succeed (configuration change should invalidate cache)
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome());
     }
 
     @Test
@@ -104,8 +104,8 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
 
         // Then: First run should succeed, second run should also be SUCCESS since template changed
         // (custom template changes DO affect the task when using userTemplateDir)
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Task should succeed (template processing working correctly)
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         // Note: Template processing log messages may vary, core functionality is the successful build
     }
 
@@ -159,9 +159,9 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         BuildResult secondResult = runGenerationTask();
 
         // Then: Both generation runs should succeed (no UP-TO-DATE after clean)
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, cleanResult.task(":clean").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(cleanResult.task(":clean")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome());
     }
 
     @Test
@@ -211,14 +211,15 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: First run all SUCCESS, second run pets SUCCESS and orders UP-TO-DATE or SUCCESS
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generatePets").getOutcome());
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateOrders").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generatePets")).getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generateOrders")).getOutcome());
         
-        assertEquals(TaskOutcome.SUCCESS, secondResult.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(secondResult.task(":generatePets")).getOutcome());
         // Note: Template precedence detection may cause tasks to run as SUCCESS instead of UP_TO_DATE
-        assertTrue(secondResult.task(":generateOrders").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generateOrders").getOutcome() == TaskOutcome.SUCCESS,
-                   "Orders task should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generateOrders").getOutcome());
+        TaskOutcome ordersOutcome = Objects.requireNonNull(secondResult.task(":generateOrders")).getOutcome();
+        assertTrue(ordersOutcome == TaskOutcome.UP_TO_DATE ||
+                   ordersOutcome == TaskOutcome.SUCCESS,
+                   "Orders task should be UP_TO_DATE or SUCCESS, was: " + ordersOutcome);
     }
 
     @Test
@@ -235,7 +236,7 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
         long duration = endTime - startTime;
 
         // Then: Should complete successfully within reasonable time (< 30 seconds)
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         assertTrue(duration < 30000, "Generation should complete within 30 seconds, took: " + duration + "ms");
         
         // Verify multiple files were generated
@@ -371,7 +372,8 @@ public class PerformanceIntegrationTest extends BaseTestKitTest {
     private void setupCustomTemplateConfiguration() throws IOException {
         // Create custom template  
         File templateDir = new File(testProjectDir, "src/main/resources/templates");
-        templateDir.mkdirs();
+        assertTrue(templateDir.mkdirs() || templateDir.exists(),
+                  "Failed to create directory: " + templateDir);
         
         File customTemplate = new File(templateDir, "pojo.mustache");
         Files.write(customTemplate.toPath(), 

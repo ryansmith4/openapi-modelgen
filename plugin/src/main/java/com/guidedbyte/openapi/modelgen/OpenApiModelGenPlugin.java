@@ -2,7 +2,7 @@ package com.guidedbyte.openapi.modelgen;
 
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.*;
-import org.apache.commons.lang3.StringUtils;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -182,11 +182,11 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             // Log the detected version
             project.getLogger().debug("Validating OpenAPI Generator version compatibility: {}", version);
             
-            // Parse version for comparison (simple semantic versioning)
-            if (isVersionBelow(version, minTestedVersion)) {
+            // Parse version for comparison (semantic versioning)
+            if (VersionUtils.isVersionBelow(version, minTestedVersion)) {
                 project.getLogger().warn("OpenAPI Generator version {} is below the minimum tested version {}. " +
                     "Consider upgrading to ensure compatibility with all plugin features.", version, minTestedVersion);
-            } else if (isVersionAbove(version, maxTestedVersion)) {
+            } else if (VersionUtils.isVersionAbove(version, maxTestedVersion)) {
                 project.getLogger().info("OpenAPI Generator version {} is newer than the maximum tested version {}. " +
                     "The plugin should work but some features may behave differently.", version, maxTestedVersion);
             } else {
@@ -201,67 +201,6 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             
         } catch (Exception e) {
             project.getLogger().debug("Error validating OpenAPI Generator version '{}': {}", version, e.getMessage());
-        }
-    }
-    
-    /**
-     * Checks if a version is below the minimum version using simple semantic versioning.
-     */
-    private boolean isVersionBelow(String version, String minVersion) {
-        try {
-            return compareVersions(version, minVersion) < 0;
-        } catch (Exception e) {
-            return false; // If we can't parse, assume it's compatible
-        }
-    }
-    
-    /**
-     * Checks if a version is above the maximum tested version using simple semantic versioning.
-     */
-    private boolean isVersionAbove(String version, String maxVersion) {
-        try {
-            return compareVersions(version, maxVersion) > 0;
-        } catch (Exception e) {
-            return false; // If we can't parse, assume it's compatible
-        }
-    }
-    
-    /**
-     * Compares two version strings using simple semantic versioning.
-     * Returns: negative if version1 < version2, zero if equal, positive if version1 > version2
-     */
-    private int compareVersions(String version1, String version2) {
-        if (version1.equals(version2)) {
-            return 0;
-        }
-        
-        String[] parts1 = version1.split("[.-]");
-        String[] parts2 = version2.split("[.-]");
-        
-        int maxLength = Math.max(parts1.length, parts2.length);
-        
-        for (int i = 0; i < maxLength; i++) {
-            int v1 = i < parts1.length ? parseVersionPart(parts1[i]) : 0;
-            int v2 = i < parts2.length ? parseVersionPart(parts2[i]) : 0;
-            
-            if (v1 != v2) {
-                return Integer.compare(v1, v2);
-            }
-        }
-        
-        return 0;
-    }
-    
-    /**
-     * Parses a version part, handling non-numeric suffixes.
-     */
-    private int parseVersionPart(String part) {
-        try {
-            // Extract numeric part (ignore suffixes like "SNAPSHOT", "RC", etc.)
-            String numericPart = part.replaceAll("[^0-9].*", "");
-            return numericPart.isEmpty() ? 0 : Integer.parseInt(numericPart);
-        } catch (NumberFormatException e) {
-            return 0;
         }
     }
     
@@ -283,7 +222,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         try {
             // Validate minimum OpenAPI Generator version requirement
             if (metadata.getMinOpenApiGeneratorVersion() != null) {
-                if (isVersionBelow(detectedGeneratorVersion, metadata.getMinOpenApiGeneratorVersion())) {
+                if (VersionUtils.isVersionBelow(detectedGeneratorVersion, metadata.getMinOpenApiGeneratorVersion())) {
                     errors.add(String.format("Library '%s' requires OpenAPI Generator version %s+ but detected version is %s", 
                               libraryName, metadata.getMinOpenApiGeneratorVersion(), detectedGeneratorVersion));
                 } else {
@@ -294,7 +233,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             
             // Validate maximum OpenAPI Generator version requirement
             if (metadata.getMaxOpenApiGeneratorVersion() != null) {
-                if (isVersionAbove(detectedGeneratorVersion, metadata.getMaxOpenApiGeneratorVersion())) {
+                if (VersionUtils.isVersionAbove(detectedGeneratorVersion, metadata.getMaxOpenApiGeneratorVersion())) {
                     errors.add(String.format("Library '%s' supports OpenAPI Generator up to version %s but detected version is %s", 
                               libraryName, metadata.getMaxOpenApiGeneratorVersion(), detectedGeneratorVersion));
                 } else {
@@ -310,7 +249,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             }
             
         } catch (Exception e) {
-            logger.debug("Error validating library '{}' version compatibility: {}", libraryName, e.getMessage());
+            logger.warn("Error validating library '{}' version compatibility: {}", libraryName, e.getMessage());
         }
     }
     
@@ -357,7 +296,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             }
             
         } catch (Exception e) {
-            logger.debug("Error during library version compatibility validation: {}", e.getMessage());
+            logger.warn("Error during library version compatibility validation: {}", e.getMessage());
             errors.add("Error validating library version compatibility: " + e.getMessage());
         }
         
@@ -439,7 +378,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             
             return PluginConstants.UNKNOWN_VERSION; // Present but version unknown
         } catch (Exception e) {
-            logger.debug("Failed to detect OpenAPI Generator version from classpath: {}", e.getMessage());
+            logger.warn("Failed to detect OpenAPI Generator version from classpath: {}", e.getMessage());
             return null;
         }
     }

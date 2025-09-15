@@ -3,6 +3,8 @@ package com.guidedbyte.openapi.modelgen.services;
 import org.gradle.api.file.FileSystemOperations;
 import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.CodegenConfigLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
@@ -18,6 +20,7 @@ import java.util.jar.JarFile;
  * without requiring the CLI dependency.
  */
 public class OpenApiTemplateExtractor {
+    private static final Logger logger = LoggerFactory.getLogger(OpenApiTemplateExtractor.class);
     
     /**
      * Constructs a new OpenApiTemplateExtractor.
@@ -70,11 +73,10 @@ public class OpenApiTemplateExtractor {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         
         // Try to get the resource URL
-        String resourcePath = templateDir;
-        URL resourceUrl = classLoader.getResource(resourcePath);
+        URL resourceUrl = classLoader.getResource(templateDir);
         
         if (resourceUrl == null) {
-            throw new IllegalArgumentException("Template directory not found: " + resourcePath);
+            throw new IllegalArgumentException("Template directory not found: " + templateDir);
         }
         
         Path outputPath = Paths.get(outputDir);
@@ -82,7 +84,7 @@ public class OpenApiTemplateExtractor {
         
         if (resourceUrl.getProtocol().equals("jar")) {
             // Extract from JAR file
-            extractFromJar(resourceUrl, resourcePath, outputPath, library, fileSystemOperations);
+            extractFromJar(resourceUrl, templateDir, outputPath, library, fileSystemOperations);
         } else {
             // Extract from file system (development mode)
             extractFromFileSystem(Paths.get(resourceUrl.toURI()), outputPath, library, fileSystemOperations);
@@ -132,7 +134,7 @@ public class OpenApiTemplateExtractor {
                         Files.copy(inputStream, targetPath);
                     }
                     
-                    System.out.println("Extracted: " + relativePath);
+                    logger.debug("Extracted: {}", relativePath);
                 }
             }
         }
@@ -141,42 +143,44 @@ public class OpenApiTemplateExtractor {
     /**
      * Extract templates from file system (development mode)
      */
-    private static void extractFromFileSystem(Path sourcePath, Path outputPath, String library, FileSystemOperations fileSystemOperations) 
+    private static void extractFromFileSystem(Path sourcePath, Path outputPath, String library, FileSystemOperations fileSystemOperations)
             throws Exception {
-        
-        Files.walk(sourcePath)
-            .filter(Files::isRegularFile)
-            .forEach(sourceFile -> {
-                try {
-                    Path relativePath = sourcePath.relativize(sourceFile);
-                    String pathStr = relativePath.toString();
-                    
-                    // Handle library-specific templates
-                    if (library != null && !library.isEmpty()) {
-                        if (!pathStr.contains("/libraries/" + library + "/") && 
-                            pathStr.contains("/libraries/")) {
-                            return; // Skip other library templates
+
+        try (var pathStream = Files.walk(sourcePath)) {
+            pathStream
+                .filter(Files::isRegularFile)
+                .forEach(sourceFile -> {
+                    try {
+                        Path relativePath = sourcePath.relativize(sourceFile);
+                        String pathStr = relativePath.toString();
+
+                        // Handle library-specific templates
+                        if (library != null && !library.isEmpty()) {
+                            if (!pathStr.contains("/libraries/" + library + "/") &&
+                                pathStr.contains("/libraries/")) {
+                                return; // Skip other library templates
+                            }
                         }
+
+                        Path targetPath = outputPath.resolve(relativePath);
+                        var parentPath = targetPath.getParent();
+                        if (parentPath == null) {
+                            throw new IllegalStateException(
+                                String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from filesystem '%s'",
+                                targetPath, relativePath, sourceFile));
+                        }
+                        Files.createDirectories(parentPath);
+                        fileSystemOperations.copy(copySpec -> {
+                            copySpec.from(sourceFile);
+                            copySpec.into(parentPath.toFile());
+                        });
+
+                        logger.debug("Extracted: {}", relativePath);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to copy file: " + sourceFile, e);
                     }
-                    
-                    Path targetPath = outputPath.resolve(relativePath);
-                    var parentPath = targetPath.getParent();
-                    if (parentPath == null) {
-                        throw new IllegalStateException(
-                            String.format("Failed to resolve parent directory for target path '%s' when extracting '%s' from filesystem '%s'", 
-                            targetPath, relativePath, sourceFile));
-                    }
-                    Files.createDirectories(parentPath);
-                    fileSystemOperations.copy(copySpec -> {
-                        copySpec.from(sourceFile);
-                        copySpec.into(parentPath.toFile());
-                    });
-                    
-                    System.out.println("Extracted: " + relativePath);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to copy file: " + sourceFile, e);
-                }
-            });
+                });
+        }
     }
 
     
@@ -184,9 +188,9 @@ public class OpenApiTemplateExtractor {
      * Get information about available generators
      */
     public static void listAvailableGenerators() {
-        System.out.println("Available generators:");
+        logger.info("Available generators:");
         for (CodegenConfig generator : CodegenConfigLoader.getAll()) {
-            System.out.println("- " + generator.getName() + ": " + generator.getHelp());
+            logger.info("- {}: {}", generator.getName(), generator.getHelp());
         }
     }
     
@@ -202,26 +206,5 @@ public class OpenApiTemplateExtractor {
             throw new IllegalArgumentException("Generator '" + generatorName + "' not found");
         }
         return config.embeddedTemplateDir();
-    }
-    
-    /**
-     * Example usage and test method.
-     * @param args command line arguments
-     */
-    public static void main(String[] args) {
-        try {
-            // List available generators
-            listAvailableGenerators();
-            
-            // Note: FileSystemOperations not available in main() method context
-            // For testing purposes, we'll note that template extraction requires Gradle context
-            System.out.println("\nTemplate extraction requires Gradle FileSystemOperations context.");
-            System.out.println("Use CodegenConfigTemplateExtractor for standalone template extraction.");
-            System.out.println("Or call extractTemplates() with proper FileSystemOperations from a Gradle task.");
-            
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }

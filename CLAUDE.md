@@ -22,10 +22,10 @@ Gradle plugin wrapping OpenAPI Generator with Java DTOs, Lombok support, custom 
 
 ### Requirements
 1. **No `Project` in Actions**: Use `ProjectLayout`, `DirectoryProperty` instead
-2. **Static Logging Only**: `LoggerFactory.getLogger(Class)`, never `project.getLogger()`
-3. **Config vs Execution Separation**: All discovery at config time, serializable objects only
-4. **Test with `--configuration-cache`**: All changes must pass cache tests
-5. **Never Disable Tests**: Fix failures, don't bypass them
+1. **Static Logging Only**: `LoggerFactory.getLogger(Class)`, never `project.getLogger()`
+1. **Config vs Execution Separation**: All discovery at config time, serializable objects only
+1. **Test with `--configuration-cache`**: All changes must pass cache tests
+1. **Never Disable Tests**: Fix failures, don't bypass them
 
 Breaking compatibility = critical regression requiring immediate fix.
 

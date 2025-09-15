@@ -1,13 +1,11 @@
 package com.guidedbyte.openapi.modelgen.services;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Context for evaluating customization conditions.
- * 
+ * <p>
  * Contains all the information needed to evaluate whether a customization
  * should be applied, including generator version, template content, project
  * properties, and cached feature detection results.

@@ -134,7 +134,7 @@ class PatternElementTest {
         element.append(sb, "msg", "spec", "template", "component");
         
         // Should produce a timestamp
-        assertTrue(sb.length() > 0);
+        assertFalse(sb.isEmpty());
         assertTrue(sb.toString().matches("\\d{2}:\\d{2}:\\d{2}"));
         assertTrue(element.estimateMaxLength() > 0);
     }
@@ -159,7 +159,7 @@ class PatternElementTest {
         element.append(sb, "msg", "spec", "template", "component");
         
         // Should fall back to default format
-        assertTrue(sb.length() > 0);
+        assertFalse(sb.isEmpty());
         assertTrue(sb.toString().matches("\\d{2}:\\d{2}:\\d{2}"));
     }
 

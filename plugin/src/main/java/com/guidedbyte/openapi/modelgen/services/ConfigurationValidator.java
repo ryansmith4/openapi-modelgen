@@ -5,6 +5,7 @@ import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -15,12 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Configuration-cache compatible service for validating OpenAPI Model Generator plugin configuration.
@@ -99,7 +95,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate output directory
         if (defaults.getOutputDir().isPresent()) {
             String outputDir = defaults.getOutputDir().get();
-            if (outputDir == null || outputDir.trim().isEmpty()) {
+            if (outputDir.trim().isEmpty()) {
                 errors.add("defaults.outputDir cannot be empty");
             }
         }
@@ -107,7 +103,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate template directory
         if (defaults.getUserTemplateDir().isPresent()) {
             String templateDir = defaults.getUserTemplateDir().get();
-            if (templateDir != null && !templateDir.trim().isEmpty()) {
+            if (!templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
                 if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
                     errors.add("defaults.userTemplateDir is not a directory: " + templateDir);
@@ -152,8 +148,7 @@ public class ConfigurationValidator implements Serializable {
         }
         
         // Validate required inputSpec
-        if (!specConfig.getInputSpec().isPresent() || specConfig.getInputSpec().get() == null || 
-            specConfig.getInputSpec().get().trim().isEmpty()) {
+        if (!specConfig.getInputSpec().isPresent() || specConfig.getInputSpec().get().trim().isEmpty()) {
             errors.add(specPrefix + ": inputSpec is required and cannot be empty");
         } else {
             String inputSpecPath = specConfig.getInputSpec().get();
@@ -176,8 +171,7 @@ public class ConfigurationValidator implements Serializable {
         }
         
         // Validate required modelPackage - check spec first, then fall back to defaults
-        if (!specConfig.getModelPackage().isPresent() || specConfig.getModelPackage().get() == null || 
-            specConfig.getModelPackage().get().trim().isEmpty()) {
+        if (!specConfig.getModelPackage().isPresent() || specConfig.getModelPackage().get().trim().isEmpty()) {
             // modelPackage is required for each spec - no default fallback available
             errors.add(specPrefix + ": modelPackage is required and cannot be empty");
         } else {
@@ -190,7 +184,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate optional outputDir
         if (specConfig.getOutputDir().isPresent()) {
             String outputDir = specConfig.getOutputDir().get();
-            if (outputDir != null && outputDir.trim().isEmpty()) {
+            if (outputDir.trim().isEmpty()) {
                 errors.add(specPrefix + ": outputDir cannot be empty when specified (use null to inherit from defaults)");
             }
         }
@@ -198,7 +192,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate optional userTemplateDir
         if (specConfig.getUserTemplateDir().isPresent()) {
             String templateDir = specConfig.getUserTemplateDir().get();
-            if (templateDir != null && !templateDir.trim().isEmpty()) {
+            if (!templateDir.trim().isEmpty()) {
                 File templateDirFile = new File(templateDir);
                 if (templateDirFile.exists() && !templateDirFile.isDirectory()) {
                     errors.add(specPrefix + ": userTemplateDir is not a directory: " + templateDir);
@@ -210,7 +204,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate optional modelNameSuffix
         if (specConfig.getModelNameSuffix().isPresent()) {
             String suffix = specConfig.getModelNameSuffix().get();
-            if (suffix != null && !suffix.trim().isEmpty() && !suffix.matches("[A-Za-z0-9_]*")) {
+            if (!suffix.trim().isEmpty() && !suffix.matches("[A-Za-z0-9_]*")) {
                 errors.add(specPrefix + ": modelNameSuffix can only contain letters, numbers, and underscores: " + suffix);
             }
         }
@@ -218,7 +212,7 @@ public class ConfigurationValidator implements Serializable {
         // Validate optional modelNamePrefix
         if (specConfig.getModelNamePrefix().isPresent()) {
             String prefix = specConfig.getModelNamePrefix().get();
-            if (prefix != null && !prefix.trim().isEmpty() && !prefix.matches("[A-Za-z0-9_]*")) {
+            if (!prefix.trim().isEmpty() && !prefix.matches("[A-Za-z0-9_]*")) {
                 errors.add(specPrefix + ": modelNamePrefix can only contain letters, numbers, and underscores: " + prefix);
             }
         }
@@ -322,7 +316,6 @@ public class ConfigurationValidator implements Serializable {
         validateLibrarySettings(defaults, errors);
         
         // Get library files and validate metadata
-        Set<File> libraryFiles = new HashSet<>();
         try {
             org.gradle.api.artifacts.Configuration customizationsConfig = 
                 project.getConfigurations().getByName("openapiCustomizations");
@@ -331,22 +324,19 @@ public class ConfigurationValidator implements Serializable {
                 logger.debug("Library template sources are included in templateSources but no openapiCustomizations dependencies found - library sources will be skipped");
                 return; // Skip library validation gracefully
             }
-            
-            libraryFiles.addAll(customizationsConfig.getFiles());
+
+            Set<File> libraryFiles = new HashSet<>(customizationsConfig.getFiles());
             validateLibraryMetadata(project, libraryFiles, specs, errors);
             
         } catch (Exception e) {
             // Use ErrorHandlingUtils for consistent validation error handling
             String errorMessage = ErrorHandlingUtils.formatLibraryError("configuration", 
                 "validation failed: " + e.getMessage());
-            logger.debug("Error validating library configuration: {}", e.getMessage(), e);
+            logger.error("Error validating library configuration: {}", e.getMessage(), e);
             errors.add(errorMessage);
         }
     }
-    
-    /**
-     * Validates library metadata for compatibility.
-     */
+
     /**
      * Validates library metadata for compatibility.
      * 
@@ -388,7 +378,7 @@ public class ConfigurationValidator implements Serializable {
             // Use ErrorHandlingUtils for consistent validation error handling
             String errorMessage = ErrorHandlingUtils.formatLibraryError("metadata extraction", 
                 "failed: " + e.getMessage());
-            logger.debug("Error extracting library metadata: {}", e.getMessage(), e);
+            logger.error("Error extracting library metadata: {}", e.getMessage(), e);
             errors.add(errorMessage);
         }
     }
@@ -425,8 +415,8 @@ public class ConfigurationValidator implements Serializable {
         
         // Validate minimum plugin version
         if (metadata.getMinPluginVersion() != null) {
-            String currentVersion = getCurrentPluginVersion();
-            if (currentVersion != null && !isVersionCompatible(currentVersion, metadata.getMinPluginVersion())) {
+            String currentVersion = VersionUtils.getCurrentPluginVersion();
+            if (currentVersion != null && VersionUtils.isVersionIncompatible(currentVersion, metadata.getMinPluginVersion())) {
                 errors.add(String.format("Library '%s' requires plugin version %s+ (current: %s)", 
                           libraryName, metadata.getMinPluginVersion(), currentVersion));
             }
@@ -453,10 +443,7 @@ public class ConfigurationValidator implements Serializable {
         // Library validation is now handled automatically by templateSources inclusion
         // No additional validation needed since library sources are enabled by including them in templateSources
     }
-    
-    /**
-     * Validates Java package name format.
-     */
+
     /**
      * Checks if the given string is a valid Java package name.
      * 
@@ -478,9 +465,6 @@ public class ConfigurationValidator implements Serializable {
     }
     
     /**
-     * Checks if a word is a Java reserved word.
-     */
-    /**
      * Checks if the given string is a Java reserved word.
      * 
      * @param word the word to check
@@ -490,20 +474,4 @@ public class ConfigurationValidator implements Serializable {
         return JAVA_RESERVED_WORDS.contains(word);
     }
     
-    /**
-     * Gets the current plugin version for validation.
-     */
-    private String getCurrentPluginVersion() {
-        // This would need to be implemented to get actual plugin version
-        // For now, return null to skip version validation
-        return null;
-    }
-    
-    /**
-     * Checks if current version meets minimum requirement.
-     */
-    private boolean isVersionCompatible(String currentVersion, String minVersion) {
-        // Simple version comparison - in reality this should use semantic versioning
-        return currentVersion.compareTo(minVersion) >= 0;
-    }
 }

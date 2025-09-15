@@ -278,7 +278,7 @@ For configuration cache compatibility (faster builds):
    - Right-click `build/generated/sources/openapi/src/main/java`
    - Select "Mark Directory as" → "Generated Sources Root"
 
-2. **Auto-import**: IntelliJ will automatically detect the generated classes
+1. **Auto-import**: IntelliJ will automatically detect the generated classes
 
 ### VS Code
 

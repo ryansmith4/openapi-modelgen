@@ -66,44 +66,6 @@ public final class CompiledSLF4JPattern {
         return sb.toString();
     }
     
-    /**
-     * Returns the original pattern string that was compiled.
-     * 
-     * @return the original pattern
-     */
-    public String getOriginalPattern() {
-        return originalPattern;
-    }
-    
-    /**
-     * Returns the estimated maximum length of formatted strings.
-     * Used for StringBuilder pre-allocation.
-     * 
-     * @return estimated maximum character count
-     */
-    public int getEstimatedLength() {
-        return estimatedLength;
-    }
-    
-    /**
-     * Returns the number of pattern elements in this compiled pattern.
-     * 
-     * @return element count
-     */
-    public int getElementCount() {
-        return elements.length;
-    }
-    
-    /**
-     * Returns a copy of the pattern elements for testing/debugging.
-     * 
-     * @return array of pattern elements
-     */
-    public PatternElement[] getElements() {
-        PatternElement[] copy = new PatternElement[elements.length];
-        System.arraycopy(elements, 0, copy, 0, elements.length);
-        return copy;
-    }
     
     private int calculateEstimatedLength() {
         int total = 0;

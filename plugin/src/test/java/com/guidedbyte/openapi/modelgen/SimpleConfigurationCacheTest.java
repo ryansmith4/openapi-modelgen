@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,9 +31,9 @@ public class SimpleConfigurationCacheTest extends BaseTestKitTest {
         BuildResult result = createGradleRunner(testProjectDir)
             .withArguments("--configuration-cache", "help")
             .build();
-        
-        assertEquals(TaskOutcome.SUCCESS, result.task(":help").getOutcome());
-        
+
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":help")).getOutcome());
+
         // The key test: configuration cache was successfully stored without serialization errors
         assertTrue(result.getOutput().contains("Configuration cache entry stored") || 
                   result.getOutput().contains("Configuration cache entry reused"), 
@@ -64,9 +65,9 @@ public class SimpleConfigurationCacheTest extends BaseTestKitTest {
         BuildResult result = createGradleRunner(testProjectDir)
             .withArguments("--configuration-cache", "help")
             .build();
-        
-        assertEquals(TaskOutcome.SUCCESS, result.task(":help").getOutcome());
-        
+
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":help")).getOutcome());
+
         // Verify configuration cache works with parallel multi-spec setup
         assertTrue(result.getOutput().contains("Configuration cache entry stored") || 
                   result.getOutput().contains("Configuration cache entry reused"), 
@@ -186,7 +187,8 @@ public class SimpleConfigurationCacheTest extends BaseTestKitTest {
             """;
         
         File resourcesDir = new File(testProjectDir, "src/main/resources");
-        resourcesDir.mkdirs();
+        assertTrue(resourcesDir.mkdirs() || resourcesDir.exists(),
+                  "Failed to create directory: " + resourcesDir);
         Files.writeString(new File(resourcesDir, "pets.yaml").toPath(), petSpec);
     }
     
@@ -226,7 +228,8 @@ public class SimpleConfigurationCacheTest extends BaseTestKitTest {
             """;
         
         File resourcesDir = new File(testProjectDir, "src/main/resources");
-        resourcesDir.mkdirs();
+        assertTrue(resourcesDir.mkdirs() || resourcesDir.exists(),
+                  "Failed to create directory: " + resourcesDir);
         Files.writeString(new File(resourcesDir, "orders.yaml").toPath(), orderSpec);
     }
 }

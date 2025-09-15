@@ -6,6 +6,7 @@ import com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.slf4j.Logger;
@@ -280,8 +281,8 @@ public class LibraryProcessor implements Serializable {
     private void validateVersionRequirements(Project project, String libraryName, LibraryMetadata metadata, LibraryValidationResult result) {
         // Validate minimum plugin version
         if (metadata.getMinPluginVersion() != null) {
-            String currentVersion = getCurrentPluginVersion();
-            if (currentVersion != null && !isVersionCompatible(currentVersion, metadata.getMinPluginVersion())) {
+            String currentVersion = VersionUtils.getCurrentPluginVersion();
+            if (currentVersion != null && VersionUtils.isVersionIncompatible(currentVersion, metadata.getMinPluginVersion())) {
                 result.addIssue(String.format("Library '%s' requires plugin version %s+ (current: %s)",
                                libraryName, metadata.getMinPluginVersion(), currentVersion));
             }
@@ -300,7 +301,7 @@ public class LibraryProcessor implements Serializable {
                        libraryName, metadata.getMinOpenApiGeneratorVersion());
             
             if (detectedVersion != null && !"unknown".equals(detectedVersion)) {
-                if (isVersionBelow(detectedVersion, metadata.getMinOpenApiGeneratorVersion())) {
+                if (VersionUtils.isVersionBelow(detectedVersion, metadata.getMinOpenApiGeneratorVersion())) {
                     result.addIssue(String.format("Library '%s' requires OpenAPI Generator version %s+ but detected version is %s", 
                                   libraryName, metadata.getMinOpenApiGeneratorVersion(), detectedVersion));
                 } else {
@@ -318,7 +319,7 @@ public class LibraryProcessor implements Serializable {
                        libraryName, metadata.getMaxOpenApiGeneratorVersion());
             
             if (detectedVersion != null && !"unknown".equals(detectedVersion)) {
-                if (isVersionAbove(detectedVersion, metadata.getMaxOpenApiGeneratorVersion())) {
+                if (VersionUtils.isVersionAbove(detectedVersion, metadata.getMaxOpenApiGeneratorVersion())) {
                     result.addIssue(String.format("Library '%s' supports OpenAPI Generator up to version %s but detected version is %s", 
                                   libraryName, metadata.getMaxOpenApiGeneratorVersion(), detectedVersion));
                 } else {
@@ -348,84 +349,6 @@ public class LibraryProcessor implements Serializable {
     }
     
     /**
-     * Gets current plugin version for validation.
-     */
-    private String getCurrentPluginVersion() {
-        // This would need to be implemented to get actual plugin version
-        // For now, return null to skip version validation
-        return null;
-    }
-    
-    /**
-     * Checks if current version meets minimum requirement.
-     */
-    private boolean isVersionCompatible(String currentVersion, String minVersion) {
-        // Simple version comparison - in reality this should use semantic versioning
-        return currentVersion.compareTo(minVersion) >= 0;
-    }
-    
-    /**
-     * Checks if a version is below the minimum version using simple semantic versioning.
-     */
-    private boolean isVersionBelow(String version, String minVersion) {
-        try {
-            return compareVersions(version, minVersion) < 0;
-        } catch (Exception e) {
-            logger.debug("Error comparing versions '{}' and '{}': {}", version, minVersion, e.getMessage());
-            return false; // If we can't parse, assume it's compatible
-        }
-    }
-    
-    /**
-     * Checks if a version is above the maximum version using simple semantic versioning.
-     */
-    private boolean isVersionAbove(String version, String maxVersion) {
-        try {
-            return compareVersions(version, maxVersion) > 0;
-        } catch (Exception e) {
-            logger.debug("Error comparing versions '{}' and '{}': {}", version, maxVersion, e.getMessage());
-            return false; // If we can't parse, assume it's compatible
-        }
-    }
-    
-    /**
-     * Compares two version strings using simple semantic versioning.
-     * Returns: negative if version1 < version2, zero if equal, positive if version1 > version2
-     */
-    private int compareVersions(String version1, String version2) {
-        if (version1.equals(version2)) {
-            return 0;
-        }
-        
-        String[] parts1 = version1.split("[.-]");
-        String[] parts2 = version2.split("[.-]");
-        
-        int maxLength = Math.max(parts1.length, parts2.length);
-        
-        for (int i = 0; i < maxLength; i++) {
-            String part1 = i < parts1.length ? parts1[i] : "0";
-            String part2 = i < parts2.length ? parts2[i] : "0";
-            
-            // Try to parse as integer first
-            try {
-                int num1 = Integer.parseInt(part1);
-                int num2 = Integer.parseInt(part2);
-                if (num1 != num2) {
-                    return Integer.compare(num1, num2);
-                }
-            } catch (NumberFormatException e) {
-                // If not numeric, compare as strings
-                int stringComparison = part1.compareTo(part2);
-                if (stringComparison != 0) {
-                    return stringComparison;
-                }
-            }
-        }
-        
-        return 0; // All parts are equal
-    }
-    
-    /**
      * Container for library content extracted from dependencies.
      */
     public static class LibraryContent implements Serializable {
@@ -436,6 +359,7 @@ public class LibraryProcessor implements Serializable {
         public LibraryContent() {
             // Default constructor
         }
+        @Serial
         private static final long serialVersionUID = 1L;
         
         private Map<String, String> templates = new java.util.HashMap<>();
@@ -498,6 +422,7 @@ public class LibraryProcessor implements Serializable {
         public LibraryValidationResult() {
             // Default constructor
         }
+        @Serial
         private static final long serialVersionUID = 1L;
         
         private final java.util.List<String> issues = new java.util.ArrayList<>();

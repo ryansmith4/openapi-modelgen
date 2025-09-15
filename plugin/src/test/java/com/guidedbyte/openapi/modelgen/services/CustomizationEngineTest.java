@@ -19,13 +19,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for CustomizationEngine.
  */
 class CustomizationEngineTest {
-    
-    private Project project;
+
     private CustomizationEngine customizationEngine;
     
     @BeforeEach
     void setUp() {
-        project = ProjectBuilder.builder().build();
+        Project project = ProjectBuilder.builder().build();
         customizationEngine = new CustomizationEngine();
     }
     

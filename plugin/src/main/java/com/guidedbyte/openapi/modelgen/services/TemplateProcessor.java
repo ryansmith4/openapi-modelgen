@@ -2,7 +2,6 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine.CustomizationException;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class TemplateProcessor {
     public String applyInsertion(String template, Insertion insertion, EvaluationContext context, 
                                Map<String, String> partials) throws CustomizationException {
         
-        if (!shouldApplyCustomization(insertion.getConditions(), context)) {
+        if (shouldSkipCustomization(insertion.getConditions(), context)) {
             // Try fallback if conditions not met
             if (insertion.getFallback() != null) {
                 logger.debug("Primary insertion conditions not met, trying fallback");
@@ -85,7 +84,7 @@ public class TemplateProcessor {
         logger.debug("Replacement type: '{}'", replacement.getType());
         logger.debug("Has conditions: {}", replacement.getConditions() != null);
         
-        if (!shouldApplyCustomization(replacement.getConditions(), context)) {
+        if (shouldSkipCustomization(replacement.getConditions(), context)) {
             logger.debug("CONDITIONS NOT MET - skipping replacement");
             // Try fallback if conditions not met
             if (replacement.getFallback() != null) {
@@ -148,7 +147,7 @@ public class TemplateProcessor {
     public String applySmartReplacement(String template, SmartReplacement replacement, EvaluationContext context,
                                       Map<String, String> partials) throws CustomizationException {
         
-        if (!shouldApplyCustomization(replacement.getConditions(), context)) {
+        if (shouldSkipCustomization(replacement.getConditions(), context)) {
             logger.debug("Smart replacement conditions not met");
             return template;
         }
@@ -175,7 +174,7 @@ public class TemplateProcessor {
     public String applySmartInsertion(String template, SmartInsertion insertion, EvaluationContext context,
                                     Map<String, String> partials) throws CustomizationException {
         
-        if (!shouldApplyCustomization(insertion.getConditions(), context)) {
+        if (shouldSkipCustomization(insertion.getConditions(), context)) {
             // Try fallback if conditions not met
             if (insertion.getFallback() != null) {
                 logger.debug("Smart insertion conditions not met, trying fallback");
@@ -305,10 +304,11 @@ public class TemplateProcessor {
     }
     
     /**
-     * Checks if a customization should be applied based on its conditions.
+     * Checks if a customization should be skipped based on its conditions.
+     * Returns true if conditions are not met and customization should be skipped.
      */
-    private boolean shouldApplyCustomization(ConditionSet conditions, EvaluationContext context) {
-        return conditionEvaluator.evaluate(conditions, context);
+    private boolean shouldSkipCustomization(ConditionSet conditions, EvaluationContext context) {
+        return !conditionEvaluator.evaluate(conditions, context);
     }
     
     /**
@@ -436,14 +436,11 @@ public class TemplateProcessor {
          * Applies semantic insertion at logical points in the template.
          */
         public String applySemanticInsertion(String template, String semantic, String content) {
-            switch (semantic) {
-                case "start_of_file":
-                    return content + template;
-                case "end_of_file":
-                    return template + content;
-                default:
-                    return applyPatternBasedInsertion(template, semantic, content);
-            }
+            return switch (semantic) {
+                case "start_of_file" -> content + template;
+                case "end_of_file" -> template + content;
+                default -> applyPatternBasedInsertion(template, semantic, content);
+            };
         }
         
         /**

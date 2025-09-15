@@ -9,11 +9,8 @@ import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.TaskContainer;
-import org.gradle.api.tasks.TaskProvider;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,7 +74,7 @@ class TaskConfigurationServiceTest {
         // Verify spec task is created
         Task petsTask = tasks.findByName("generatePets");
         assertNotNull(petsTask, "Generate pets task should be created");
-        assertTrue(petsTask instanceof GenerateTask, "Pets task should be a GenerateTask");
+        assertInstanceOf(GenerateTask.class, petsTask, "Pets task should be a GenerateTask");
         assertEquals("openapi modelgen", petsTask.getGroup());
         
         // Verify aggregate task is created
@@ -94,12 +91,12 @@ class TaskConfigurationServiceTest {
     @Test
     void testConfigureGenerateTaskBasicProperties() {
         // Given
-        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.getInputSpec().set("test-spec.yaml");
         specConfig.getModelPackage().set("com.example.test");
         
-        ProjectLayout projectLayout = ((ProjectInternal) project).getLayout();
+        ProjectLayout projectLayout = project.getLayout();
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
         
@@ -119,13 +116,13 @@ class TaskConfigurationServiceTest {
     @Test
     void testApplySpecConfigWithDefaults() {
         // Given
-        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.getInputSpec().set("test-spec.yaml");
         specConfig.getModelPackage().set("com.example.test");
         // Don't set outputDir or modelNameSuffix to test defaults
         
-        ProjectLayout projectLayout = ((ProjectInternal) project).getLayout();
+        ProjectLayout projectLayout = project.getLayout();
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
         
@@ -150,7 +147,7 @@ class TaskConfigurationServiceTest {
     @Test
     void testApplySpecConfigSpecOverridesDefaults() {
         // Given
-        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.getInputSpec().set("test-spec.yaml");
         specConfig.getModelPackage().set("com.example.test");
@@ -158,7 +155,7 @@ class TaskConfigurationServiceTest {
         specConfig.getModelNameSuffix().set("Model");        // Override default
         specConfig.getValidateSpec().set(true);              // Override default
         
-        ProjectLayout projectLayout = ((ProjectInternal) project).getLayout();
+        ProjectLayout projectLayout = project.getLayout();
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
         
@@ -181,13 +178,13 @@ class TaskConfigurationServiceTest {
     @Test
     void testApplySpecConfigWithEmptyStringSuffix() {
         // Given
-        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.getInputSpec().set("test-spec.yaml");
         specConfig.getModelPackage().set("com.example.test");
         specConfig.getModelNameSuffix().set("");  // Test empty string suffix
         
-        ProjectLayout projectLayout = ((ProjectInternal) project).getLayout();
+        ProjectLayout projectLayout = project.getLayout();
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
         
@@ -207,7 +204,7 @@ class TaskConfigurationServiceTest {
     @Test
     void testApplyDefaultConfigurationSetsCommonOptions() {
         // Given
-        GenerateTask task = project.getTasks().create("testTask", GenerateTask.class);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         
         // When - Use reflection to call private method
         invokeApplyDefaultConfiguration(task);
@@ -228,7 +225,7 @@ class TaskConfigurationServiceTest {
     @Test
     void testConfigureParallelExecution() {
         // Given
-        Task aggregateTask = project.getTasks().create("testAggregate");
+        Task aggregateTask = project.getTasks().register("testAggregate").get();
         TaskContainer tasks = project.getTasks();
         
         // When

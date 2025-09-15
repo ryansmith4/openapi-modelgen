@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,11 +33,10 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create basic settings.gradle
@@ -67,7 +65,7 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Plugin should be applied successfully
-        assertEquals(TaskOutcome.SUCCESS, result.task(":tasks").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":tasks")).getOutcome());
         assertFalse(result.getOutput().contains("FAILED"));
     }
 
@@ -165,7 +163,7 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Task should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generatePets").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify generated files exist in the default location (build/generated/sources/openapi)
         File generatedPackageDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
@@ -211,7 +209,8 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
     private void createValidSpec() throws IOException {
         // Create spec directory
         File specDir = new File(testProjectDir, "src/main/resources/openapi-spec");
-        specDir.mkdirs();
+        assertTrue(specDir.mkdirs() || specDir.exists(),
+                  "Failed to create directory: " + specDir);
         
         String specContent = """
             openapi: 3.0.0

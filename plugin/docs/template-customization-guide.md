@@ -325,7 +325,7 @@ my-templates-lib/
 │   └── build.gradle
 ```
 
-2. **Add library metadata:**
+1. **Add library metadata:**
 
 ```yaml
 # src/main/resources/META-INF/openapi-library.yaml
@@ -349,7 +349,7 @@ features:
   springBootIntegration: "3.x"
 ```
 
-3. **Build and publish:**
+1. **Build and publish:**
 
 ```gradle
 // my-templates-lib/build.gradle
@@ -424,7 +424,7 @@ build/template-work/spring-{specName}/    # Each spec has its own directory
    ✅ Solution: Remove explicit template to allow YAML customizations
    ```
 
-2. **Wrong generator directory:**
+1. **Wrong generator directory:**
    ```text
    ❌ Problem: Templates in wrong directory
    src/main/resources/template-customizations/pojo.mustache.yaml
@@ -433,7 +433,7 @@ build/template-work/spring-{specName}/    # Each spec has its own directory
    src/main/resources/template-customizations/spring/pojo.mustache.yaml
    ```
 
-3. **Pattern not found:**
+1. **Pattern not found:**
    ```yaml
    ❌ Problem: Insertion pattern doesn't exist in base template
    insertions:
@@ -522,9 +522,9 @@ insertions:
      - after: "import"
    ```
 
-2. **Group related customizations** in single files rather than multiple files
+1. **Group related customizations** in single files rather than multiple files
 
-3. **Use conditions effectively** to avoid unnecessary processing:
+1. **Use conditions effectively** to avoid unnecessary processing:
    ```yaml
    ✅ Conditional insertion
    insertions:
@@ -539,28 +539,28 @@ insertions:
 ### Template Organization
 
 1. **Use generator-specific directories** (`spring/`, `java/`, etc.)
-2. **Group related customizations** by functionality
-3. **Name files descriptively** (`validation.mustache.yaml`, `audit-fields.mustache.yaml`)
+1. **Group related customizations** by functionality
+1. **Name files descriptively** (`validation.mustache.yaml`, `audit-fields.mustache.yaml`)
 
 ### YAML Structure
 
 1. **Add metadata** for documentation and maintenance
-2. **Use conditions** to ensure compatibility across OpenAPI Generator versions  
-3. **Test patterns** against actual base templates
-4. **Handle whitespace explicitly** using YAML block scalar indicators
+1. **Use conditions** to ensure compatibility across OpenAPI Generator versions  
+1. **Test patterns** against actual base templates
+1. **Handle whitespace explicitly** using YAML block scalar indicators
 
 ### Development Workflow
 
 1. **Start small** with single insertions
-2. **Test incrementally** after each customization
-3. **Use debug logging** to understand template resolution
-4. **Version control** customization files alongside code
+1. **Test incrementally** after each customization
+1. **Use debug logging** to understand template resolution
+1. **Version control** customization files alongside code
 
 ### Team Collaboration
 
 1. **Document customizations** with clear metadata
-2. **Create template libraries** for shared patterns
-3. **Establish naming conventions** for customization files
-4. **Review template changes** through code review process
+1. **Create template libraries** for shared patterns
+1. **Establish naming conventions** for customization files
+1. **Review template changes** through code review process
 
 This guide covers the most common template customization scenarios. For the complete technical reference, see the [Template Schema Reference](template-schema.md).

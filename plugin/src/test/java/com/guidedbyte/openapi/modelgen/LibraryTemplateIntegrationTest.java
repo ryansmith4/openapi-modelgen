@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -10,7 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -47,8 +46,13 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
         libraryJar = new File(testProjectDir, "libs/test-templates-1.0.jar");
         
         // Create directory structure
-        new File(testProjectDir, "src/main/resources/openapi").mkdirs();
-        new File(testProjectDir, "libs").mkdirs();
+        File openApiDir = new File(testProjectDir, "src/main/resources/openapi");
+        File libsDir = new File(testProjectDir, "libs");
+
+        assertTrue(openApiDir.mkdirs() || openApiDir.exists(),
+                  "Failed to create OpenAPI directory: " + openApiDir);
+        assertTrue(libsDir.mkdirs() || libsDir.exists(),
+                  "Failed to create libs directory: " + libsDir);
     }
 
     @Test
@@ -136,7 +140,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
 
         // Verify build succeeded and library processing was skipped
         String output = result.getOutput();
-        assertEquals(SUCCESS, result.task(":tasks").getOutcome());
+        assertEquals(SUCCESS, Objects.requireNonNull(result.task(":tasks")).getOutcome());
         assertFalse(output.contains("Processing 1 template library dependencies"),
                    "Should not process libraries when not in templateSources: " + output);
     }
@@ -256,7 +260,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                     {{#vars}}
                     private {{{datatypeWithEnum}}} {{name}};
                     {{/vars}}
-                    
+                
                     {{#vars}}
                     public {{{datatypeWithEnum}}} get{{nameInCamelCase}}() { return {{name}}; }
                     public void set{{nameInCamelCase}}({{{datatypeWithEnum}}} {{name}}) { this.{{name}} = {{name}}; }
@@ -491,7 +495,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
 
         // Verify build succeeded and library processing was skipped
         String output = result.getOutput();
-        assertEquals(SUCCESS, result.task(":tasks").getOutcome());
+        assertEquals(SUCCESS, Objects.requireNonNull(result.task(":tasks")).getOutcome());
         assertFalse(output.contains("Processing 1 template library dependencies"),
                    "Should not process libraries when no dependencies exist: " + output);
     }
@@ -705,7 +709,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                   - "spring"
                 minOpenApiGeneratorVersion: "7.11.0"
                 maxOpenApiGeneratorVersion: "7.14.0"
-                minPluginVersion: "1.0.0"
+                minPluginVersion: "1.0.0-DEVELOPMENT"
                 requiredFeatures:
                   - "advanced-validation"
                 """;
@@ -857,7 +861,7 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                     defaults {
                         templateSources([
                             'user-templates',           // Highest precedence
-                            'user-customizations',      
+                            'user-customizations',
                             'library-templates',        // Library templates
                             'library-customizations',   // Library YAML customizations
                             'plugin-customizations',    // Plugin customizations (disabled)

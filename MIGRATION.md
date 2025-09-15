@@ -22,10 +22,10 @@ This document provides guidance for migrating between different versions of the 
 
 **Migration Steps:**
 1. Update Java version to 17+
-2. Update Gradle wrapper to 8.5+
-3. Review and update any custom templates
-4. Test generation with new structure
-5. Update CI/CD pipelines
+1. Update Gradle wrapper to 8.5+
+1. Review and update any custom templates
+1. Test generation with new structure
+1. Update CI/CD pipelines
 
 ### Version 1.1.0 (Planned)
 **New Features (Backward Compatible):**
@@ -44,9 +44,9 @@ This document provides guidance for migrating between different versions of the 
 The plugin automatically detects its version from:
 
 1. **Gradle property**: `./gradlew build -Pversion=1.2.3`
-2. **gradle.properties**: Uncomment `version=1.2.3` 
-3. **Git tags**: Automatic detection from `git describe --tags`
-4. **Fallback**: `1.0.0-SNAPSHOT` for development
+1. **gradle.properties**: Uncomment `version=1.2.3` 
+1. **Git tags**: Automatic detection from `git describe --tags`
+1. **Fallback**: `1.0.0-SNAPSHOT` for development
 
 ## Incremental Versioning Strategies
 
@@ -78,9 +78,9 @@ version=1.1.0
 
 ### Development Cycle
 1. **Feature Development**: Work on `1.0.0-SNAPSHOT`
-2. **Pre-release Testing**: `1.1.0-RC1`, `1.1.0-RC2`
-3. **Release**: Create `v1.1.0` tag
-4. **Hotfix**: `1.1.1` for critical fixes
+1. **Pre-release Testing**: `1.1.0-RC1`, `1.1.0-RC2`
+1. **Release**: Create `v1.1.0` tag
+1. **Hotfix**: `1.1.1` for critical fixes
 
 ### Release Commands
 ```bash

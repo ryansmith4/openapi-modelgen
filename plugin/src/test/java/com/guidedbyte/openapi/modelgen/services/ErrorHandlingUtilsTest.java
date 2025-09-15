@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +59,7 @@ class ErrorHandlingUtilsTest {
         
         assertTrue(exception.getMessage().contains("Failed to read test file"));
         assertTrue(exception.getMessage().contains("Check file permissions"));
-        assertTrue(exception.getCause() instanceof IOException);
+        assertInstanceOf(IOException.class, exception.getCause());
     }
 
     @Test
@@ -334,7 +333,7 @@ class ErrorHandlingUtilsTest {
         
         assertTrue(exception.getMessage().contains("Failed to process file"));
         assertTrue(exception.getMessage().contains("Check permissions"));
-        assertTrue(exception.getCause() instanceof IOException);
+        assertInstanceOf(IOException.class, exception.getCause());
     }
 
     @Test

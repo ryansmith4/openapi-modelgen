@@ -1,6 +1,6 @@
 package com.guidedbyte.openapi.modelgen.actions;
 
-import org.apache.commons.lang3.StringUtils;
+
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.slf4j.Logger;

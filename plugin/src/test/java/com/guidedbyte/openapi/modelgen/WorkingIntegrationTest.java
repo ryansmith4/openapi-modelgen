@@ -1,7 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,12 +10,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Working integration tests using TestKit
- * 
+ * <p>
  * NOTE: These tests use ${project.projectDir} for inputSpec paths due to TestKit's temporary directory setup.
  * In real-world usage, relative paths like "src/main/resources/openapi-spec/pets.yaml" work fine.
  * See test-app/build.gradle for examples of normal usage with relative paths.
@@ -27,11 +27,10 @@ public class WorkingIntegrationTest extends BaseTestKitTest {
     File testProjectDir;
     
     private File buildFile;
-    private File settingsFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        settingsFile = new File(testProjectDir, "settings.gradle");
+        File settingsFile = new File(testProjectDir, "settings.gradle");
         buildFile = new File(testProjectDir, "build.gradle");
         
         // Create basic settings.gradle
@@ -60,7 +59,7 @@ public class WorkingIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Build should succeed
-        assertEquals(TaskOutcome.SUCCESS, result.task(":tasks").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":tasks")).getOutcome());
         assertFalse(result.getOutput().contains("FAILED"));
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
     }
@@ -87,7 +86,7 @@ public class WorkingIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Help task should run successfully
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateHelp").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateHelp")).getOutcome());
         assertTrue(result.getOutput().contains("OpenAPI Model Generator Plugin"));
         assertTrue(result.getOutput().contains("Configuration Example"));
     }
@@ -163,7 +162,7 @@ public class WorkingIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: Should generate code successfully
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
         // Verify generated files exist in the default location (build/generated/sources/openapi)
         File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
@@ -214,17 +213,19 @@ public class WorkingIntegrationTest extends BaseTestKitTest {
                 .build();
 
         // Then: First should succeed, second should be up-to-date or success
-        assertEquals(TaskOutcome.SUCCESS, firstResult.task(":generateTest").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(firstResult.task(":generateTest")).getOutcome());
         // Note: Template precedence detection may cause tasks to run as SUCCESS instead of UP_TO_DATE
-        assertTrue(secondResult.task(":generateTest").getOutcome() == TaskOutcome.UP_TO_DATE ||
-                   secondResult.task(":generateTest").getOutcome() == TaskOutcome.SUCCESS,
-                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondResult.task(":generateTest").getOutcome());
+        TaskOutcome secondOutcome = Objects.requireNonNull(secondResult.task(":generateTest")).getOutcome();
+        assertTrue(secondOutcome == TaskOutcome.UP_TO_DATE ||
+                   secondOutcome == TaskOutcome.SUCCESS,
+                   "Second run should be UP_TO_DATE or SUCCESS, was: " + secondOutcome);
     }
 
     private void createValidSpecFile() throws IOException {
         // Create resources directory
         File resourcesDir = new File(testProjectDir, "src/main/resources");
-        resourcesDir.mkdirs();
+        assertTrue(resourcesDir.mkdirs() || resourcesDir.exists(),
+                  "Failed to create directory: " + resourcesDir);
         
         String specContent = """
             openapi: 3.0.0

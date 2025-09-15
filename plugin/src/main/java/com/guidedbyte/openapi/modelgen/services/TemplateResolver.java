@@ -2,7 +2,6 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
-import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.util.DebugLogger;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
@@ -333,7 +332,7 @@ public class TemplateResolver {
             return hasCustomizations;
             
         } catch (Exception e) {
-            logger.debug("Error checking plugin customizations for generator '{}': {}", generatorName, e.getMessage());
+            logger.warn("Error checking plugin customizations for generator '{}': {}", generatorName, e.getMessage());
             return false;
         }
     }
