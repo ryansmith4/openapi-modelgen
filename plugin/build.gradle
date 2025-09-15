@@ -19,10 +19,10 @@ dependencies {
     
     // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled
     // Consumer projects must provide their own version (7.10.0+)
-    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.10.0'
+    compileOnly 'org.openapitools:openapi-generator-gradle-plugin:7.14.0'
     
     // OpenAPI Generator core for CodegenConfig API - also compileOnly
-    compileOnly 'org.openapitools:openapi-generator:7.10.0'
+    compileOnly 'org.openapitools:openapi-generator:7.14.0'
     
     // YAML processing for template customizations
     implementation 'org.yaml:snakeyaml:1.33'
