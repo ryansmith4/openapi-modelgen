@@ -30,9 +30,9 @@ public class ParallelExecutionLoggingAction implements Action<Task>, Serializabl
     
     @Override
     public void execute(Task task) {
-        if (StringUtils.equalsIgnoreCase(phase, "start")) {
+        if ("start".equalsIgnoreCase(phase)) {
             logExecutionStart();
-        } else if (StringUtils.equalsIgnoreCase(phase, "end")) {
+        } else if ("end".equalsIgnoreCase(phase)) {
             logExecutionEnd();
         }
     }

@@ -1,6 +1,5 @@
 package com.guidedbyte.openapi.modelgen.services;
 
-import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.SpecConfig;

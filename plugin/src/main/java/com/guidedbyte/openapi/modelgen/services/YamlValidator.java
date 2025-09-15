@@ -140,7 +140,7 @@ public class YamlValidator {
         // Validate 'at' values (case-insensitive)
         if (insertion.getAt() != null) {
             String at = insertion.getAt().trim();
-            if (!StringUtils.equalsIgnoreCase(at, "start") && !StringUtils.equalsIgnoreCase(at, "end")) {
+            if (!"start".equalsIgnoreCase(at) && !"end".equalsIgnoreCase(at)) {
                 errors.add(path + ".at: must be 'start' or 'end' (case-insensitive), got: " + insertion.getAt());
             }
         }
@@ -183,12 +183,12 @@ public class YamlValidator {
         // Validate replacement type (case-insensitive)
         if (replacement.getType() != null) {
             String type = replacement.getType().trim();
-            if (!StringUtils.equalsIgnoreCase(type, "string") && !StringUtils.equalsIgnoreCase(type, "regex")) {
+            if (!"string".equalsIgnoreCase(type) && !"regex".equalsIgnoreCase(type)) {
                 errors.add(path + ".type: must be 'string' or 'regex' (case-insensitive), got: " + replacement.getType());
             }
             
             // Validate regex if specified
-            if (StringUtils.equalsIgnoreCase(type, "regex")) {
+            if ("regex".equalsIgnoreCase(type)) {
                 try {
                     Pattern.compile(replacement.getFind());
                 } catch (Exception e) {

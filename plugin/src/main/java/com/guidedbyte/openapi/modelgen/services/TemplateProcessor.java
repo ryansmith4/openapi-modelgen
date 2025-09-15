@@ -204,9 +204,9 @@ public class TemplateProcessor {
      * Applies insertion at special locations (start/end).
      */
     private String applyAtInsertion(String template, String at, String content) {
-        if (StringUtils.equalsIgnoreCase(at, "start")) {
+        if ("start".equalsIgnoreCase(at)) {
             return content + template;
-        } else if (StringUtils.equalsIgnoreCase(at, "end")) {
+        } else if ("end".equalsIgnoreCase(at)) {
             return template + content;
         } else {
             logger.warn("Unknown insertion location: {}", at);

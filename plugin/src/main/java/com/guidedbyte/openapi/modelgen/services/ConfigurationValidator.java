@@ -167,9 +167,9 @@ public class ConfigurationValidator implements Serializable {
             } else {
                 // Validate file extension (case-insensitive)
                 String fileName = inputSpecFile.getName();
-                if (!StringUtils.endsWithIgnoreCase(fileName, ".yaml") && 
-                    !StringUtils.endsWithIgnoreCase(fileName, ".yml") && 
-                    !StringUtils.endsWithIgnoreCase(fileName, ".json")) {
+                if (!fileName.toLowerCase().endsWith(".yaml") && 
+                    !fileName.toLowerCase().endsWith(".yml") && 
+                    !fileName.toLowerCase().endsWith(".json")) {
                     errors.add(specPrefix + ": inputSpec should be a YAML (.yaml/.yml) or JSON (.json) file (case-insensitive): " + inputSpecPath);
                 }
             }
@@ -251,8 +251,8 @@ public class ConfigurationValidator implements Serializable {
         }
         
         // Validate Spring Boot 3 and Jakarta EE compatibility (case-insensitive)
-        if (StringUtils.equalsIgnoreCase(configOptions.get("useSpringBoot3"), "false") && 
-            StringUtils.equalsIgnoreCase(configOptions.get("useJakartaEe"), "true")) {
+        if ("false".equalsIgnoreCase(configOptions.get("useSpringBoot3")) && 
+            "true".equalsIgnoreCase(configOptions.get("useJakartaEe"))) {
             errors.add(context + ".configOptions: useJakartaEe=true requires useSpringBoot3=true (case-insensitive)");
         }
         

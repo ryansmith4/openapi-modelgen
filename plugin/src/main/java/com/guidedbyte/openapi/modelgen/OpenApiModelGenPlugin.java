@@ -170,7 +170,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                        "treating unknown/malformed versions as compatible rather than failing the build."
     )
     private void validateVersionCompatibility(String version, Project project) {
-        if (version == null || version.trim().isEmpty() || StringUtils.equals(version, PluginConstants.UNKNOWN_VERSION)) {
+        if (version == null || version.trim().isEmpty() || Objects.equals(version, PluginConstants.UNKNOWN_VERSION)) {
             return; // Nothing to validate
         }
         
@@ -276,7 +276,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      */
     private void validateLibraryVersionCompatibility(String libraryName, LibraryMetadata metadata, 
                                                    String detectedGeneratorVersion, List<String> errors) {
-        if (metadata == null || detectedGeneratorVersion == null || StringUtils.equals(detectedGeneratorVersion, PluginConstants.UNKNOWN_VERSION)) {
+        if (metadata == null || detectedGeneratorVersion == null || Objects.equals(detectedGeneratorVersion, PluginConstants.UNKNOWN_VERSION)) {
             return; // Cannot validate without proper inputs
         }
         
@@ -333,7 +333,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             // Detect current OpenAPI Generator version
             String detectedVersion = detectOpenApiGeneratorVersion(project);
             
-            if (detectedVersion == null || StringUtils.equals(detectedVersion, PluginConstants.UNKNOWN_VERSION)) {
+            if (detectedVersion == null || Objects.equals(detectedVersion, PluginConstants.UNKNOWN_VERSION)) {
                 logger.debug("Cannot validate library version compatibility - OpenAPI Generator version unknown");
                 return errors;
             }
@@ -372,7 +372,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         try {
             String detectedVersion = detectOpenApiGeneratorVersion(project);
             
-            if (detectedVersion != null && !StringUtils.equals(detectedVersion, PluginConstants.UNKNOWN_VERSION)) {
+            if (detectedVersion != null && !Objects.equals(detectedVersion, PluginConstants.UNKNOWN_VERSION)) {
                 project.getLogger().info("Using OpenAPI Generator version: {}", detectedVersion);
                 validateVersionCompatibility(detectedVersion, project);
             } else {

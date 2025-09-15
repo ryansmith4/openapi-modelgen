@@ -181,7 +181,7 @@ public class CustomizationEngine {
         
         // Check if debug is enabled from context (case-insensitive)
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && StringUtils.equalsIgnoreCase(context.getProjectProperties().get("debug"), "true");
+            && "true".equalsIgnoreCase(context.getProjectProperties().get("debug"));
         
         try {
             // Enhanced debug logging for troubleshooting
@@ -240,7 +240,7 @@ public class CustomizationEngine {
     private String applyCustomizationsInternal(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
         // Check if debug is enabled from context (case-insensitive)
         boolean debugEnabled = context != null && context.getProjectProperties() != null 
-            && StringUtils.equalsIgnoreCase(context.getProjectProperties().get("debug"), "true");
+            && "true".equalsIgnoreCase(context.getProjectProperties().get("debug"));
         
         // Use ErrorHandlingUtils for consistent validation
         try {
@@ -557,13 +557,13 @@ public class CustomizationEngine {
             for (String key : insertion.keySet()) {
                 if (!allowedInsertionProps.contains(key)) {
                     // Provide helpful error messages for common mistakes (case-insensitive)
-                    if (StringUtils.equalsIgnoreCase(key, "pattern")) {
+                    if ("pattern".equalsIgnoreCase(key)) {
                         throw new CustomizationException(
                             "Invalid property 'pattern' in insertions[" + i + "] in " + sourceName + 
                             ". Use 'after' or 'before' instead of 'pattern'"
                         );
                     }
-                    if (StringUtils.equalsIgnoreCase(key, "position")) {
+                    if ("position".equalsIgnoreCase(key)) {
                         throw new CustomizationException(
                             "Invalid property 'position' in insertions[" + i + "] in " + sourceName + 
                             ". Use 'after', 'before', or 'at' instead of 'position'"
@@ -1163,7 +1163,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            StringUtils.endsWithIgnoreCase(name, ".yaml") || StringUtils.endsWithIgnoreCase(name, ".yml"));
+            name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml"));
         
         if (yamlFiles != null) {
             for (File yamlFile : yamlFiles) {
@@ -1309,7 +1309,7 @@ public class CustomizationEngine {
                     String fileName = entryName.substring(searchPrefix.length());
                     
                     // Only include direct files (no subdirectories) that are YAML files (case-insensitive)
-                    if (!fileName.contains("/") && StringUtils.endsWithIgnoreCase(fileName, ".yaml") || StringUtils.endsWithIgnoreCase(fileName, ".yml")) {
+                    if (!fileName.contains("/") && (fileName.toLowerCase().endsWith(".yaml") || fileName.toLowerCase().endsWith(".yml"))) {
                         customizations.add(fileName);
                     }
                 }
@@ -1329,7 +1329,7 @@ public class CustomizationEngine {
         
         if (dir.exists() && dir.isDirectory()) {
             java.io.File[] files = dir.listFiles((file) -> 
-                file.isFile() && StringUtils.endsWithIgnoreCase(file.getName(), ".yaml") || StringUtils.endsWithIgnoreCase(file.getName(), ".yml"));
+                file.isFile() && (file.getName().toLowerCase().endsWith(".yaml") || file.getName().toLowerCase().endsWith(".yml")));
             
             if (files != null) {
                 for (java.io.File file : files) {
@@ -1389,7 +1389,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            StringUtils.endsWithIgnoreCase(name, ".yaml") || StringUtils.endsWithIgnoreCase(name, ".yml"));
+            name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml"));
         
         if (yamlFiles == null) {
             return;

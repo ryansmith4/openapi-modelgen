@@ -4,6 +4,7 @@ plugins {
     id 'groovy'
     alias(libs.plugins.spotbugs)
     alias(libs.plugins.owasp.dependencycheck)
+    id 'checkstyle'
 }
 
 import com.github.spotbugs.snom.Effort
@@ -39,6 +40,12 @@ dependencies {
     testImplementation gradleTestKit()
 }
 
+// Configure compilation warnings
+compileJava {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+    options.deprecation = true
+}
+
 // Configure test execution
 test {
     useJUnitPlatform()
@@ -55,6 +62,16 @@ test {
     
     // Increase timeout for integration tests
     timeout = Duration.ofMinutes(5)
+}
+
+// Checkstyle configuration for code style enforcement
+checkstyle {
+    toolVersion = '10.12.4'
+    configFile = file("${projectDir}/config/checkstyle/checkstyle.xml")
+    configDirectory = file("${projectDir}/config/checkstyle")
+    ignoreFailures = true   // Don't fail build on style violations (for now)
+    // maxWarnings = 0      // Commented out - too strict for existing codebase
+    // maxErrors = 0        // Commented out - too strict for existing codebase
 }
 
 // SpotBugs configuration for code quality

@@ -125,7 +125,7 @@ public class EvaluationContext {
         } else {
             // Property existence: "enableFeature" (case-insensitive false check)
             return projectProperties.containsKey(propertySpec.trim()) && 
-                   !StringUtils.equalsIgnoreCase(projectProperties.get(propertySpec.trim()), "false");
+                   !"false".equalsIgnoreCase(projectProperties.get(propertySpec.trim()));
         }
     }
     
@@ -149,7 +149,7 @@ public class EvaluationContext {
         } else {
             // Variable existence: "NODE_ENV" (case-insensitive false check)
             String value = environmentVariables.get(variableSpec.trim());
-            return value != null && !value.isEmpty() && !StringUtils.equalsIgnoreCase(value, "false");
+            return value != null && !value.isEmpty() && !"false".equalsIgnoreCase(value);
         }
     }
     

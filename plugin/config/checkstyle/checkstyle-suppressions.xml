@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Suppress specific violations for existing codebase -->
+    
+    <!-- Allow non-final parameters in existing code -->
+    <suppress checks="FinalParameters" files=".*\.java"/>
+    
+    <!-- Allow design for extension warnings in existing action classes -->
+    <suppress checks="DesignForExtension" files=".*Action\.java"/>
+    
+    <!-- Allow longer lines for existing complex expressions -->
+    <suppress checks="LineLength" files=".*\.java"/>
+    
+    <!-- Allow operator wrapping issues in existing code -->
+    <suppress checks="OperatorWrap" files=".*\.java"/>
+    
+    <!-- Allow whitespace around braces in existing code -->
+    <suppress checks="WhitespaceAround" files=".*\.java"/>
+    
+    <!-- Allow unused imports during development -->
+    <suppress checks="UnusedImports" files=".*\.java"/>
+    
+    <!-- Allow constant naming that doesn't follow strict conventions -->
+    <suppress checks="ConstantName" files=".*\.java"/>
+    
+    <!-- Allow utility classes without private constructors -->
+    <suppress checks="HideUtilityClassConstructor" files=".*\.java"/>
+    
+    <!-- Allow TODO comments -->
+    <suppress checks="TodoComment" files=".*\.java"/>
+    
+    <!-- Allow visibility modifier issues in data classes -->
+    <suppress checks="VisibilityModifier" files=".*\.java"/>
+</suppressions>
