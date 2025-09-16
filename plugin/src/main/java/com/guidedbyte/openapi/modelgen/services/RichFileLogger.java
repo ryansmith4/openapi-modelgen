@@ -43,10 +43,13 @@ public class RichFileLogger {
     private static final Logger logger = LoggerFactory.getLogger(RichFileLogger.class);
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final Map<String, RichFileLogger> instances = new ConcurrentHashMap<>();
-    
+    private static volatile boolean shutdownHookRegistered = false;
+
     private final File logFile;
     private FileWriter writer;
     private boolean enabled;
+    private volatile boolean closed = false;
+    private volatile boolean useAppendMode = false;
     
     private RichFileLogger(File logFile) {
         this.logFile = logFile;
@@ -121,15 +124,19 @@ public class RichFileLogger {
     
     /**
      * Writes a section header to help organize the log file.
-     * 
+     *
      * @param section the section name
      */
     public void section(String section) {
-        if (enabled && writer != null) {
+        if (enabled && !closed) {
             try {
-                writeRawLine("");
-                writeRawLine("=== " + section + " ===");
-                writer.flush();
+                String header = System.lineSeparator() + "=== " + section + " ===" + System.lineSeparator();
+
+                // Use try-with-resources to ensure immediate file handle closure
+                try (FileWriter tempWriter = new FileWriter(logFile, StandardCharsets.UTF_8, useAppendMode)) {
+                    tempWriter.write(header);
+                    tempWriter.flush();
+                }
             } catch (IOException e) {
                 logger.warn("Failed to write section header: {}", e.getMessage());
                 enabled = false;
@@ -138,34 +145,67 @@ public class RichFileLogger {
     }
     
     /**
-     * Closes the log file and flushes any remaining content.
+     * Closes the log file. Since we use try-with-resources for each write,
+     * this primarily marks the logger as disabled.
      */
     public void close() {
-        if (writer != null) {
-            try {
-                writer.flush();
-                writer.close();
-            } catch (IOException e) {
-                logger.warn("Failed to close rich log file: {}", e.getMessage());
+        synchronized (this) {
+            if (!closed) {
+                closed = true;
+                enabled = false;
+                writer = null; // Clear any lingering reference
+
+                // On Windows, encourage garbage collection to help with cleanup
+                if (org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) {
+                    System.runFinalization();
+                    System.gc();
+                }
             }
         }
     }
-    
+
+    /**
+     * Registers a global shutdown hook to close all RichFileLogger instances.
+     */
+    private static void registerShutdownHook() {
+        if (!shutdownHookRegistered) {
+            synchronized (RichFileLogger.class) {
+                if (!shutdownHookRegistered) {
+                    Runtime.getRuntime().addShutdownHook(new Thread(RichFileLogger::closeAll));
+                    shutdownHookRegistered = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Closes all RichFileLogger instances.
+     * Called by shutdown hook and can be called manually for test cleanup.
+     */
+    public static void closeAll() {
+        instances.values().forEach(RichFileLogger::close);
+    }
+
     private boolean initializeLogFile() {
         try {
-            writer = new FileWriter(logFile, StandardCharsets.UTF_8, false); // Overwrite existing file
-            writeRawLine("OpenAPI Model Generator Rich Debug Log");
-            writeRawLine("Started: " + LocalDateTime.now().format(TIMESTAMP_FORMAT));
-            writeRawLine("Log file: " + logFile.getAbsolutePath());
-            writeRawLine("");
-            writer.flush();
-            
-            // Add shutdown hook to ensure file is closed
-            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-            
+            // Initialize the log file with header using try-with-resources
+            try (FileWriter tempWriter = new FileWriter(logFile, StandardCharsets.UTF_8, false)) {
+                tempWriter.write("OpenAPI Model Generator Rich Debug Log" + System.lineSeparator());
+                tempWriter.write("Started: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + System.lineSeparator());
+                tempWriter.write("Log file: " + logFile.getAbsolutePath() + System.lineSeparator());
+                tempWriter.write(System.lineSeparator());
+                tempWriter.flush();
+            }
+
+            // After initialization, switch to append mode
+            useAppendMode = true;
+
+            // Note: No persistent FileWriter - each write operation uses try-with-resources
+            // This ensures immediate file handle release, preventing Windows temp directory issues
+
             return true;
         } catch (IOException e) {
-            logger.warn("Failed to initialize rich debug log file at {}: {}", 
+            logger.warn("Failed to initialize rich debug log file at {}: {}",
                 logFile.getAbsolutePath(), e.getMessage());
             return false;
         }
@@ -205,22 +245,22 @@ public class RichFileLogger {
      * @param message the formatted message to log
      */
     private synchronized void writeLogEntry(String level, String message) {
-        if (writer == null) return;
-        
+        if (closed || !enabled) return;
+
         try {
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
             String component = LoggingContext.getCurrentComponent();
             String spec = LoggingContext.getCurrentSpec();
             String template = LoggingContext.getCurrentTemplate();
-            
+
             StringBuilder entry = new StringBuilder();
             entry.append(timestamp)
                  .append(" [").append(level).append("]");
-            
+
             if (component != null) {
                 entry.append(" [").append(component).append("]");
             }
-            
+
             if (spec != null) {
                 entry.append(" [").append(spec);
                 if (template != null) {
@@ -228,21 +268,21 @@ public class RichFileLogger {
                 }
                 entry.append("]");
             }
-            
-            entry.append(" - ").append(message);
-            
-            writeRawLine(entry.toString());
-            writer.flush(); // Ensure immediate visibility
+
+            entry.append(" - ").append(message).append(System.lineSeparator());
+
+            // Use try-with-resources to ensure immediate file handle closure
+            try (FileWriter tempWriter = new FileWriter(logFile, StandardCharsets.UTF_8, useAppendMode)) {
+                tempWriter.write(entry.toString());
+                tempWriter.flush(); // Ensure immediate visibility
+            }
+
         } catch (IOException e) {
             logger.warn("Failed to write to rich debug log: {}", e.getMessage());
             enabled = false; // Disable logging on write failure
         }
     }
     
-    private void writeRawLine(String line) throws IOException {
-        writer.write(line);
-        writer.write(System.lineSeparator());
-    }
     
     private String formatMessage(String message, Object... args) {
         if (args.length == 0) {

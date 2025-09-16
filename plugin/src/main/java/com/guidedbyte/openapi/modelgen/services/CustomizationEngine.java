@@ -5,6 +5,7 @@ import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.TemplateCustomizationDiagnostics;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -197,56 +198,94 @@ public class CustomizationEngine {
      */
     private String applyCustomizationsInternal(String baseTemplate, CustomizationConfig config, EvaluationContext context) throws CustomizationException {
         // Check if debug is enabled from context (case-insensitive)
-        boolean debugEnabled = context != null && context.getProjectProperties() != null 
+        boolean debugEnabled = context != null && context.getProjectProperties() != null
             && "true".equalsIgnoreCase(context.getProjectProperties().get("debug"));
-        
+
         // Use ErrorHandlingUtils for consistent validation
         try {
-            ErrorHandlingUtils.validateNotNull(baseTemplate, 
+            ErrorHandlingUtils.validateNotNull(baseTemplate,
                 "Base template content cannot be null",
                 ErrorHandlingUtils.TEMPLATE_GUIDANCE,
                 logger);
         } catch (IllegalArgumentException e) {
             throw new CustomizationException(e.getMessage(), e);
         }
-        
+
         logger.debug(
             "Starting template customization, base template length: {}", baseTemplate.length());
-        
+
+        // Enhanced diagnostics: Analyze available template variables for debugging
+        if (debugEnabled) {
+            String templateName = context != null && context.getProjectProperties() != null ?
+                context.getProjectProperties().getOrDefault("templateName", "unknown") : "unknown";
+            TemplateCustomizationDiagnostics.analyzeTemplateVariables(context, templateName);
+        }
+
         if (config == null) {
             logger.debug(
                 "CUSTOMIZATION DEBUG: No customization config provided, returning original template");
             return baseTemplate;
         }
-        
+
         logger.debug(
             "CUSTOMIZATION DEBUG: Config metadata: {}", config.getMetadata());
         logger.debug(
             "CUSTOMIZATION DEBUG: Number of insertions: {}",
             config.getInsertions() != null ? config.getInsertions().size() : 0);
-        
-        // Check global conditions first
+
+        // Check global conditions first with enhanced diagnostics
         ConditionEvaluator conditionEvaluator = new ConditionEvaluator();
-        if (config.getConditions() != null && !conditionEvaluator.evaluate(config.getConditions(), context)) {
-            logger.debug(
-                "CUSTOMIZATION DEBUG: Global conditions not met, skipping customization");
-            return baseTemplate;
+        if (config.getConditions() != null) {
+            if (debugEnabled) {
+                TemplateCustomizationDiagnostics.traceConditionEvaluation(
+                    config.getConditions(), context, "Global customization conditions");
+            }
+
+            if (!conditionEvaluator.evaluate(config.getConditions(), context)) {
+                logger.debug(
+                    "CUSTOMIZATION DEBUG: Global conditions not met, skipping customization");
+                return baseTemplate;
+            }
         }
         
         String result = baseTemplate;
         TemplateProcessor processor = new TemplateProcessor(conditionEvaluator);
-        
+        java.util.List<String> appliedOperations = new java.util.ArrayList<>();
+
         try {
             // Apply customizations in a specific order for predictable results
-            
+
             // 1. Apply replacements first (modify existing content)
             if (config.getReplacements() != null) {
                 logger.debug("Processing {} replacements", config.getReplacements().size());
                 int replacementIndex = 0;
                 for (Replacement replacement : config.getReplacements()) {
-                    logger.debug("Processing replacement #{}: find='{}', replace='{}'", 
-                        replacementIndex++, replacement.getFind(), replacement.getReplace());
+                    String beforeReplacement = result;
+                    logger.debug("Processing replacement #{}: find='{}', replace='{}'",
+                        replacementIndex, replacement.getFind(), replacement.getReplace());
+
+                    // Enhanced diagnostics: Analyze pattern matching
+                    if (debugEnabled) {
+                        boolean willMatch = result.contains(replacement.getFind()) ||
+                            (replacement.getFind() != null && result.matches("(?s).*" + java.util.regex.Pattern.quote(replacement.getFind()) + ".*"));
+                        TemplateCustomizationDiagnostics.analyzePatternMatch(
+                            replacement.getFind(), result, "replacement", willMatch);
+                    }
+
                     result = processor.applyReplacement(result, replacement, context, config.getPartials());
+
+                    // Track applied operations and log diffs
+                    boolean wasApplied = !beforeReplacement.equals(result);
+                    if (wasApplied) {
+                        appliedOperations.add("replacement #" + replacementIndex);
+                        if (debugEnabled) {
+                            TemplateCustomizationDiagnostics.logTemplateDiff(
+                                getCurrentTemplateName(context), beforeReplacement, result,
+                                "Applied replacement #" + replacementIndex);
+                        }
+                    }
+
+                    replacementIndex++;
                 }
                 logger.debug("Finished processing replacements");
             } else {
@@ -266,13 +305,35 @@ public class CustomizationEngine {
                     "CUSTOMIZATION DEBUG: Processing {} insertions", config.getInsertions().size());
                 for (int i = 0; i < config.getInsertions().size(); i++) {
                     Insertion insertion = config.getInsertions().get(i);
+                    String beforeInsertion = result;
                     logger.debug(
                         "CUSTOMIZATION DEBUG: Processing insertion #{}: before='{}', content='{}'",
                         i, insertion.getBefore(), insertion.getContent());
-                    String beforeResult = result;
+
+                    // Enhanced diagnostics: Analyze insertion pattern matching
+                    if (debugEnabled) {
+                        String insertionPattern = insertion.getBefore() != null ? insertion.getBefore() :
+                                                insertion.getAfter() != null ? insertion.getAfter() : "unknown";
+                        boolean willMatch = insertionPattern != null && result.contains(insertionPattern);
+                        TemplateCustomizationDiagnostics.analyzePatternMatch(
+                            insertionPattern, result, "insertion", willMatch);
+                    }
+
                     result = processor.applyInsertion(result, insertion, context, config.getPartials());
+
+                    // Track applied operations and log diffs
+                    boolean wasApplied = !beforeInsertion.equals(result);
+                    if (wasApplied) {
+                        appliedOperations.add("insertion #" + i);
+                        if (debugEnabled) {
+                            TemplateCustomizationDiagnostics.logTemplateDiff(
+                                getCurrentTemplateName(context), beforeInsertion, result,
+                                "Applied insertion #" + i);
+                        }
+                    }
+
                     logger.debug(
-                        "CUSTOMIZATION DEBUG: Template changed: {}", !beforeResult.equals(result));
+                        "CUSTOMIZATION DEBUG: Template changed: {}", wasApplied);
                 }
             }
             
@@ -288,11 +349,14 @@ public class CustomizationEngine {
             logger.debug(
                 "CUSTOMIZATION DEBUG: Final result first 200 chars: {}",
                 result.length() > 200 ? result.substring(0, 200) + "..." : result);
-            
+
+            // Enhanced diagnostics: Comprehensive customization summary
             if (debugEnabled) {
+                TemplateCustomizationDiagnostics.logCustomizationSummary(
+                    config, baseTemplate, result, appliedOperations);
                 logger.debug("Finished template customization");
             }
-            
+
             return result;
         
         } catch (Exception e) {
@@ -1584,5 +1648,18 @@ public class CustomizationEngine {
         public CustomizationException(String message, Throwable cause) {
             super(message, cause);
         }
+    }
+
+    /**
+     * Helper method to extract template name from evaluation context.
+     *
+     * @param context the evaluation context
+     * @return the template name or "unknown" if not available
+     */
+    private String getCurrentTemplateName(EvaluationContext context) {
+        if (context != null && context.getProjectProperties() != null) {
+            return context.getProjectProperties().getOrDefault("templateName", "unknown");
+        }
+        return "unknown";
     }
 }

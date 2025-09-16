@@ -139,7 +139,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             configurationValidator.validateExtensionConfiguration(proj, proj.getLayout(), extension);
 
             // Set plugin state for global access
-            PluginState.getInstance().setDebugEnabled(extension.isDebug());
+            PluginState.getInstance().setLogLevel(extension.isDebug() ? "DEBUG" : "INFO");
             PluginState.getInstance().setBuildDirectory(proj.getLayout().getBuildDirectory().getAsFile().get());
             
             // Check for library dependencies and process if needed

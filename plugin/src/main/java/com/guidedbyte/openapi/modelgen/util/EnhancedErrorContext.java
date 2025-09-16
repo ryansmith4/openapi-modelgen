@@ -345,7 +345,7 @@ public final class EnhancedErrorContext {
         }
 
         // Check path format
-        if (filePath.contains("\\") && !System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if (filePath.contains("\\") && !org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) {
             suggestions.add("Use forward slashes (/) in file paths for cross-platform compatibility");
         }
 

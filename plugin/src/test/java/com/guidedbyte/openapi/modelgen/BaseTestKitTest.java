@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.testkit.runner.GradleRunner;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,9 +15,13 @@ import java.util.Set;
  * <p>
  * This class ensures TestKit tests have access to both our plugin and the OpenAPI Generator
  * plugin classes when using compileOnly dependency structure.
+ * <p>
+ * File handle cleanup is automatically handled by the {@link FileHandleCleanupExtension}
+ * to prevent Windows temp directory deletion issues.
  */
+@ExtendWith(FileHandleCleanupExtension.class)
 public abstract class BaseTestKitTest {
-    
+
     /**
      * Creates a GradleRunner with stable plugin classpath for configuration cache compatibility.
      */

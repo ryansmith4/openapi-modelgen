@@ -15,7 +15,7 @@ import java.io.File;
  * <h2>Usage Examples:</h2>
  * <pre>{@code
  * // In plugin configuration (extension)
- * PluginState.getInstance().setDebugEnabled(extension.isDebug());
+ * PluginState.getInstance().setLogLevel(extension.isDebug() ? "DEBUG" : "INFO");
  * PluginState.getInstance().setBuildDirectory(project.getBuildDir());
  *
  * // In services and utilities
@@ -35,6 +35,7 @@ public final class PluginState {
     private static final PluginState INSTANCE = new PluginState();
 
     private volatile boolean debugEnabled = false;
+    private volatile LogLevel logLevel = LogLevel.INFO;
     private volatile File buildDirectory = null;
 
     private PluginState() {
@@ -59,15 +60,74 @@ public final class PluginState {
         return debugEnabled;
     }
 
+
     /**
-     * Sets whether debug logging is enabled for the plugin.
+     * Returns the current log level for the plugin.
+     *
+     * @return the current log level
+     */
+    public LogLevel getLogLevel() {
+        return logLevel;
+    }
+
+    /**
+     * Sets the log level for the plugin.
      * This should only be called once during plugin configuration phase.
      *
-     * @param debugEnabled true to enable debug logging, false to disable
+     * @param logLevel the desired log level
      */
-    public void setDebugEnabled(boolean debugEnabled) {
-        this.debugEnabled = debugEnabled;
+    public void setLogLevel(LogLevel logLevel) {
+        this.logLevel = logLevel != null ? logLevel : LogLevel.INFO;
+        // Update legacy debug flag to match new log level
+        this.debugEnabled = this.logLevel.isDebugEnabled();
     }
+
+    /**
+     * Sets the log level from a string value.
+     * This should only be called once during plugin configuration phase.
+     *
+     * @param logLevelString the log level string (case-insensitive)
+     */
+    public void setLogLevel(String logLevelString) {
+        setLogLevel(LogLevel.fromString(logLevelString));
+    }
+
+    /**
+     * Checks if ERROR logging is enabled.
+     *
+     * @return true if ERROR level or higher
+     */
+    public boolean isErrorEnabled() {
+        return logLevel.isErrorEnabled();
+    }
+
+    /**
+     * Checks if WARN logging is enabled.
+     *
+     * @return true if WARN level or higher
+     */
+    public boolean isWarnEnabled() {
+        return logLevel.isWarnEnabled();
+    }
+
+    /**
+     * Checks if INFO logging is enabled.
+     *
+     * @return true if INFO level or higher
+     */
+    public boolean isInfoEnabled() {
+        return logLevel.isInfoEnabled();
+    }
+
+    /**
+     * Checks if TRACE logging is enabled.
+     *
+     * @return true if TRACE level
+     */
+    public boolean isTraceEnabled() {
+        return logLevel.isTraceEnabled();
+    }
+
 
     /**
      * Returns the build directory for the current project.

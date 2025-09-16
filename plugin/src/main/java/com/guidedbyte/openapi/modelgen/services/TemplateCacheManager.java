@@ -108,7 +108,7 @@ public class TemplateCacheManager implements Serializable {
             return isValid;
 
         } catch (IOException e) {
-            logger.warn("❌ Cache ERROR: Error reading template cache file '{}': {}", cacheLocation, e.getMessage());
+            logger.warn("Cache ERROR: Error reading template cache file '{}': {}", cacheLocation, e.getMessage());
 
             // Log cache error
             TemplateProcessingLogger.logTemplateCacheOperation(

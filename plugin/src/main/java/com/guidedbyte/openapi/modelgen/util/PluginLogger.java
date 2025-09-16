@@ -6,34 +6,48 @@ import org.slf4j.Logger;
 import org.slf4j.Marker;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 /**
- * Unified plugin logger that provides console logging with debug filtering and rich file logging.
+ * Smart plugin logger that provides intelligent log level routing, dual output, and performance optimizations.
  *
- * <p>This logger wraps a standard SLF4J logger and automatically provides:</p>
+ * <p>This logger combines the best of both worlds - infrastructure-level dual logging with
+ * intelligent business logic routing. It automatically provides:</p>
  * <ul>
- *   <li><strong>Console Output:</strong> Respects plugin debug settings for Gradle console</li>
+ *   <li><strong>Console Output:</strong> Respects plugin log level settings for Gradle console</li>
  *   <li><strong>Rich File Output:</strong> Always logs to detailed debug file with full MDC context</li>
- *   <li><strong>Debug Filtering:</strong> Debug calls automatically respect plugin debug settings</li>
- *   <li><strong>Context Aware:</strong> Automatically includes MDC context in file logs</li>
- *   <li><strong>Performance:</strong> Single call, dual output with minimal overhead</li>
+ *   <li><strong>Intelligent Routing:</strong> Routes messages to appropriate levels based on plugin LogLevel</li>
+ *   <li><strong>Lazy Evaluation:</strong> Expensive log message construction only when needed</li>
+ *   <li><strong>Context Awareness:</strong> Adjusts output based on current plugin log level</li>
+ *   <li><strong>Smart Diagnostics:</strong> Automatic routing for template customization and performance logs</li>
+ *   <li><strong>Performance:</strong> Zero overhead when log levels are disabled</li>
  * </ul>
  *
  * <h2>Usage Examples:</h2>
  * <pre>{@code
- * // Standard SLF4J interface - automatically outputs to both console and file
+ * // Standard SLF4J interface with intelligent routing
  * Logger logger = PluginLoggerFactory.getLogger(MyClass.class);
  *
  * LoggingContext.setContext("pets", "pojo.mustache");
  * LoggingContext.setComponent("CustomizationEngine");
  *
- * logger.debug("Processing template");
- * // Console: "Processing template" (if plugin debug enabled)
- * // File: "2025-01-15 14:30:45 [DEBUG] [CustomizationEngine] [pets:pojo.mustache] - Processing template"
+ * // Standard logging - routes based on plugin log level
+ * logger.info("Processing spec: {}", specName);
+ * logger.debug("Template cache hit rate: {}%", hitRate);
+ * logger.trace("Pattern matching details: {}", details);
  *
- * logger.info("Template completed");
- * // Console: "Template completed" (always)
- * // File: "2025-01-15 14:30:45 [INFO] [CustomizationEngine] [pets:pojo.mustache] - Template completed"
+ * // Lazy evaluation for expensive operations
+ * ((PluginLogger) logger).debug("Expensive analysis: {}", () -> performAnalysis());
+ *
+ * // Conditional execution
+ * ((PluginLogger) logger).ifDebug(() -> {
+ *     String report = generateDetailedReport();
+ *     logger.debug("Detailed report: {}", report);
+ * });
+ *
+ * // Smart diagnostics - automatically routes to appropriate levels
+ * ((PluginLogger) logger).customizationDiagnostic("pattern_match", "Pattern matched: {}", pattern);
+ * ((PluginLogger) logger).performanceMetric("build_summary", "Build completed in {}ms", duration);
  * }</pre>
  *
  * @author GuidedByte Technologies Inc.
@@ -44,6 +58,7 @@ public class PluginLogger implements Logger {
     private final Logger delegate;
     private final RichFileLogger richLogger;
     private final boolean fileLoggingEnabled;
+    private final PluginState pluginState;
 
     /**
      * Creates a plugin logger with both console and file output.
@@ -53,6 +68,7 @@ public class PluginLogger implements Logger {
      */
     public PluginLogger(Logger delegate, File buildDir) {
         this.delegate = delegate;
+        this.pluginState = PluginState.getInstance();
 
         // Initialize rich file logger if build directory is provided
         RichFileLogger tempRichLogger = null;
@@ -64,7 +80,9 @@ public class PluginLogger implements Logger {
                 tempFileLoggingEnabled = true;
             } catch (Exception e) {
                 // Fallback gracefully if file logging fails
-                delegate.warn("Failed to initialize rich file logging: {}", e.getMessage());
+                if (pluginState.isWarnEnabled()) {
+                    delegate.warn("Failed to initialize rich file logging: {}", e.getMessage());
+                }
                 tempRichLogger = null;
                 tempFileLoggingEnabled = false;
             }
@@ -87,18 +105,18 @@ public class PluginLogger implements Logger {
 
     @Override
     public boolean isDebugEnabled() {
-        return PluginState.getInstance().isDebugEnabled() && delegate.isDebugEnabled();
+        return pluginState.isDebugEnabled() && delegate.isDebugEnabled();
     }
 
     @Override
     public boolean isDebugEnabled(Marker marker) {
-        return PluginState.getInstance().isDebugEnabled() && delegate.isDebugEnabled(marker);
+        return pluginState.isDebugEnabled() && delegate.isDebugEnabled(marker);
     }
 
     @Override
     public void debug(String msg) {
         // Console output (filtered by plugin debug state)
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(msg);
         }
         // File output (always logged for troubleshooting)
@@ -109,7 +127,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(String format, Object arg) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(format, arg);
         }
         if (fileLoggingEnabled) {
@@ -119,7 +137,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(String format, Object arg1, Object arg2) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(format, arg1, arg2);
         }
         if (fileLoggingEnabled) {
@@ -129,7 +147,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(String format, Object... arguments) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(format, arguments);
         }
         if (fileLoggingEnabled) {
@@ -139,7 +157,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(String msg, Throwable t) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(msg, t);
         }
         if (fileLoggingEnabled) {
@@ -149,7 +167,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(Marker marker, String msg) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(marker, msg);
         }
         if (fileLoggingEnabled) {
@@ -159,7 +177,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(Marker marker, String format, Object arg) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(marker, format, arg);
         }
         if (fileLoggingEnabled) {
@@ -169,7 +187,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(Marker marker, String format, Object arg1, Object arg2) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(marker, format, arg1, arg2);
         }
         if (fileLoggingEnabled) {
@@ -179,7 +197,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(Marker marker, String format, Object... arguments) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(marker, format, arguments);
         }
         if (fileLoggingEnabled) {
@@ -189,7 +207,7 @@ public class PluginLogger implements Logger {
 
     @Override
     public void debug(Marker marker, String msg, Throwable t) {
-        if (PluginState.getInstance().isDebugEnabled()) {
+        if (pluginState.isDebugEnabled()) {
             delegate.debug(marker, msg, t);
         }
         if (fileLoggingEnabled) {
@@ -205,20 +223,22 @@ public class PluginLogger implements Logger {
         return delegate.getName();
     }
 
-    // INFO level - pass through (future: could add MDC context here)
+    // INFO level - respects plugin INFO level setting
     @Override
     public boolean isInfoEnabled() {
-        return delegate.isInfoEnabled();
+        return pluginState.isInfoEnabled() && delegate.isInfoEnabled();
     }
 
     @Override
     public boolean isInfoEnabled(Marker marker) {
-        return delegate.isInfoEnabled(marker);
+        return pluginState.isInfoEnabled() && delegate.isInfoEnabled(marker);
     }
 
     @Override
     public void info(String msg) {
-        delegate.info(msg);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(msg);
         }
@@ -226,7 +246,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(String format, Object arg) {
-        delegate.info(format, arg);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arg);
         }
@@ -234,7 +256,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(String format, Object arg1, Object arg2) {
-        delegate.info(format, arg1, arg2);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arg1, arg2);
         }
@@ -242,7 +266,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(String format, Object... arguments) {
-        delegate.info(format, arguments);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arguments);
         }
@@ -250,7 +276,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(String msg, Throwable t) {
-        delegate.info(msg, t);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.info("{} - Exception: {}", msg, t.getMessage());
         }
@@ -258,7 +286,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(Marker marker, String msg) {
-        delegate.info(marker, msg);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(marker, msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(msg);
         }
@@ -266,7 +296,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(Marker marker, String format, Object arg) {
-        delegate.info(marker, format, arg);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(marker, format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arg);
         }
@@ -274,7 +306,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(Marker marker, String format, Object arg1, Object arg2) {
-        delegate.info(marker, format, arg1, arg2);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(marker, format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arg1, arg2);
         }
@@ -282,7 +316,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(Marker marker, String format, Object... arguments) {
-        delegate.info(marker, format, arguments);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(marker, format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.info(format, arguments);
         }
@@ -290,26 +326,30 @@ public class PluginLogger implements Logger {
 
     @Override
     public void info(Marker marker, String msg, Throwable t) {
-        delegate.info(marker, msg, t);
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(marker, msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.info("{} - Exception: {}", msg, t.getMessage());
         }
     }
 
-    // WARN level - pass through (future: could add custom formatting)
+    // WARN level - respects plugin WARN level setting
     @Override
     public boolean isWarnEnabled() {
-        return delegate.isWarnEnabled();
+        return pluginState.isWarnEnabled() && delegate.isWarnEnabled();
     }
 
     @Override
     public boolean isWarnEnabled(Marker marker) {
-        return delegate.isWarnEnabled(marker);
+        return pluginState.isWarnEnabled() && delegate.isWarnEnabled(marker);
     }
 
     @Override
     public void warn(String msg) {
-        delegate.warn(msg);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(msg);
         }
@@ -317,7 +357,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(String format, Object arg) {
-        delegate.warn(format, arg);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arg);
         }
@@ -325,7 +367,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(String format, Object arg1, Object arg2) {
-        delegate.warn(format, arg1, arg2);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arg1, arg2);
         }
@@ -333,7 +377,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(String format, Object... arguments) {
-        delegate.warn(format, arguments);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arguments);
         }
@@ -341,7 +387,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(String msg, Throwable t) {
-        delegate.warn(msg, t);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn("{} - Exception: {}", msg, t.getMessage());
         }
@@ -349,7 +397,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(Marker marker, String msg) {
-        delegate.warn(marker, msg);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(marker, msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(msg);
         }
@@ -357,7 +407,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(Marker marker, String format, Object arg) {
-        delegate.warn(marker, format, arg);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(marker, format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arg);
         }
@@ -365,7 +417,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(Marker marker, String format, Object arg1, Object arg2) {
-        delegate.warn(marker, format, arg1, arg2);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(marker, format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arg1, arg2);
         }
@@ -373,7 +427,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(Marker marker, String format, Object... arguments) {
-        delegate.warn(marker, format, arguments);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(marker, format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn(format, arguments);
         }
@@ -381,26 +437,30 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warn(Marker marker, String msg, Throwable t) {
-        delegate.warn(marker, msg, t);
+        if (pluginState.isWarnEnabled()) {
+            delegate.warn(marker, msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.warn("{} - Exception: {}", msg, t.getMessage());
         }
     }
 
-    // ERROR level - pass through (future: could add structured error data)
+    // ERROR level - respects plugin ERROR level setting
     @Override
     public boolean isErrorEnabled() {
-        return delegate.isErrorEnabled();
+        return pluginState.isErrorEnabled() && delegate.isErrorEnabled();
     }
 
     @Override
     public boolean isErrorEnabled(Marker marker) {
-        return delegate.isErrorEnabled(marker);
+        return pluginState.isErrorEnabled() && delegate.isErrorEnabled(marker);
     }
 
     @Override
     public void error(String msg) {
-        delegate.error(msg);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(msg);
         }
@@ -408,7 +468,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(String format, Object arg) {
-        delegate.error(format, arg);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arg);
         }
@@ -416,7 +478,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(String format, Object arg1, Object arg2) {
-        delegate.error(format, arg1, arg2);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arg1, arg2);
         }
@@ -424,7 +488,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(String format, Object... arguments) {
-        delegate.error(format, arguments);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arguments);
         }
@@ -432,7 +498,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(String msg, Throwable t) {
-        delegate.error(msg, t);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.error("{} - Exception: {}", msg, t.getMessage());
         }
@@ -440,7 +508,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(Marker marker, String msg) {
-        delegate.error(marker, msg);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(marker, msg);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(msg);
         }
@@ -448,7 +518,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(Marker marker, String format, Object arg) {
-        delegate.error(marker, format, arg);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(marker, format, arg);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arg);
         }
@@ -456,7 +528,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(Marker marker, String format, Object arg1, Object arg2) {
-        delegate.error(marker, format, arg1, arg2);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(marker, format, arg1, arg2);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arg1, arg2);
         }
@@ -464,7 +538,9 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(Marker marker, String format, Object... arguments) {
-        delegate.error(marker, format, arguments);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(marker, format, arguments);
+        }
         if (fileLoggingEnabled) {
             richLogger.error(format, arguments);
         }
@@ -472,71 +548,260 @@ public class PluginLogger implements Logger {
 
     @Override
     public void error(Marker marker, String msg, Throwable t) {
-        delegate.error(marker, msg, t);
+        if (pluginState.isErrorEnabled()) {
+            delegate.error(marker, msg, t);
+        }
         if (fileLoggingEnabled) {
             richLogger.error("{} - Exception: {}", msg, t.getMessage());
         }
     }
 
-    // TRACE level - pass through (though rarely used)
+    // TRACE level - routes to DEBUG with [TRACE] prefix as per SmartLogger pattern
     @Override
     public boolean isTraceEnabled() {
-        return delegate.isTraceEnabled();
+        return pluginState.isTraceEnabled() && delegate.isDebugEnabled();
     }
 
     @Override
     public boolean isTraceEnabled(Marker marker) {
-        return delegate.isTraceEnabled(marker);
+        return pluginState.isTraceEnabled() && delegate.isDebugEnabled(marker);
     }
 
     @Override
     public void trace(String msg) {
-        delegate.trace(msg);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + msg);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + msg);
+        }
     }
 
     @Override
     public void trace(String format, Object arg) {
-        delegate.trace(format, arg);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + format, arg);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arg);
+        }
     }
 
     @Override
     public void trace(String format, Object arg1, Object arg2) {
-        delegate.trace(format, arg1, arg2);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + format, arg1, arg2);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arg1, arg2);
+        }
     }
 
     @Override
     public void trace(String format, Object... arguments) {
-        delegate.trace(format, arguments);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + format, arguments);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arguments);
+        }
     }
 
     @Override
     public void trace(String msg, Throwable t) {
-        delegate.trace(msg, t);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + msg, t);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] {} - Exception: {}", msg, t.getMessage());
+        }
     }
 
     @Override
     public void trace(Marker marker, String msg) {
-        delegate.trace(marker, msg);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug(marker, "[TRACE] " + msg);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + msg);
+        }
     }
 
     @Override
     public void trace(Marker marker, String format, Object arg) {
-        delegate.trace(marker, format, arg);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug(marker, "[TRACE] " + format, arg);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arg);
+        }
     }
 
     @Override
     public void trace(Marker marker, String format, Object arg1, Object arg2) {
-        delegate.trace(marker, format, arg1, arg2);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug(marker, "[TRACE] " + format, arg1, arg2);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arg1, arg2);
+        }
     }
 
     @Override
     public void trace(Marker marker, String format, Object... arguments) {
-        delegate.trace(marker, format, arguments);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug(marker, "[TRACE] " + format, arguments);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + format, arguments);
+        }
     }
 
     @Override
     public void trace(Marker marker, String msg, Throwable t) {
-        delegate.trace(marker, msg, t);
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug(marker, "[TRACE] " + msg, t);
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] {} - Exception: {}", msg, t.getMessage());
+        }
+    }
+
+    // ==================== SMART LOGGER METHODS ====================
+
+    /**
+     * Logs an informational message with lazy evaluation. Visible at INFO level and above.
+     */
+    public void info(String message, Supplier<Object> argSupplier) {
+        if (pluginState.isInfoEnabled()) {
+            delegate.info(message, argSupplier.get());
+        }
+        if (fileLoggingEnabled) {
+            richLogger.info(message, argSupplier.get());
+        }
+    }
+
+    /**
+     * Logs a debug message with lazy evaluation. Visible at DEBUG level and above.
+     */
+    public void debug(String message, Supplier<Object> argSupplier) {
+        if (pluginState.isDebugEnabled()) {
+            delegate.debug(message, argSupplier.get());
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug(message, argSupplier.get());
+        }
+    }
+
+    /**
+     * Logs a trace message with lazy evaluation. Visible only at TRACE level.
+     */
+    public void trace(String message, Supplier<Object> argSupplier) {
+        if (pluginState.isTraceEnabled()) {
+            delegate.debug("[TRACE] " + message, argSupplier.get());
+        }
+        if (fileLoggingEnabled) {
+            richLogger.debug("[TRACE] " + message, argSupplier.get());
+        }
+    }
+
+    /**
+     * Executes code only if INFO level is enabled.
+     */
+    public void ifInfo(Runnable action) {
+        if (pluginState.isInfoEnabled()) {
+            action.run();
+        }
+    }
+
+    /**
+     * Executes code only if DEBUG level is enabled.
+     */
+    public void ifDebug(Runnable action) {
+        if (pluginState.isDebugEnabled()) {
+            action.run();
+        }
+    }
+
+    /**
+     * Executes code only if TRACE level is enabled.
+     */
+    public void ifTrace(Runnable action) {
+        if (pluginState.isTraceEnabled()) {
+            action.run();
+        }
+    }
+
+    /**
+     * Logs template customization diagnostics at the appropriate level.
+     * - Pattern matches: TRACE
+     * - Applied operations: DEBUG
+     * - Summary stats: INFO
+     */
+    public void customizationDiagnostic(String type, String message, Object... args) {
+        switch (type.toLowerCase()) {
+            case "pattern_match":
+            case "template_diff":
+            case "condition_evaluation":
+                trace(message, args);
+                break;
+            case "operation_applied":
+            case "cache_operation":
+            case "variable_analysis":
+                debug(message, args);
+                break;
+            case "summary":
+            case "performance":
+            case "progress":
+                info(message, args);
+                break;
+            default:
+                debug(message, args);
+        }
+    }
+
+    /**
+     * Logs performance metrics at the appropriate level.
+     * - Detailed timing: DEBUG
+     * - Summary metrics: INFO
+     * - Build completion: INFO
+     */
+    public void performanceMetric(String scope, String message, Object... args) {
+        switch (scope.toLowerCase()) {
+            case "build_summary":
+            case "completion":
+            case "cache_performance":
+            case "phase_timing":
+                info(message, args);
+                break;
+            case "operation_timing":
+            case "detailed_metrics":
+                debug(message, args);
+                break;
+            default:
+                info(message, args);
+        }
+    }
+
+    /**
+     * Gets the current log level.
+     */
+    public LogLevel getCurrentLogLevel() {
+        return pluginState.getLogLevel();
+    }
+
+    /**
+     * Gets the underlying SLF4J logger.
+     */
+    public Logger getUnderlyingLogger() {
+        return delegate;
+    }
+
+    /**
+     * Checks if the specified log level is enabled.
+     */
+    public boolean isLevelEnabled(LogLevel level) {
+        return pluginState.getLogLevel().includes(level);
     }
 
     // ==================== PLUGIN-SPECIFIC UTILITY METHODS ====================

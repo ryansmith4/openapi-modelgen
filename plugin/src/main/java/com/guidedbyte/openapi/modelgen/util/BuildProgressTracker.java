@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class BuildProgressTracker {
 
-    private static final Logger logger = PluginLoggerFactory.getLogger(BuildProgressTracker.class);
+    private static final PluginLogger logger = (PluginLogger) PluginLoggerFactory.getLogger(BuildProgressTracker.class);
 
     // Build-level tracking
     private static volatile Instant buildStartTime;
@@ -229,35 +229,39 @@ public final class BuildProgressTracker {
             if (buildStartTime != null && buildDuration.isZero()) {
                 buildDuration = Duration.between(buildStartTime, Instant.now());
             }
+            final Duration finalBuildDuration = buildDuration; // For lambda capture
 
-            // Rich file logging with detailed metrics
-            logger.info("=== Build Summary ===");
-            logger.info("BUILD_COMPLETE: total_duration={}ms specs_processed={} files_generated={} " +
-                       "cache_hit_rate={:.0f}% parallel_efficiency={:.0f}% memory_peak={}MB",
-                buildDuration.toMillis(),
-                summary.getSpecsProcessed(),
-                summary.getFilesGenerated(),
+            // Build completion always visible at INFO level
+            logger.info("Build completed successfully in {:.1f}s", finalBuildDuration.toMillis() / 1000.0);
+
+            // Performance summary at INFO level
+            logger.info("BUILD_PERFORMANCE: cache_hit_rate={:.0f}% parallel_efficiency={:.0f}% memory_peak={}MB",
                 summary.getCacheHitRate() * 100,
                 summary.getParallelEfficiency() * 100,
                 summary.getMemoryPeakMB());
 
-            // Console summary (user-friendly)
-            StringBuilder consoleSummary = new StringBuilder();
-            consoleSummary.append(String.format("Build completed successfully in %.1fs", buildDuration.toMillis() / 1000.0));
+            // Detailed metrics at DEBUG level
+            logger.debug("BUILD_DETAILS: total_duration={}ms specs_processed={} files_generated={}",
+                finalBuildDuration.toMillis(),
+                summary.getSpecsProcessed(),
+                summary.getFilesGenerated());
 
-            if (summary.getCacheHitRate() > 0) {
-                consoleSummary.append(String.format(" (Cache hit rate: %.0f%%", summary.getCacheHitRate() * 100));
-                if (parallelProcessing && summary.getParallelEfficiency() > 0) {
-                    consoleSummary.append(String.format(", Parallel efficiency: %.0f%%", summary.getParallelEfficiency() * 100));
-                }
-                consoleSummary.append(")");
-            }
-
-            logger.info(consoleSummary.toString());
+            // Rich file logging with comprehensive details (always for troubleshooting)
+            logger.ifDebug(() -> {
+                logger.info("=== Build Summary ===");
+                logger.info("BUILD_COMPLETE: total_duration={}ms specs_processed={} files_generated={} " +
+                           "cache_hit_rate={:.0f}% parallel_efficiency={:.0f}% memory_peak={}MB",
+                    finalBuildDuration.toMillis(),
+                    summary.getSpecsProcessed(),
+                    summary.getFilesGenerated(),
+                    summary.getCacheHitRate() * 100,
+                    summary.getParallelEfficiency() * 100,
+                    summary.getMemoryPeakMB());
+            });
 
             // Log to performance metrics
             PerformanceMetrics.BuildMetrics buildMetrics = new PerformanceMetrics.BuildMetrics()
-                .withTotalDuration(buildDuration)
+                .withTotalDuration(finalBuildDuration)
                 .withSpecsProcessed(summary.getSpecsProcessed())
                 .withFilesGenerated(summary.getFilesGenerated())
                 .withCacheHitRate(summary.getCacheHitRate())

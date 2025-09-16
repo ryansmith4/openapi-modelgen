@@ -1041,25 +1041,26 @@ public class TaskConfigurationService implements Serializable {
      * @param extension the plugin extension containing debug configuration
      */
     private void addGenerationFailureHandling(GenerateTask task, String specName, OpenApiModelGenExtension extension) {
-        // Add error handling through task lifecycle hooks
+        // Capture only serializable values during configuration time for configuration cache compatibility
+        boolean isDebug = extension.isDebug();
+        String taskPath = task.getPath();
+        String taskName = task.getName();
+
+        // Add error handling through task lifecycle hooks without capturing Project reference
         task.doFirst(t -> {
-            // Set up context for potential error logging
-            task.getProject().getExtensions().getExtraProperties().set(
-                "openapiModelgenFailureContext_" + specName,
-                new GenerationContext(specName, task, extension.isDebug()));
+            // Log context setup - no project state needed
+            if (isDebug) {
+                logger.debug("Setting up failure context for task '{}' spec '{}'", taskName, specName);
+            }
         });
 
-        // Add finalizer that runs even if task fails
-        task.finalizedBy(task.getProject().getTasks().register(
-            "logGenerationFailure" + capitalize(specName), t -> {
-                t.doLast(action -> {
-                    // Check if our generation task failed
-                    if (task.getState().getFailure() != null) {
-                        logGenerationFailure(task, specName, task.getState().getFailure(), extension.isDebug());
-                    }
-                });
-                t.onlyIf(spec -> task.getState().getFailure() != null);
-            }));
+        // Add error logging directly in the task's doLast
+        task.doLast(t -> {
+            // Check if task failed and log detailed failure information
+            if (task.getState().getFailure() != null) {
+                logGenerationFailure(task, specName, task.getState().getFailure(), isDebug);
+            }
+        });
     }
 
     /**
@@ -1071,8 +1072,8 @@ public class TaskConfigurationService implements Serializable {
      * @param debugEnabled whether debug logging is enabled
      */
     private void logGenerationFailure(GenerateTask task, String specName, Throwable failure, boolean debugEnabled) {
-        logger.error("❌ OpenAPI generation FAILED for spec: {}", specName);
-        logger.error("💥 Error: {}", failure.getMessage());
+        logger.error("OpenAPI generation FAILED for spec: {}", specName);
+        logger.error("Error: {}", failure.getMessage());
 
         if (debugEnabled) {
             // Provide comprehensive context about the failure
@@ -1153,8 +1154,8 @@ public class TaskConfigurationService implements Serializable {
         }
 
         // Always show basic troubleshooting info
-        logger.error("🔧 Enable debug mode for detailed analysis: openapiModelgen {{ debug true }}");
-        logger.error("📖 Documentation: https://github.com/GuidedByte/openapi-modelgen");
+        logger.error("Enable debug mode for detailed analysis: openapiModelgen {{ debug true }}");
+        logger.error("Documentation: https://github.com/GuidedByte/openapi-modelgen");
     }
 
     /**

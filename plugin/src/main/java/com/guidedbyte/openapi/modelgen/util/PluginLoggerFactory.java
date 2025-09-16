@@ -131,4 +131,5 @@ public final class PluginLoggerFactory {
     public static Logger getStandardLogger(String name) {
         return LoggerFactory.getLogger(name);
     }
+
 }
