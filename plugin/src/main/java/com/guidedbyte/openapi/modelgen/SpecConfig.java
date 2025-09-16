@@ -102,7 +102,6 @@ public class SpecConfig {
     private final Property<String> userTemplateCustomizationsDir;
     private final Property<Boolean> validateSpec;
     private final ListProperty<String> templateSources;
-    private final Property<Boolean> debug;
     private final Property<Boolean> generateModelTests;
     private final Property<Boolean> generateApiTests;
     private final Property<Boolean> generateApiDocumentation;
@@ -135,7 +134,6 @@ public class SpecConfig {
         this.userTemplateCustomizationsDir = project.getObjects().property(String.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
-        this.debug = project.getObjects().property(Boolean.class);
         
         // No default convention for templateSources - let specs inherit from defaults
         // or explicitly override as needed
@@ -327,19 +325,6 @@ public class SpecConfig {
     }
     
     /**
-     * Gets the debug override property for this specification.
-     *
-     * <p>This property allows overriding the default debug setting for this specific
-     * specification, enabling per-spec debug logging control within the same project.</p>
-     *
-     * <p>When not set, inherits the debug setting from default configuration. Useful for
-     * enabling detailed logging for problematic specs while keeping other specs quiet.</p>
-     *
-     * @return the debug override property for this specification
-     */
-    public Property<Boolean> getDebug() {
-        return debug;
-    }
     
     
     /**
@@ -678,10 +663,6 @@ public class SpecConfig {
         this.templateSources.set(sources);
     }
     
-    @Option(option = "debug", description = "Enable comprehensive debug logging for this spec")
-    public void debug(boolean value) {
-        this.debug.set(value);
-    }
     
     
     @Option(option = "generate-model-tests", description = "Generate unit tests for model classes for this spec")

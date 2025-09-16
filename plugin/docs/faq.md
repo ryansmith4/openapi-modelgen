@@ -209,18 +209,24 @@ This prevents template cross-contamination and allows each spec to have differen
 
 ### Q: How do I debug template issues?
 
-**A:** Enable debug logging:
+**A:** Access comprehensive debug information:
 
 ```gradle
 openapiModelgen {
     defaults {
-        debug true
+        // No logging configuration needed - rich debug log always captured
     }
 }
 ```
 
 ```bash
-# Generate with debug info
+# View rich debug log (always available)
+cat build/logs/openapi-modelgen-debug.log
+
+# Filter by specific spec
+grep "[spec:mySpec]" build/logs/openapi-modelgen-debug.log
+
+# Use standard Gradle flags for console output
 ./gradlew generateApi --info
 
 # Check template working directory (replace {specName} with your spec name)

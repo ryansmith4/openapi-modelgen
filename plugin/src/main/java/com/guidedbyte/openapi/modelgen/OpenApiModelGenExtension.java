@@ -70,13 +70,8 @@ public class OpenApiModelGenExtension {
      * Default is true for better performance on multi-core systems.
      */
     private boolean parallel = true;
+
     
-    /**
-     * Whether to enable debug logging for template resolution and processing.
-     * When enabled, provides detailed information about template extraction,
-     * customization processing, and resolution logic. Default is false.
-     */
-    private boolean debug = false;
     
     /**
      * Library content extracted from template library dependencies.
@@ -346,43 +341,9 @@ public class OpenApiModelGenExtension {
         this.parallel = true;
     }
     
-    /**
-     * Returns whether debug logging for template resolution is enabled.
-     * 
-     * @return true if debug logging is enabled, false otherwise
-     */
-    public boolean isDebug() {
-        return debug;
-    }
     
-    /**
-     * Sets whether to enable debug logging for template resolution and processing.
-     * When enabled, provides detailed information about:
-     * <ul>
-     *   <li>Template extraction from OpenAPI Generator</li>
-     *   <li>Template customization processing</li>
-     *   <li>Template precedence resolution</li>
-     *   <li>Cache operations and invalidation</li>
-     *   <li>Library processing and validation</li>
-     * </ul>
-     * 
-     * <p><strong>Note:</strong> Debug logging requires the underlying logger to have 
-     * DEBUG level enabled. This flag only controls plugin-specific debug output.</p>
-     * 
-     * @param debug true to enable debug logging, false to disable
-     */
-    public void debug(boolean debug) {
-        this.debug = debug;
-    }
     
-    /**
-     * Enables debug logging for template resolution and processing.
-     * Equivalent to {@code debug(true)}.
-     */
-    public void debug() {
-        this.debug = true;
-    }
-    
+
     /**
      * Gets the extracted library content from template library dependencies.
      * 

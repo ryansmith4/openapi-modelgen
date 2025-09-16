@@ -83,7 +83,6 @@ public class TemplateResolver {
             Map<String, String> templateVariables,
             LibraryTemplateExtractor.LibraryExtractionResult libraryContent) {
         
-        boolean debugEnabled = resolvedConfig.isDebug();
         
         logger.debug(
             "=== TEMPLATE RESOLUTION START ===");
@@ -161,31 +160,29 @@ public class TemplateResolver {
             generatorName, configuredTemplateSources, availableTemplateSources);
         
         // Enhanced debug logging for template resolution
-        if (resolvedConfig.isDebug()) {
-            logger.info("=== Template Resolution Debug for '{}' ===", generatorName);
-            logger.info("Configured template sources: {}", configuredTemplateSources);
-            logger.info("Available template sources: {}", availableTemplateSources);
-            
-            if (hasUserTemplates) {
-                logger.info("✅ user-templates: {}", resolvedUserTemplateDir);
-            }
-            if (hasUserCustomizations) {
-                logger.info("✅ user-customizations: {}", resolvedUserCustomizationsDir);
-            }
-            if (hasLibraryTemplates) {
-                logger.info("✅ library-templates: {} templates from libraries", libraryContent.getTemplates().size());
-            }
-            if (hasLibraryCustomizations) {
-                logger.info("✅ library-customizations: {} customizations from libraries", libraryContent.getCustomizations().size());
-            }
-            if (hasPluginCustomizations) {
-                logger.info("✅ plugin-customizations: built-in YAML customizations");
-            }
-            if (availableTemplateSources.contains("openapi-generator") || availableTemplateSources.isEmpty()) {
-                logger.info("✅ openapi-generator: OpenAPI Generator default templates (fallback)");
-            }
-            logger.info("=== End Template Resolution Debug ===");
+        logger.debug("=== Template Resolution Debug for '{}' ===", generatorName);
+        logger.debug("Configured template sources: {}", configuredTemplateSources);
+        logger.debug("Available template sources: {}", availableTemplateSources);
+
+        if (hasUserTemplates) {
+            logger.debug("✅ user-templates: {}", resolvedUserTemplateDir);
         }
+        if (hasUserCustomizations) {
+            logger.debug("✅ user-customizations: {}", resolvedUserCustomizationsDir);
+        }
+        if (hasLibraryTemplates) {
+            logger.debug("✅ library-templates: {} templates from libraries", libraryContent.getTemplates().size());
+        }
+        if (hasLibraryCustomizations) {
+            logger.debug("✅ library-customizations: {} customizations from libraries", libraryContent.getCustomizations().size());
+        }
+        if (hasPluginCustomizations) {
+            logger.debug("✅ plugin-customizations: built-in YAML customizations");
+        }
+        if (availableTemplateSources.contains("openapi-generator") || availableTemplateSources.isEmpty()) {
+            logger.debug("✅ openapi-generator: OpenAPI Generator default templates (fallback)");
+        }
+        logger.debug("=== End Template Resolution Debug ===");
         
         // Determine template work directory path at configuration time
         String templateWorkDirectory = null;
@@ -276,36 +273,34 @@ public class TemplateResolver {
             .templateVariables(templateVariables != null ? Map.copyOf(templateVariables) : Map.of())
             .templateProcessingEnabled(templateProcessingEnabled)
             .templateSources(resolvedConfig.getTemplateSources())
-            .debug(resolvedConfig.isDebug())
+            .debug(false)  // Debug logging now handled by PluginLogger automatically
             .saveOriginalTemplates(resolvedConfig.isSaveOriginalTemplates())
             .build();
         
         logger.debug(
             "TemplateConfiguration created successfully for generator '{}'", generatorName);
         
-        if (debugEnabled) {
-            logger.info("=== TEMPLATE RESOLUTION COMPLETE ===");
-            logger.info("Final configuration for generator '{}', spec '{}'", generatorName, resolvedConfig.getSpecName());
-            logger.info("Template processing enabled: {}", templateProcessingEnabled);
-            logger.info("Template work directory: {}", templateWorkDirectory);
-            if (hasUserTemplates) {
-                logger.info("✅ User templates: {}", resolvedUserTemplateDir);
-            }
-            if (hasUserCustomizations) {
-                logger.info("✅ User customizations: {}", resolvedUserCustomizationsDir);
-            }
-            if (hasLibraryTemplates) {
-                logger.info("✅ Library templates: {} templates", generatorLibraryTemplates.size());
-            }
-            if (hasLibraryCustomizations) {
-                logger.info("✅ Library customizations: {} files", generatorLibraryCustomizations.size());
-            }
-            if (hasPluginCustomizations) {
-                logger.info("✅ Plugin customizations: enabled");
-            }
-            logger.info("Template variables: {}", templateVariables != null ? templateVariables.keySet() : "none");
-            logger.info("=== END TEMPLATE RESOLUTION ===");
+        logger.debug("=== TEMPLATE RESOLUTION COMPLETE ===");
+        logger.debug("Final configuration for generator '{}', spec '{}'", generatorName, resolvedConfig.getSpecName());
+        logger.debug("Template processing enabled: {}", templateProcessingEnabled);
+        logger.debug("Template work directory: {}", templateWorkDirectory);
+        if (hasUserTemplates) {
+            logger.debug("✅ User templates: {}", resolvedUserTemplateDir);
         }
+        if (hasUserCustomizations) {
+            logger.debug("✅ User customizations: {}", resolvedUserCustomizationsDir);
+        }
+        if (hasLibraryTemplates) {
+            logger.debug("✅ Library templates: {} templates", generatorLibraryTemplates.size());
+        }
+        if (hasLibraryCustomizations) {
+            logger.debug("✅ Library customizations: {} files", generatorLibraryCustomizations.size());
+        }
+        if (hasPluginCustomizations) {
+            logger.debug("✅ Plugin customizations: enabled");
+        }
+        logger.debug("Template variables: {}", templateVariables != null ? templateVariables.keySet() : "none");
+        logger.debug("=== END TEMPLATE RESOLUTION ===");
         
         return templateConfig;
     }

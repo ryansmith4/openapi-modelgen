@@ -25,7 +25,6 @@ import java.util.Map;
  *   <li><strong>modelNameSuffix:</strong> Suffix appended to model class names (default: "Dto")</li>
  *   <li><strong>validateSpec:</strong> Enable/disable OpenAPI specification validation (default: false)</li>
  *   <li><strong>templateSources:</strong> Ordered list of template sources with auto-discovery (default: all sources)</li>
- *   <li><strong>debug:</strong> Enable comprehensive debug logging throughout the plugin (default: false)</li>
  *   <li><strong>templateVariables:</strong> Variables available in Mustache templates (supports nested expansion)</li>
  *   <li><strong>configOptions:</strong> OpenAPI Generator configuration options (pre-configured for Spring Boot 3 + Jakarta EE + Lombok)</li>
  *   <li><strong>globalProperties:</strong> Global properties passed to the generator</li>
@@ -59,7 +58,6 @@ import java.util.Map;
  *         "plugin-customizations",   // Built-in plugin customizations
  *         "openapi-generator"        // OpenAPI Generator defaults (fallback)
  *     ])
- *     debug true  // Enable comprehensive debug logging
  *     
  *     templateVariables([
  *         copyright: "Copyright © {{currentYear}} {{companyName}}",
@@ -113,7 +111,6 @@ public class DefaultConfig {
     private final Property<Boolean> generateModelDocumentation;
     private final Property<Boolean> validateSpec;
     private final ListProperty<String> templateSources;
-    private final Property<Boolean> debug;
     private final MapProperty<String, String> configOptions;
     private final MapProperty<String, String> globalProperties;
     private final MapProperty<String, String> templateVariables;
@@ -144,7 +141,6 @@ public class DefaultConfig {
         this.generateModelDocumentation = project.getObjects().property(Boolean.class);
         this.validateSpec = project.getObjects().property(Boolean.class);
         this.templateSources = project.getObjects().listProperty(String.class);
-        this.debug = project.getObjects().property(Boolean.class);
         
         // Set smart defaults for templateSources - all possible sources with auto-discovery
         this.templateSources.convention(TemplateSourceType.getAllAsStrings());
@@ -536,28 +532,6 @@ public class DefaultConfig {
     }
     
     /**
-     * Gets the debug property.
-     *
-     * <p>This property enables comprehensive debug logging throughout the plugin for
-     * troubleshooting template resolution, customization processing, and generation issues.</p>
-     *
-     * <p>When enabled, provides detailed logging for:
-     * <ul>
-     *   <li>Template source resolution and precedence logic</li>
-     *   <li>Template customization processing and application</li>
-     *   <li>Configuration validation and merging</li>
-     *   <li>Cache operations and performance metrics</li>
-     *   <li>Error diagnosis and troubleshooting information</li>
-     * </ul>
-     * </p>
-     *
-     * <p>Default value: {@code false}</p>
-     *
-     * @return the debug property controlling comprehensive debug logging
-     */
-    public Property<Boolean> getDebug() {
-        return debug;
-    }
     
     
     // Convenience setter methods for Gradle DSL
@@ -844,30 +818,6 @@ public class DefaultConfig {
     }
     
     /**
-     * Enables comprehensive debug logging throughout the plugin.
-     * 
-     * <p>When enabled, provides detailed logging for:</p>
-     * <ul>
-     *   <li>Template source resolution and precedence</li>
-     *   <li>Template customization processing and application</li>
-     *   <li>Configuration validation and merging</li>
-     *   <li>Cache operations and performance metrics</li>
-     *   <li>Error diagnosis and troubleshooting information</li>
-     * </ul>
-     * 
-     * <p>Example debug output:</p>
-     * <pre>
-     * DEBUG: Template 'pojo.mustache' resolved from: user-templates
-     * DEBUG: Applying 3 customizations to template 'pojo.mustache'
-     * DEBUG: Configuration validation passed for spec 'pets'
-     * </pre>
-     * 
-     * @param debug {@code true} to enable comprehensive debug logging
-     */
-    @Option(option = "debug", description = "Enable comprehensive debug logging throughout the plugin")
-    public void debug(Boolean debug) {
-        this.debug.set(debug);
-    }
     
     /**
      * Saves original OpenAPI Generator templates to a subdirectory for reference.

@@ -867,7 +867,6 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                             'plugin-customizations',    // Plugin customizations (disabled)
                             'openapi-generator'         // Lowest precedence
                         ])
-                        debug true  // Enable comprehensive debug logging
                         // plugin-customizations excluded
                     }
                     specs {

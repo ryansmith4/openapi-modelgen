@@ -1,133 +1,122 @@
 # OpenAPI Model Generator - Logging Guide
 
-The OpenAPI Model Generator plugin provides a sophisticated logging system that combines intelligent level routing, dual output (console + file), and performance optimizations to give you exactly the information you need during development and troubleshooting.
+The OpenAPI Model Generator plugin provides **intuitive logging** that follows standard Gradle conventions while offering comprehensive debugging capabilities through rich file logging.
 
-## Key Features
+## 🎯 Key Principles
 
-- **🎯 Intelligent Routing**: Messages automatically route to appropriate levels based on plugin configuration
-- **📁 Dual Output**: Console output respects your settings, while comprehensive logs are always written to file
-- **⚡ Performance Optimized**: Zero overhead when log levels are disabled, with lazy evaluation support
-- **🔧 Template Diagnostics**: Specialized logging for template customization development
-- **📊 Build Progress**: Real-time progress tracking with time estimation
-- **🐛 Smart Diagnostics**: Automatic troubleshooting suggestions and detailed analysis
+- **✅ Zero Configuration**: Works out of the box with standard Gradle flags
+- **✅ Standard Gradle Behavior**: No plugin-specific logging configuration needed
+- **✅ Comprehensive File Logging**: Always captures everything for post-build analysis
+- **✅ Per-Spec Analysis**: Filter rich logs by spec using standard Unix tools
 
 ## Quick Start
 
-### Basic Configuration
+### Standard Gradle Usage (Recommended)
+
+```bash
+# Standard Gradle logging - no configuration needed!
+./gradlew generatePets                # Normal output
+./gradlew generatePets --info         # Verbose output
+./gradlew generatePets --debug        # Debug output
+./gradlew generatePets --quiet        # Minimal output
+
+# Rich file logging is always available for analysis
+grep "[spec:pets]" build/logs/openapi-modelgen-debug.log
+```
+
+### No Configuration Required
 
 ```gradle
 openapiModelgen {
-    // Set global log level for the plugin
-    logLevel = "DEBUG"  // ERROR, WARN, INFO, DEBUG, TRACE
-
-    // Legacy debug flag still supported
-    debug = true  // Equivalent to logLevel = "DEBUG"
-
+    // No logging configuration needed - just works!
     defaults {
-        // ... other configuration
+        outputDir "build/generated-sources"
+        // ... your normal configuration
+    }
+    specs {
+        pets {
+            inputSpec "specs/pets.yaml"
+            // ... your normal configuration
+        }
     }
 }
 ```
 
-### Command Line Override
-
-```bash
-# Via project properties
-./gradlew generateModels -Popenapi.logLevel=TRACE
-
-# Via environment variable
-export OPENAPI_LOG_LEVEL=DEBUG
-./gradlew generateModels
-```
-
 ## Log Levels Explained
 
-### ERROR - Critical Issues Only
-**Use for**: CI/CD pipelines, production builds where minimal output is desired
+### Standard Gradle Flags
 
-**Shows**:
-- Build failures and critical errors
-- Configuration validation errors
-- Fatal exceptions that stop the build
+| Gradle Flag | Log Level | Use Case | Plugin Output |
+|-------------|-----------|----------|---------------|
+| `--quiet` | ERROR | CI/CD, minimal output | Only critical errors |
+| _(default)_ | INFO | Normal development | Standard progress messages |
+| `--info` | INFO | Verbose development | Same as default |
+| `--debug` | DEBUG | Troubleshooting | Detailed template processing |
 
-**Example Output**:
+### Console Output Examples
+
+**Normal Build (`./gradlew generatePets`):**
 ```
-[ERROR] Failed to process OpenAPI spec 'pets': File not found
-[ERROR] Invalid OpenAPI specification: Missing required 'paths' field
-```
+> Task :generatePets
+Generated 15 model classes for spec 'pets'
 
-### WARN - Errors and Warnings
-**Use for**: Production builds where you want to see potential issues
-
-**Shows**: ERROR +
-- Configuration warnings
-- Deprecated usage notifications
-- Optimization suggestions
-- Non-fatal issues
-
-**Example Output**:
-```
-[WARN] Template customization file has syntax errors
-[WARN] Using deprecated 'modelNamePrefix' option
-[WARN] More operations were skipped (5) than applied (2)
+BUILD SUCCESSFUL in 3s
 ```
 
-### INFO - Standard Development
-**Use for**: Regular development, standard builds
-
-**Shows**: WARN +
-- Spec processing progress
-- Build completion summaries
-- Cache performance statistics
-- File generation counts
-- Template customization summaries
-
-**Example Output**:
+**Debug Build (`./gradlew generatePets --debug`):**
 ```
-[INFO] Processing OpenAPI spec 'pets'
-[INFO] Generated 23 model files for spec 'pets'
-[INFO] Build completed successfully in 5.2s
-[INFO] BUILD_PERFORMANCE: cache_hit_rate=78% parallel_efficiency=85%
+> Task :generatePets
+Resolved template sources for 'pets': [user-templates, openapi-generator]
+Processing template: pojo.mustache
+Applied 3 customizations to template: pojo.mustache
+Generated 15 model classes for spec 'pets'
+
+BUILD SUCCESSFUL in 3s
 ```
 
-### DEBUG - Template Development
-**Use for**: Template customization development, configuration troubleshooting
+## Rich File Logging (Always Available)
 
-**Shows**: INFO +
-- Template resolution details
-- Pattern matching results
-- Applied customization operations
-- Variable context information
-- Cache operation details
+Regardless of console output level, **comprehensive debug information** is always written to:
 
-**Example Output**:
 ```
-[DEBUG] PATTERN_MATCH_SUCCESS: operation=replacement pattern='class {{classname}}' found_in_template=true
-[DEBUG] APPLIED_OPERATIONS: operations=[replacement #0, insertion #1, replacement #2]
-[DEBUG] VARIABLE_ANALYSIS: total_variables=15 project_properties=8 environment_variables=7
+build/logs/openapi-modelgen-debug.log
 ```
 
-### TRACE - Deep Troubleshooting
-**Use for**: Deep debugging, understanding why customizations fail
+### File Content Examples
 
-**Shows**: DEBUG +
-- Pattern matching analysis with context
-- Template diffs showing exact changes
-- Condition evaluation step-by-step
-- Line-by-line template context
-- Troubleshooting suggestions
-
-**Example Output**:
+```log
+2025-01-15 14:30:45.123 [INFO] [spec:pets|template:pojo.mustache] TemplateResolver - Processing template
+2025-01-15 14:30:45.456 [DEBUG] [spec:pets|template:pojo.mustache] CustomizationEngine - Applied replacement: 'class' → 'public class'
+2025-01-15 14:30:45.789 [DEBUG] [spec:pets] TaskConfiguration - Generated 15 model classes
+2025-01-15 14:30:46.012 [INFO] [spec:orders] TemplateResolver - Processing template
 ```
-[TRACE] PATTERN_MATCH_1: match_number=1 line=23 matched_text='class PetDto'
-[TRACE] TEMPLATE_DIFF: operation='Applied replacement #0' length_change=45 line_change=2
-[TRACE] CONDITION_CHECK: type=generatorVersion constraint='>= 7.0.0' context_version='7.2.0'
-[TRACE] → Template doesn't contain Mustache variables. Check if this is the correct template.
+
+### Per-Spec Analysis
+
+Use standard Unix tools to analyze specific specs:
+
+```bash
+# Debug only the 'pets' spec
+grep "\[spec:pets\]" build/logs/openapi-modelgen-debug.log
+
+# Compare working vs broken spec
+grep "\[spec:workingSpec\]" build/logs/openapi-modelgen-debug.log > working.log
+grep "\[spec:brokenSpec\]" build/logs/openapi-modelgen-debug.log > broken.log
+diff working.log broken.log
+
+# Timeline analysis for a specific spec
+grep "\[spec:problemSpec\]" build/logs/openapi-modelgen-debug.log | head -50
+
+# Find template-specific issues
+grep "\[spec:pets.*template:pojo\.mustache\]" build/logs/openapi-modelgen-debug.log
+
+# Get error context
+grep -B 5 -A 5 "ERROR.*pets" build/logs/openapi-modelgen-debug.log
 ```
 
 ## Programming with PluginLogger
 
-### Basic Usage (Standard SLF4J Interface)
+### Basic Usage (Standard SLF4J)
 
 ```java
 import org.slf4j.Logger;
@@ -137,426 +126,195 @@ public class MyService {
     private static final Logger logger = PluginLoggerFactory.getLogger(MyService.class);
 
     public void processTemplate(String template) {
-        // Standard SLF4J logging with intelligent routing
+        // Standard SLF4J - respects Gradle log level for console
+        // Always logs to rich file regardless of console level
         logger.info("Processing template: {}", template);
         logger.debug("Template size: {} characters", template.length());
-        logger.trace("Template content: {}", template);
     }
 }
 ```
 
-### Advanced Usage (Enhanced PluginLogger Features)
+### Enhanced Features
 
 ```java
 import com.guidedbyte.openapi.modelgen.util.PluginLogger;
-import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
-import com.guidedbyte.openapi.modelgen.util.LogLevel;
+import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 
 public class AdvancedService {
     private static final PluginLogger logger = (PluginLogger) PluginLoggerFactory.getLogger(AdvancedService.class);
 
-    public void processTemplate(String template) {
-        // Lazy evaluation - expensive operation only runs when DEBUG enabled
-        logger.debug("Expensive analysis: {}", () -> performComplexAnalysis(template));
-        logger.trace("Full analysis: {}", () -> performFullAnalysis(template));
+    public void processSpec(String specName) {
+        // Set MDC context for rich file filtering
+        LoggingContext.setContext(specName, "pojo.mustache");
+        LoggingContext.setComponent("TemplateProcessor");
 
-        // Conditional execution - block only runs when level is enabled
-        logger.ifInfo(() -> {
-            String summary = generateSummary(template);
-            logger.info("Summary: {}", summary);
-        });
+        // Standard logging
+        logger.info("Processing spec: {}", specName);
 
+        // Lazy evaluation for expensive operations
+        logger.debug("Analysis: {}", () -> performExpensiveAnalysis());
+
+        // Conditional execution
         logger.ifDebug(() -> {
-            String details = generateDetailedReport(template);
-            logger.debug("Detailed report: {}", details);
+            String report = generateDetailedReport();
+            logger.debug("Report: {}", report);
         });
 
-        logger.ifTrace(() -> {
-            String trace = performTraceAnalysis(template);
-            logger.trace("Trace analysis: {}", trace);
-        });
+        // Smart diagnostics
+        logger.customizationDiagnostic("pattern_match", "Pattern '{}' matched", pattern);
+        logger.performanceMetric("timing", "Processing took {}ms", duration);
 
-        // Smart diagnostics - automatically routes to appropriate level
-        logger.customizationDiagnostic("pattern_match", "Pattern '{}' matched at line {}", pattern, lineNumber);
-        logger.performanceMetric("operation_timing", "Template processing took {}ms", duration);
-
-        // Rich file logging utilities
-        logger.section("Template Processing Phase");
-
-        // Level checking
-        if (logger.isLevelEnabled(LogLevel.DEBUG)) {
-            // Expensive debug logic here
-        }
-
-        LogLevel currentLevel = logger.getCurrentLogLevel();
-        logger.info("Current log level: {}", currentLevel);
-    }
-
-    private String performComplexAnalysis(String template) {
-        // This expensive operation only runs when DEBUG is enabled
-        return analyzeTemplateStructure(template);
+        // Clean up context
+        LoggingContext.clear();
     }
 }
 ```
 
-### Smart Diagnostics
+## Troubleshooting Workflows
 
-The PluginLogger provides specialized diagnostic methods that automatically route messages to appropriate levels:
+### Problem: Template Customizations Not Working
 
-```java
-// Template customization diagnostics
-logger.customizationDiagnostic("pattern_match", "Pattern matched: {}", pattern);     // → TRACE
-logger.customizationDiagnostic("operation_applied", "Applied replacement", op);      // → DEBUG
-logger.customizationDiagnostic("summary", "Applied {} operations", count);          // → INFO
-
-// Performance metrics
-logger.performanceMetric("operation_timing", "Operation took {}ms", time);          // → DEBUG
-logger.performanceMetric("build_summary", "Build completed in {}s", duration);     // → INFO
-logger.performanceMetric("cache_performance", "Cache hit rate: {}%", rate);        // → INFO
-```
-
-### Conditional Execution
-
-Use conditional execution to avoid expensive operations when logging is disabled:
-
-```java
-// Only runs when INFO level is enabled
-logger.ifInfo(() -> {
-    String summary = generateSummaryReport();
-    logger.info("Summary: {}", summary);
-});
-
-// Only runs when DEBUG level is enabled
-logger.ifDebug(() -> {
-    Map<String, Object> debugInfo = collectDebugInformation();
-    logger.debug("Debug info: {}", debugInfo);
-});
-
-// Only runs when TRACE level is enabled
-logger.ifTrace(() -> {
-    String fullAnalysis = performFullAnalysis();
-    logger.trace("Full analysis: {}", fullAnalysis);
-});
-```
-
-### Level Checking and Control
-
-PluginLogger provides methods to check current log levels and control logging behavior:
-
-```java
-// Check current log level
-LogLevel currentLevel = logger.getCurrentLogLevel();
-logger.info("Running at log level: {}", currentLevel);
-
-// Check if specific levels are enabled
-if (logger.isLevelEnabled(LogLevel.DEBUG)) {
-    // Perform expensive debug operations
-    performDebugAnalysis();
-}
-
-if (logger.isLevelEnabled(LogLevel.TRACE)) {
-    // Perform very expensive trace operations
-    performTraceAnalysis();
-}
-```
-
-### Rich File Logging Utilities
-
-PluginLogger provides additional methods for enhanced file logging:
-
-```java
-// Add section headers to rich log files for better organization
-logger.section("Template Processing Phase");
-logger.info("Starting template processing");
-// ... processing logic ...
-
-logger.section("Validation Phase");
-logger.info("Starting validation");
-// ... validation logic ...
-
-// Check if file logging is available
-if (logger.isFileLoggingEnabled()) {
-    logger.debug("File logging available at: build/logs/openapi-modelgen-debug.log");
-}
-
-// Manually close and flush file logger (usually not needed - automatic via shutdown hook)
-logger.close();
-```
-
-### Lazy Evaluation
-
-PluginLogger supports lazy evaluation for expensive log message construction:
-
-```java
-// PluginLogger lazy evaluation (requires cast for access to enhanced methods)
-PluginLogger pluginLogger = (PluginLogger) logger;
-
-// Lazy evaluation methods - expensive operations only run when level is enabled
-pluginLogger.info("Summary: {}", () -> generateExpensiveSummary());
-pluginLogger.debug("Debug analysis: {}", () -> performDebugAnalysis());
-pluginLogger.trace("Trace analysis: {}", () -> performTraceAnalysis());
-
-// Standard SLF4J approaches also work
-logger.debug("Result: {}", () -> expensiveOperation()); // SLF4J 2.0+ feature
-logger.debug("Result: {}", expensiveOperation());        // Always evaluated
-```
-
-## Integration with Gradle
-
-The plugin automatically detects and respects Gradle's log level settings:
-
-| Gradle Flag | Plugin Log Level | Description |
-|-------------|------------------|-------------|
-| `gradle --quiet` | ERROR | Only critical errors |
-| `gradle --warn` | WARN | Errors and warnings |
-| `gradle` (default) | INFO | Standard development output |
-| `gradle --info` | INFO | Same as default |
-| `gradle --debug` | DEBUG | Template development details |
-
-### Manual Override
-
-You can override the automatic detection:
-
+**Step 1: Enable debug output**
 ```bash
-# Project properties (gradle.properties)
-openapi.logLevel=TRACE
-
-# Command line
-./gradlew generateModels -Popenapi.logLevel=DEBUG
-
-# Environment variable
-export OPENAPI_LOG_LEVEL=TRACE
-./gradlew generateModels
+./gradlew generatePets --debug
 ```
 
-## Rich File Logging
-
-Regardless of your console log level, comprehensive debug information is **always** written to:
-
-```
-build/logs/openapi-modelgen-debug.log
+**Step 2: Check rich file for details**
+```bash
+grep "\[spec:pets.*template:" build/logs/openapi-modelgen-debug.log
 ```
 
-This file contains:
-- **Full context**: All log messages with complete MDC context
-- **Structured data**: Machine-readable log entries for analysis
-- **Performance metrics**: Detailed timing and cache statistics
-- **Template diagnostics**: Complete customization workflow traces
-- **Build progression**: Phase-by-phase build analysis
+**Step 3: Look for specific issues**
+```bash
+# Check template resolution
+grep "Template.*resolved" build/logs/openapi-modelgen-debug.log
 
-### Log File Format
+# Check customization application
+grep "Applied.*customization" build/logs/openapi-modelgen-debug.log
 
+# Check for errors
+grep "ERROR\|WARN" build/logs/openapi-modelgen-debug.log
 ```
-2025-01-15 14:30:45.123 [INFO] [BuildProgress] [pets:pojo.mustache] - Processing template
-2025-01-15 14:30:45.456 [DEBUG] [CustomizationEngine] [pets:pojo.mustache] - PATTERN_MATCH_SUCCESS: pattern='class {{classname}}'
-2025-01-15 14:30:45.789 [TRACE] [TemplateProcessor] [pets:pojo.mustache] - Applied replacement: 'public class' → 'public final class'
+
+### Problem: Slow Build Performance
+
+**Step 1: Run with timing**
+```bash
+./gradlew generateAllModels --debug --profile
+```
+
+**Step 2: Analyze performance metrics**
+```bash
+grep "BUILD_PERFORMANCE\|cache_hit_rate\|parallel_efficiency" build/logs/openapi-modelgen-debug.log
+```
+
+### Problem: Missing Generated Files
+
+**Step 1: Check console for obvious errors**
+```bash
+./gradlew generatePets
+```
+
+**Step 2: Check rich file for detailed diagnosis**
+```bash
+grep -B 5 -A 5 "Generated.*files\|ERROR\|Failed" build/logs/openapi-modelgen-debug.log
+```
+
+## Rich File Analysis Examples
+
+### Template Processing Analysis
+```bash
+# See full template processing flow
+grep "\[spec:pets\].*template" build/logs/openapi-modelgen-debug.log | head -20
+
+# Check which templates were resolved
+grep "resolved.*template" build/logs/openapi-modelgen-debug.log
+
+# See customization details
+grep "customization\|replacement\|insertion" build/logs/openapi-modelgen-debug.log
+```
+
+### Performance Analysis
+```bash
+# Cache performance
+grep "cache.*hit\|cache.*miss" build/logs/openapi-modelgen-debug.log
+
+# Timing analysis
+grep "took.*ms\|completed.*in" build/logs/openapi-modelgen-debug.log
+
+# Parallel processing efficiency
+grep "parallel\|concurrent" build/logs/openapi-modelgen-debug.log
+```
+
+### Cross-Spec Comparison
+```bash
+# Compare specs side by side
+for spec in pets orders inventory; do
+    echo "=== $spec ==="
+    grep "\[spec:$spec\]" build/logs/openapi-modelgen-debug.log | wc -l
+done
+
+# Find common patterns across specs
+grep "\[spec:" build/logs/openapi-modelgen-debug.log | cut -d']' -f3- | sort | uniq -c | sort -nr
+```
+
+## Legacy Migration
+
+If you had complex logging configuration before, **remove it** - the plugin now works with standard Gradle conventions:
+
+**Before (Complex):**
+```gradle
+openapiModelgen {
+    debug true  // Remove this
+    defaults {
+        debug false  // Remove this
+    }
+    specs {
+        pets { debug true }  // Remove this
+    }
+}
+```
+
+**After (Simple):**
+```gradle
+openapiModelgen {
+    // No logging config needed!
+    defaults {
+        outputDir "build/generated-sources"
+    }
+    specs {
+        pets {
+            inputSpec "specs/pets.yaml"
+        }
+    }
+}
 ```
 
 ## Performance Impact
 
-| Log Level | Performance Impact | When to Use |
-|-----------|-------------------|-------------|
-| **ERROR/WARN** | Minimal (<1%) | CI/CD pipelines, production |
-| **INFO** | Minimal (<1%) | Standard development |
-| **DEBUG** | Low (2-5%) | Template customization development |
-| **TRACE** | Moderate (5-10%) | Deep troubleshooting only |
+- **Console Logging**: Follows standard Gradle overhead (minimal)
+- **Rich File Logging**: Low overhead (~1-2% build time)
+- **Debug Analysis**: Only when using `--debug` flag
 
-### Performance Optimization Features
+## FAQ
 
-- **Zero overhead**: Disabled log levels have no performance cost
-- **Lazy evaluation**: Expensive message construction only when needed
-- **Conditional execution**: Code blocks only run when logging is enabled
-- **Efficient routing**: Smart diagnostics avoid unnecessary string operations
+**Q: How do I debug only one spec?**
+A: Use rich file filtering: `grep "[spec:pets]" build/logs/openapi-modelgen-debug.log`
 
-## Legacy Compatibility
+**Q: Can I disable file logging?**
+A: File logging is always enabled and has minimal overhead. Use the file for debugging!
 
-The plugin maintains backward compatibility with existing code:
+**Q: Console output is too verbose with --debug**
+A: Use normal mode for console (`./gradlew generatePets`) and analyze the rich file afterward.
 
-```java
-// Legacy debug flag checking (still works)
-if (PluginState.getInstance().isDebugEnabled()) {
-    // Debug logic
-}
+**Q: Where is the debug configuration?**
+A: There isn't one! Use standard Gradle flags. The plugin follows Gradle conventions.
 
-// New granular level checking
-if (PluginState.getInstance().isInfoEnabled()) {
-    // Info logic
-}
-
-if (PluginState.getInstance().isTraceEnabled()) {
-    // Trace logic
-}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Q: I set `logLevel = "DEBUG"` but don't see debug messages**
-- Check that Gradle's log level isn't overriding: try `./gradlew --info generateModels`
-- Verify the spelling: `"DEBUG"` not `"debug"`
-
-**Q: Too much output in console**
-- Lower the console level: `logLevel = "INFO"`
-- Use `gradle --quiet` for minimal output
-- Remember: file logging always captures everything
-
-**Q: Missing log file**
-- Ensure `buildDir` is accessible and writable
-- Check `build/logs/` directory exists
-- File logging requires successful plugin initialization
-
-**Q: Performance issues**
-- Avoid `TRACE` level in production builds
-- Use lazy evaluation: `logger.debug("Result: {}", () -> expensiveOperation())`
-- Use conditional execution for expensive blocks
-
-### Debug Plugin Logging Itself
-
-```bash
-# Enable plugin internal debugging
-./gradlew generateModels -Popenapi.logLevel=TRACE --debug
-```
-
-This shows how the plugin's own logging system is working internally.
-
-## Migration Guide
-
-### From SmartLogger (Removed in v2.1)
-
-SmartLogger functionality has been merged into PluginLogger:
-
-```java
-// OLD: SmartLogger (removed)
-SmartLogger smartLogger = SmartLogger.forClass(MyClass.class);
-smartLogger.normal("Processing...");
-smartLogger.verbose("Details...");
-
-// NEW: PluginLogger (enhanced)
-PluginLogger logger = (PluginLogger) PluginLoggerFactory.getLogger(MyClass.class);
-logger.info("Processing...");  // replaces normal()
-logger.debug("Details...");    // replaces verbose()
-```
-
-### From Basic SLF4J
-
-No changes needed! PluginLoggerFactory returns standard SLF4J Logger interface:
-
-```java
-// Works exactly the same
-Logger logger = PluginLoggerFactory.getLogger(MyClass.class);
-logger.info("This works unchanged");
-```
-
-Cast to PluginLogger only when you need enhanced features:
-
-```java
-// Enhanced features
-((PluginLogger) logger).ifDebug(() -> expensiveOperation());
-```
-
-## Complete PluginLogger API Reference
-
-### Standard SLF4J Methods
-PluginLogger implements the complete SLF4J Logger interface with intelligent level routing:
-
-```java
-// Level checking (enhanced with plugin state awareness)
-boolean isErrorEnabled()
-boolean isWarnEnabled()
-boolean isInfoEnabled()
-boolean isDebugEnabled()
-boolean isTraceEnabled()
-
-// Logging methods (all levels: error, warn, info, debug, trace)
-void error(String msg)
-void error(String format, Object arg)
-void error(String format, Object arg1, Object arg2)
-void error(String format, Object... arguments)
-void error(String msg, Throwable t)
-// ... same patterns for warn, info, debug, trace
-
-// Marker support for all levels
-void error(Marker marker, String msg)
-// ... etc for all levels
-
-// Utility methods
-String getName()
-```
-
-### Enhanced PluginLogger Methods
-
-```java
-// Lazy evaluation (expensive operations only when level enabled)
-void info(String message, Supplier<Object> argSupplier)
-void debug(String message, Supplier<Object> argSupplier)
-void trace(String message, Supplier<Object> argSupplier)
-
-// Conditional execution (code blocks only run when level enabled)
-void ifInfo(Runnable action)
-void ifDebug(Runnable action)
-void ifTrace(Runnable action)
-
-// Smart diagnostics (automatic level routing)
-void customizationDiagnostic(String type, String message, Object... args)
-void performanceMetric(String scope, String message, Object... args)
-
-// Level management
-LogLevel getCurrentLogLevel()
-boolean isLevelEnabled(LogLevel level)
-
-// Rich file logging utilities
-void section(String section)           // Add section headers to file logs
-boolean isFileLoggingEnabled()        // Check if file logging available
-void close()                          // Manual close/flush (auto via shutdown hook)
-
-// Access underlying logger
-Logger getUnderlyingLogger()          // Get wrapped SLF4J logger
-```
-
-### Smart Diagnostic Types
-
-For `customizationDiagnostic(String type, ...)`:
-
-| Type | Routes To | Use Case |
-|------|-----------|----------|
-| `"pattern_match"` | TRACE | Pattern matching analysis |
-| `"template_diff"` | TRACE | Template before/after differences |
-| `"condition_evaluation"` | TRACE | Condition evaluation details |
-| `"operation_applied"` | DEBUG | Applied customization operations |
-| `"cache_operation"` | DEBUG | Cache hit/miss details |
-| `"variable_analysis"` | DEBUG | Variable context analysis |
-| `"summary"` | INFO | Customization summaries |
-| `"performance"` | INFO | Performance metrics |
-| `"progress"` | INFO | Progress indicators |
-| _default_ | DEBUG | Fallback for unknown types |
-
-### Performance Metric Scopes
-
-For `performanceMetric(String scope, ...)`:
-
-| Scope | Routes To | Use Case |
-|-------|-----------|----------|
-| `"build_summary"` | INFO | Overall build completion stats |
-| `"completion"` | INFO | Phase completion notifications |
-| `"cache_performance"` | INFO | Cache hit rates and efficiency |
-| `"phase_timing"` | INFO | Major phase timing summaries |
-| `"operation_timing"` | DEBUG | Individual operation timings |
-| `"detailed_metrics"` | DEBUG | Detailed performance breakdowns |
-| _default_ | INFO | Fallback for unknown scopes |
-
----
-
-## Examples Repository
-
-For complete working examples, see:
-- [Template Customization Examples](../examples/template-customization/)
-- [Performance Logging Examples](../examples/performance-logging/)
-- [Build Progress Examples](../examples/build-progress/)
+**Q: How do I get detailed template customization info?**
+A: Run with `--debug` flag and/or check rich file for full details.
 
 ## Related Documentation
 
-- [Plugin Configuration](./configuration.md)
+- [Plugin Configuration](./configuration-reference.md)
 - [Template Customization](./template-customization.md)
-- [Performance Optimization](./performance.md)
 - [Troubleshooting Guide](./troubleshooting.md)

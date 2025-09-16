@@ -29,7 +29,7 @@ This guide helps you diagnose and resolve common issues with the OpenAPI Model G
 # Test configuration without generating code
 ./gradlew generateAllModels --dry-run
 
-# Check for configuration cache issues  
+# Check for configuration cache issues
 ./gradlew generateAllModels --configuration-cache
 ```
 
@@ -46,7 +46,7 @@ This guide helps you diagnose and resolve common issues with the OpenAPI Model G
 plugins {
     // ✅ REQUIRED: Apply OpenAPI Generator plugin first
     id 'org.openapi.generator' version '7.14.0'
-    
+
     // ✅ Then apply this plugin
     id 'com.guidedbyte.openapi-modelgen' version '1.1.1'
 }
@@ -83,7 +83,7 @@ openapiModelgen {
     }
 }
 
-✅ Correct - Method call syntax  
+✅ Correct - Method call syntax
 openapiModelgen {
     defaults {
         outputDir "build/generated"             // Method call
@@ -108,7 +108,7 @@ openapiModelgen {
            // Missing inputSpec and modelPackage
        }
    }
-   
+
    ✅ Solution: Provide required properties
    specs {
        api {
@@ -127,7 +127,7 @@ openapiModelgen {
            modelPackage "invalid-package-name!"  // Hyphens not allowed
        }
    }
-   
+
    ✅ Solution: Use valid Java package name
    specs {
        api {
@@ -146,7 +146,7 @@ openapiModelgen {
            modelPackage "com.example.model"
        }
    }
-   
+
    ✅ Solution: Verify file exists and path is correct
    specs {
        api {
@@ -178,9 +178,10 @@ openapiModelgen {
    ls -la build/generated/sources/openapi/src/main/java/
    ```
 
-1. **Enable debug logging:**
+1. **Check rich debug log:**
    ```bash
-   ./gradlew generateApi --debug | grep -i "generating"
+   # View detailed generation information
+   cat build/logs/openapi-modelgen-debug.log | grep -i "generating"
    ```
 
 **Common Causes:**
@@ -194,7 +195,7 @@ openapiModelgen {
      version: 1.0.0
    paths: {}
    # Missing components.schemas section
-   
+
    ✅ Solution: Add schemas to components section
    openapi: 3.0.3
    info:
@@ -217,7 +218,7 @@ openapiModelgen {
        models: "false",  // Disables model generation
        apis: ""          // Enables API generation
    ])
-   
+
    ✅ Solution: Generate models only (default)
    globalProperties([
        models: "",       // Enables model generation
@@ -240,7 +241,7 @@ openapiModelgen {
        implementation 'org.springframework.boot:spring-boot-starter-web'
        implementation 'org.springframework.boot:spring-boot-starter-validation'
        implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
-       
+
        compileOnly 'org.projectlombok:lombok'
        annotationProcessor 'org.projectlombok:lombok'
    }
@@ -313,20 +314,20 @@ openapiModelgen {
    └── spring/                              # Generator name directory
        ├── pojo.mustache.yaml              # YAML customization
        └── model.mustache.yaml
-   
+
    ❌ Incorrect structure (missing generator directory)
    src/main/resources/template-customizations/
    ├── pojo.mustache.yaml                  # Wrong location
    └── model.mustache.yaml
    ```
 
-1. **Enable debug logging:**
-   ```gradle
-   openapiModelgen {
-       defaults {
-           debug true    # Enable comprehensive debug logging
-       }
-   }
+1. **Check rich debug log:**
+   ```bash
+   # View template resolution details (always captured)
+   cat build/logs/openapi-modelgen-debug.log
+
+   # Filter for template customization entries
+   grep -i "customization" build/logs/openapi-modelgen-debug.log
    ```
 
 **Common Causes:**
@@ -336,7 +337,7 @@ openapiModelgen {
    ❌ Problem: Both explicit template and YAML customization exist
    src/main/resources/openapi-templates/spring/pojo.mustache      # Explicit template
    src/main/resources/template-customizations/spring/pojo.mustache.yaml  # YAML (ignored!)
-   
+
    ✅ Solution: Remove explicit template or YAML customization
    src/main/resources/template-customizations/spring/pojo.mustache.yaml  # YAML used
    ```
@@ -350,10 +351,10 @@ openapiModelgen {
            generatorName "spring"           # Uses 'spring' directory
        }
    }
-   
-   # But templates are in 'java' directory  
+
+   # But templates are in 'java' directory
    src/main/resources/template-customizations/java/pojo.mustache.yaml
-   
+
    ✅ Solution: Move to correct generator directory
    src/main/resources/template-customizations/spring/pojo.mustache.yaml
    ```
@@ -373,7 +374,7 @@ openapiModelgen {
    - after: "{{#description}}"
    content: |
      Some content
-   
+
    ✅ Correct indentation
    insertions:
      - after: "{{#description}}"
@@ -386,7 +387,7 @@ openapiModelgen {
    ❌ Unquoted Mustache patterns
    conditions:
      templateContains: {{#description}}     # YAML parsing error
-   
+
    ✅ Properly quoted patterns
    conditions:
      templateContains: "{{#description}}"  # Correct
@@ -397,7 +398,7 @@ openapiModelgen {
    ❌ Unescaped special characters
    content: |
      String value = "Hello: World";        # Colon in string causes issues
-   
+
    ✅ Properly escaped or quoted
    content: |
      String value = "Hello\\: World";      # Escaped
@@ -409,7 +410,7 @@ openapiModelgen {
 
 **Symptoms:**
 - YAML customizations seem valid but aren't applied
-- Debug logging shows patterns not matching
+- Rich debug log shows patterns not matching
 
 **Diagnostic Steps:**
 
@@ -433,7 +434,7 @@ openapiModelgen {
    ❌ Pattern doesn't exist in template
    insertions:
      - after: "{{#nonExistentPattern}}"     # Pattern not in base template
-   
+
    ✅ Use patterns that exist in base template
    insertions:
      - after: "{{#description}}"            # Pattern exists in base template
@@ -444,7 +445,7 @@ openapiModelgen {
    ❌ Wrong case
    insertions:
      - after: "{{#Description}}"            # Capital 'D'
-   
+
    ✅ Correct case
    insertions:
      - after: "{{#description}}"            # Lowercase 'd'
@@ -464,7 +465,7 @@ openapiModelgen {
    ```bash
    # Use build scan to identify bottlenecks
    ./gradlew generateAllModels --scan
-   
+
    # Time specific tasks
    time ./gradlew generateAllModels
    ```
@@ -473,7 +474,7 @@ openapiModelgen {
    ```bash
    # Enable configuration cache
    ./gradlew generateAllModels --configuration-cache
-   
+
    # Run twice to test cache hit
    ./gradlew generateAllModels --configuration-cache  # Should be faster second time
    ```
@@ -493,7 +494,7 @@ openapiModelgen {
    ```bash
    # Add to gradle.properties
    org.gradle.configuration-cache=true
-   
+
    # Or use command line
    ./gradlew generateAllModels --configuration-cache
    ```
@@ -503,8 +504,8 @@ openapiModelgen {
    ✅ Use specific patterns for faster processing
    insertions:
      - after: "import {{#jackson}}"         # Specific pattern
-   
-   ❌ Avoid broad patterns  
+
+   ❌ Avoid broad patterns
    insertions:
      - after: "import"                     # Too broad, slower processing
    ```
@@ -613,30 +614,41 @@ java {
 
 ## Getting Help
 
-### Enable Comprehensive Debug Logging
+### Access Comprehensive Debug Information
 
-The plugin provides detailed debug logging to help troubleshoot template resolution, customization processing, and configuration issues.
+The plugin automatically captures detailed debug logging to help troubleshoot template resolution, customization processing, and configuration issues.
 
-#### Enable Plugin Debug Logging
+#### Rich Debug Log File
 
-**Option 1: Configuration (Recommended)**
-```gradle
-openapiModelgen {
-    debug true  // Enable comprehensive plugin debug logging
-    
-    defaults {
-        // Your other settings...
-    }
-}
+No configuration needed - debug information is always captured:
+
+```bash
+# View complete debug log (always available)
+cat build/logs/openapi-modelgen-debug.log
+
+# Filter by specific spec name
+grep "[spec:api]" build/logs/openapi-modelgen-debug.log
+
+# Search for template-related entries
+grep -i "template" build/logs/openapi-modelgen-debug.log
+
+# View customization processing
+grep -i "customization" build/logs/openapi-modelgen-debug.log
 ```
 
-**Option 2: Command Line**
-```bash
-# Enable plugin debug for single build
-./gradlew generateAllModels -Pdebug=true --info
+#### Console Output Control
 
-# Enable plugin debug with full Gradle debug
-./gradlew generateAllModels -Pdebug=true --debug --stacktrace
+Use standard Gradle flags to control console verbosity:
+
+```bash
+# Detailed console output
+./gradlew generateAllModels --info
+
+# Full debug console output
+./gradlew generateAllModels --debug
+
+# Minimal console output
+./gradlew generateAllModels --quiet
 ```
 
 #### Debug Output Examples
@@ -663,17 +675,20 @@ Template starts with: '{{>licenseInfo}}{{#models}}{{#model}}'
 #### Common Debug Commands
 
 ```bash
-# Full debug output to file
-./gradlew generateAllModels -Pdebug=true --debug --stacktrace > debug.log 2>&1
+# View rich debug log with all details
+cat build/logs/openapi-modelgen-debug.log
 
 # Template-specific debugging
-./gradlew generateAllModels -Pdebug=true --info | grep -E "(Template|template|TEMPLATE)"
+grep -i "template" build/logs/openapi-modelgen-debug.log
 
 # Configuration validation details
 ./gradlew generateAllModels --dry-run --info
 
 # Watch template customization processing
-./gradlew generateAllModels -Pdebug=true --info | grep -E "(CUSTOMIZATION|Applying.*customization)"
+grep -i "customization" build/logs/openapi-modelgen-debug.log
+
+# Filter by specific spec
+grep "[spec:myApi]" build/logs/openapi-modelgen-debug.log
 ```
 
 ### Useful Debug Information
@@ -702,7 +717,7 @@ When reporting issues, include:
 # Generate with verbose output
 ./gradlew generateAllModels --info --stacktrace
 
-# Clean and regenerate everything  
+# Clean and regenerate everything
 ./gradlew clean generateAllModels
 
 # Test configuration cache compatibility
@@ -726,8 +741,8 @@ When reporting issues, include:
 
 When reporting issues, please include:
 - Plugin version
-- OpenAPI Generator version  
+- OpenAPI Generator version
 - Java and Gradle versions
 - Minimal reproduction case
 - Complete error messages and stack traces
-- Debug logging output (if applicable)
+- Rich debug log content (if applicable)

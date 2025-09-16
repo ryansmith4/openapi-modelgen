@@ -77,7 +77,6 @@ public class TemplateSourceDiscovery implements Serializable {
                                                 ProjectLayout projectLayout,
                                                 boolean hasLibraryDependencies) {
         
-        boolean debugEnabled = resolvedConfig.isDebug();
         
         if (requestedSources == null || requestedSources.isEmpty()) {
             logger.debug(
@@ -230,28 +229,25 @@ public class TemplateSourceDiscovery implements Serializable {
                                    Map<String, SourceAvailability> discoveryResults, 
                                    List<String> availableSources) {
         
-        boolean debugEnabled = resolvedConfig.isDebug();
         String specName = resolvedConfig.getSpecName();
         
         logger.debug(
             "Template source discovery for spec '{}': {} requested, {} available",
             specName, requestedSources.size(), availableSources.size());
         
-        if (debugEnabled) {
+        logger.debug(
+            "Requested template sources for '{}': {}", specName, requestedSources);
+
+        for (Map.Entry<String, SourceAvailability> entry : discoveryResults.entrySet()) {
+            String source = entry.getKey();
+            SourceAvailability availability = entry.getValue();
+            String status = availability.isAvailable() ? "✅" : "❌";
             logger.debug(
-                "Requested template sources for '{}': {}", specName, requestedSources);
-            
-            for (Map.Entry<String, SourceAvailability> entry : discoveryResults.entrySet()) {
-                String source = entry.getKey();
-                SourceAvailability availability = entry.getValue();
-                String status = availability.isAvailable() ? "✅" : "❌";
-                logger.debug(
-                    "  - {}: {} ({})", source, status, availability.getReason());
-            }
-            
-            logger.debug(
-                "Effective template sources for '{}': {}", specName, availableSources);
+                "  - {}: {} ({})", source, status, availability.getReason());
         }
+
+        logger.debug(
+            "Effective template sources for '{}': {}", specName, availableSources);
         
         // Log warning if no sources are available
         if (availableSources.isEmpty()) {

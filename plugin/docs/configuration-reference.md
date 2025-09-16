@@ -78,7 +78,7 @@ openapiModelgen {
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `templateSources` | List&lt;String&gt; | See below | Template resolution order |
-| `debug` | Boolean | `false` | Enable comprehensive debug logging throughout the plugin |
+| `logLevel` | String | `"INFO"` | Logging level: ERROR, WARN, INFO, DEBUG, or TRACE |
 
 **Default `templateSources`:** `["user-templates", "user-customizations", "library-templates", "library-customizations", "plugin-customizations", "openapi-generator"]`
 
@@ -89,11 +89,11 @@ openapiModelgen {
             "user-templates",
             "user-customizations",
             "library-templates",
-            "library-customizations", 
+            "library-customizations",
             "plugin-customizations",
             "openapi-generator"
         ])
-        debug true
+        logLevel "DEBUG"
     }
 }
 ```
@@ -330,7 +330,7 @@ All configuration options support command-line overrides using `@Option` annotat
 ./gradlew generateMyApi -PvalidateSpec=true
 
 # Debug template resolution
-./gradlew generateAllModels -Pdebug=true
+./gradlew generateAllModels -PlogLevel=DEBUG
 
 # Override model package
 ./gradlew generateUsersApi -PmodelPackage=com.custom.model
@@ -394,45 +394,44 @@ openapiModelgen {
 }
 ```
 
-## Debug Logging Configuration
+## Logging Configuration
 
-The plugin provides comprehensive debug logging to help troubleshoot template resolution, customization processing, and configuration issues.
+The plugin provides comprehensive logging to help troubleshoot template resolution, customization processing, and configuration issues.
 
-### Enable Debug Logging
+### Configure Log Level
 
-**Global Debug (applies to all specs):**
+**Global Log Level (applies to all specs):**
 ```gradle
 openapiModelgen {
-    debug true  // Enable comprehensive debug logging
-    
     defaults {
-        // Your default settings...
+        logLevel "DEBUG"  // Enable debug logging for all specs
+        // Available levels: ERROR, WARN, INFO, DEBUG, TRACE
     }
-    
+
     specs {
         // Your spec configurations...
     }
 }
 ```
 
-**Per-Spec Debug:**
+**Per-Spec Log Level:**
 ```gradle
 openapiModelgen {
     defaults {
-        debug false  // Debug disabled by default
+        logLevel "INFO"  // Default logging level
     }
-    
+
     specs {
         problemSpec {
             inputSpec "problem-spec.yaml"
             modelPackage "com.example.problem"
-            debug true  // Enable debug only for this spec
+            logLevel "DEBUG"  // Enable debug logging only for this spec
         }
-        
+
         workingSpec {
             inputSpec "working-spec.yaml"
             modelPackage "com.example.working"
-            // Uses default debug setting (false)
+            // Uses default logLevel setting (INFO)
         }
     }
 }
@@ -440,16 +439,29 @@ openapiModelgen {
 
 **Command Line Override:**
 ```bash
-# Enable debug for single build
-./gradlew generateAllModels -Pdebug=true --info
+# Enable debug logging for single build
+./gradlew generateAllModels -PlogLevel=DEBUG --info
 
-# Enable debug for specific task
-./gradlew generateProblemSpec -Pdebug=true --info
+# Enable debug logging for specific task
+./gradlew generateProblemSpec -PlogLevel=DEBUG --info
+
+# Enable trace logging for maximum detail
+./gradlew generateAllModels -PlogLevel=TRACE --info
 ```
+
+### Available Log Levels
+
+| Level | Description |
+|-------|-------------|
+| `ERROR` | Only error messages |
+| `WARN` | Warnings and errors |
+| `INFO` | General information, warnings, and errors (default) |
+| `DEBUG` | Detailed debugging information |
+| `TRACE` | Maximum detail for troubleshooting |
 
 ### Debug Output Information
 
-When debug logging is enabled, you'll see detailed information about:
+When debug or trace logging is enabled, you'll see detailed information about:
 
 - **Template Resolution**: Which template sources are available and used
 - **Template Extraction**: Base template discovery and content processing
@@ -512,7 +524,7 @@ openapiModelgen {
             "plugin-customizations",
             "openapi-generator"
         ])
-        debug false
+        logLevel "INFO"
         
         // Template variables
         templateVariables([

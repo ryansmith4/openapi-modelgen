@@ -369,18 +369,24 @@ publishing {
 
 ## Debugging Template Customizations
 
-### Enable Debug Logging
+### Access Debug Information
 
 ```gradle
 openapiModelgen {
     defaults {
-        debug true
+        // No logging configuration needed - rich debug log always captured
     }
 }
 ```
 
 ```bash
-# Generate with debug information
+# View complete debug log (always available)
+cat build/logs/openapi-modelgen-debug.log
+
+# Filter for template customization entries
+grep -i "customization" build/logs/openapi-modelgen-debug.log
+
+# Use standard Gradle flags for console output
 ./gradlew generateApi --info
 ```
 
@@ -553,7 +559,7 @@ insertions:
 
 1. **Start small** with single insertions
 1. **Test incrementally** after each customization
-1. **Use debug logging** to understand template resolution
+1. **Review rich debug log** to understand template resolution
 1. **Version control** customization files alongside code
 
 ### Team Collaboration

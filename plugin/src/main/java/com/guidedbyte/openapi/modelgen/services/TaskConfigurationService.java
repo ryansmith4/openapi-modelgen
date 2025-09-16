@@ -211,10 +211,7 @@ public class TaskConfigurationService implements Serializable {
         // Template preparation is now handled by the dedicated PrepareTemplateDirectoryTask
         // No need for doFirst action - Gradle handles task dependencies automatically via Provider
 
-        // Add debug logging hooks for OpenAPI Generator execution
-        if (extension.isDebug()) {
-            addExecutionDebugLogging(task, specName, extension);
-        }
+        // Debug logging is now handled automatically by PluginLogger based on Gradle log level
 
         logger.debug("Configured generate task for spec: {}", specName);
     }
@@ -613,7 +610,6 @@ public class TaskConfigurationService implements Serializable {
         private static final long serialVersionUID = 1L;
 
         // Extract only serializable data at configuration time
-        private final boolean debugMode;
         private final boolean parallelMode;
         private final String projectPath;
         private final String buildDirPath;
@@ -623,7 +619,6 @@ public class TaskConfigurationService implements Serializable {
         private final LibraryData libraryData;
 
         DebugConfigAction(OpenApiModelGenExtension extension, Project project, ProjectLayout projectLayout) {
-            this.debugMode = extension.isDebug();
             this.parallelMode = extension.isParallel();
             this.projectPath = project.getProjectDir().getAbsolutePath();
             this.buildDirPath = projectLayout.getBuildDirectory().getAsFile().get().getAbsolutePath();
@@ -709,7 +704,6 @@ public class TaskConfigurationService implements Serializable {
 
             // Plugin-level configuration
             System.out.println("\n📋 Plugin Configuration:");
-            System.out.printf("  Debug mode: %s%n", debugMode);
             System.out.printf("  Parallel processing: %s%n", parallelMode);
             System.out.printf("  Project directory: %s%n", projectPath);
             System.out.printf("  Build directory: %s%n", buildDirPath);
@@ -803,11 +797,7 @@ public class TaskConfigurationService implements Serializable {
             System.out.println("  - Clear caches: gradle generateClean");
             System.out.println("  - Validate OpenAPI specs: https://editor.swagger.io/");
             System.out.println("  - Check file permissions and paths");
-            if (debugMode) {
-                System.out.println("  - Debug mode is enabled - check logs for detailed information");
-            } else {
-                System.out.println("  - Consider enabling debug mode for more detailed logging");
-            }
+            System.out.println("  - Use --debug flag for detailed logging");
 
             System.out.println("\n=== End Debug Configuration ===\n");
         }
@@ -1042,23 +1032,19 @@ public class TaskConfigurationService implements Serializable {
      */
     private void addGenerationFailureHandling(GenerateTask task, String specName, OpenApiModelGenExtension extension) {
         // Capture only serializable values during configuration time for configuration cache compatibility
-        boolean isDebug = extension.isDebug();
         String taskPath = task.getPath();
         String taskName = task.getName();
 
         // Add error handling through task lifecycle hooks without capturing Project reference
         task.doFirst(t -> {
             // Log context setup - no project state needed
-            if (isDebug) {
-                logger.debug("Setting up failure context for task '{}' spec '{}'", taskName, specName);
-            }
         });
 
         // Add error logging directly in the task's doLast
         task.doLast(t -> {
             // Check if task failed and log detailed failure information
             if (task.getState().getFailure() != null) {
-                logGenerationFailure(task, specName, task.getState().getFailure(), isDebug);
+                logGenerationFailure(task, specName, task.getState().getFailure());
             }
         });
     }
@@ -1069,16 +1055,14 @@ public class TaskConfigurationService implements Serializable {
      * @param task the failed GenerateTask
      * @param specName the name of the specification
      * @param failure the exception that caused the failure
-     * @param debugEnabled whether debug logging is enabled
      */
-    private void logGenerationFailure(GenerateTask task, String specName, Throwable failure, boolean debugEnabled) {
+    private void logGenerationFailure(GenerateTask task, String specName, Throwable failure) {
         logger.error("OpenAPI generation FAILED for spec: {}", specName);
         logger.error("Error: {}", failure.getMessage());
 
-        if (debugEnabled) {
-            // Provide comprehensive context about the failure
-            logger.debug("=== OpenAPI Generation Failure Analysis ===");
-            logger.debug("Spec: {}", specName);
+        // Provide comprehensive context about the failure
+        logger.debug("=== OpenAPI Generation Failure Analysis ===");
+        logger.debug("Spec: {}", specName);
 
             try {
                 // Log task configuration at time of failure
@@ -1151,7 +1135,6 @@ public class TaskConfigurationService implements Serializable {
             } catch (Exception e) {
                 logger.warn("Error during failure analysis for spec '{}': {}", specName, e.getMessage());
             }
-        }
 
         // Always show basic troubleshooting info
         logger.error("Enable debug mode for detailed analysis: openapiModelgen {{ debug true }}");

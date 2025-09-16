@@ -109,7 +109,9 @@ templatePrecedence = [                            // Template resolution priorit
     "plugin-customizations",                      // Built-in plugin YAML customizations
     "openapi-generator"                          // OpenAPI Generator defaults (lowest)
 ]
-debug = false                                      // Enable comprehensive debug logging throughout the plugin
+// No logging configuration needed - use standard Gradle flags:
+// ./gradlew generatePets --debug    (debug output)
+// ./gradlew generatePets --quiet    (minimal output)
 ```
 
 ### OpenAPI Generator Options
@@ -545,12 +547,8 @@ openapiModelgen {
 
 Enable debug logging to see library processing:
 
-```gradle
-openapiModelgen {
-    defaults {
-        debug true
-    }
-}
+```bash
+./gradlew generatePets --debug
 ```
 
 **Output:**
