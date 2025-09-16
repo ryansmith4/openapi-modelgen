@@ -3,7 +3,7 @@ package com.guidedbyte.openapi.modelgen.services;
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine.CustomizationException;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.regex.PatternSyntaxException;
  * @since 2.0.0
  */
 public class TemplateProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(TemplateProcessor.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplateProcessor.class);
     
     private final ConditionEvaluator conditionEvaluator;
     private final PatternMatcher patternMatcher;

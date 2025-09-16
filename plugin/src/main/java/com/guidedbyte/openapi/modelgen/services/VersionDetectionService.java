@@ -4,7 +4,7 @@ import com.guidedbyte.openapi.modelgen.OpenApiModelGenPlugin;
 import org.gradle.api.Project;
 import org.semver4j.Semver;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2.0.0
  */
 public class VersionDetectionService {
-    private static final Logger logger = LoggerFactory.getLogger(VersionDetectionService.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(VersionDetectionService.class);
     
     private final Project project;
     private final FeatureDetector featureDetector;

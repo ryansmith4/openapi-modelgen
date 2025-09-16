@@ -4,9 +4,8 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
-import com.guidedbyte.openapi.modelgen.util.DebugLogger;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -42,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2.0.0
  */
 public class CustomizationEngine {
-    private static final Logger logger = LoggerFactory.getLogger(CustomizationEngine.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(CustomizationEngine.class);
     
     private final YamlValidator yamlValidator;
     
@@ -167,7 +166,7 @@ public class CustomizationEngine {
         String cachedResult = customizationResultCache.get(cacheKey);
 
         if (cachedResult != null) {
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "Using cached customization result (key: {})",
                 cacheKeyPreview);
             return cachedResult;
@@ -177,7 +176,7 @@ public class CustomizationEngine {
             String result = applyCustomizationsInternal(baseTemplate, config, context);
             customizationResultCache.put(cacheKey, result);
 
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "Cached customization result (key: {}, cache size: {})",
                 cacheKeyPreview, customizationResultCache.size());
             
@@ -211,25 +210,25 @@ public class CustomizationEngine {
             throw new CustomizationException(e.getMessage(), e);
         }
         
-        DebugLogger.debug(logger, debugEnabled,
+        logger.debug(
             "Starting template customization, base template length: {}", baseTemplate.length());
         
         if (config == null) {
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "CUSTOMIZATION DEBUG: No customization config provided, returning original template");
             return baseTemplate;
         }
         
-        DebugLogger.debug(logger, debugEnabled,
+        logger.debug(
             "CUSTOMIZATION DEBUG: Config metadata: {}", config.getMetadata());
-        DebugLogger.debug(logger, debugEnabled,
-            "CUSTOMIZATION DEBUG: Number of insertions: {}", 
+        logger.debug(
+            "CUSTOMIZATION DEBUG: Number of insertions: {}",
             config.getInsertions() != null ? config.getInsertions().size() : 0);
         
         // Check global conditions first
         ConditionEvaluator conditionEvaluator = new ConditionEvaluator();
         if (config.getConditions() != null && !conditionEvaluator.evaluate(config.getConditions(), context)) {
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "CUSTOMIZATION DEBUG: Global conditions not met, skipping customization");
             return baseTemplate;
         }
@@ -263,16 +262,16 @@ public class CustomizationEngine {
             
             // 3. Apply insertions (add new content)
             if (config.getInsertions() != null) {
-                DebugLogger.debug(logger, debugEnabled,
+                logger.debug(
                     "CUSTOMIZATION DEBUG: Processing {} insertions", config.getInsertions().size());
                 for (int i = 0; i < config.getInsertions().size(); i++) {
                     Insertion insertion = config.getInsertions().get(i);
-                    DebugLogger.debug(logger, debugEnabled,
-                        "CUSTOMIZATION DEBUG: Processing insertion #{}: before='{}', content='{}'", 
+                    logger.debug(
+                        "CUSTOMIZATION DEBUG: Processing insertion #{}: before='{}', content='{}'",
                         i, insertion.getBefore(), insertion.getContent());
                     String beforeResult = result;
                     result = processor.applyInsertion(result, insertion, context, config.getPartials());
-                    DebugLogger.debug(logger, debugEnabled,
+                    logger.debug(
                         "CUSTOMIZATION DEBUG: Template changed: {}", !beforeResult.equals(result));
                 }
             }
@@ -284,10 +283,10 @@ public class CustomizationEngine {
                 }
             }
             
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "CUSTOMIZATION DEBUG: Final result length: {}", result.length());
-            DebugLogger.debug(logger, debugEnabled,
-                "CUSTOMIZATION DEBUG: Final result first 200 chars: {}", 
+            logger.debug(
+                "CUSTOMIZATION DEBUG: Final result first 200 chars: {}",
                 result.length() > 200 ? result.substring(0, 200) + "..." : result);
             
             if (debugEnabled) {
@@ -297,7 +296,7 @@ public class CustomizationEngine {
             return result;
         
         } catch (Exception e) {
-            DebugLogger.debug(logger, debugEnabled,
+            logger.debug(
                 "CUSTOMIZATION DEBUG: Exception during customization: {}", e.getMessage());
             
             // Use ErrorHandlingUtils for consistent error wrapping with context

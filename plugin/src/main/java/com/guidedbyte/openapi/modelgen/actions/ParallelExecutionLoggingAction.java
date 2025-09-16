@@ -4,7 +4,7 @@ package com.guidedbyte.openapi.modelgen.actions;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,7 +16,7 @@ import java.io.Serializable;
 public class ParallelExecutionLoggingAction implements Action<Task>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(ParallelExecutionLoggingAction.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(ParallelExecutionLoggingAction.class);
     
     private final int specCount;
     private final boolean isParallel;

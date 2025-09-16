@@ -2,7 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 
 /**
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @since 1.0.0
  */
 public class TemplateDiscoveryService {
-    private static final Logger logger = LoggerFactory.getLogger(TemplateDiscoveryService.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplateDiscoveryService.class);
     private final CodegenConfigTemplateExtractor extractor = new CodegenConfigTemplateExtractor();
     
     /**

@@ -3,7 +3,7 @@ package com.guidedbyte.openapi.modelgen.utils;
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import org.semver4j.Semver;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 /**
  * Centralized utility class for all version comparison operations.
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * @since 1.0.0
  */
 public final class VersionUtils {
-    private static final Logger logger = LoggerFactory.getLogger(VersionUtils.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(VersionUtils.class);
 
     // Private constructor to prevent instantiation
     private VersionUtils() {

@@ -7,7 +7,6 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.TaskContainer;

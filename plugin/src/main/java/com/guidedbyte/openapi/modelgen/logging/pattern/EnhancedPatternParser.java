@@ -3,7 +3,7 @@ package com.guidedbyte.openapi.modelgen.logging.pattern;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 /**
  * High-performance parser for SLF4J log patterns that converts them into compiled elements.
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class EnhancedPatternParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(EnhancedPatternParser.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(EnhancedPatternParser.class);
     
     /**
      * Parses an SLF4J pattern string into a list of pattern elements for high-performance formatting.

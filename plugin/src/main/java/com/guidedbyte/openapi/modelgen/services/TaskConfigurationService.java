@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.DefaultConfig;
 import com.guidedbyte.openapi.modelgen.OpenApiModelGenExtension;
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.SpecConfig;
@@ -7,6 +8,7 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.actions.ParallelExecutionLoggingAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -17,7 +19,6 @@ import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serial;
@@ -47,7 +48,7 @@ import java.util.Map;
 public class TaskConfigurationService implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(TaskConfigurationService.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TaskConfigurationService.class);
     
     /**
      * Creates a new TaskConfigurationService.
@@ -127,7 +128,10 @@ public class TaskConfigurationService implements Serializable {
         
         // Create help task with usage information
         createHelpTask(tasks, extension);
-        
+
+        // Create debug configuration task for troubleshooting
+        createDebugConfigTask(tasks, extension, project, projectLayout);
+
         logger.debug("Created tasks for {} OpenAPI specifications", extension.getSpecs().size());
     }
     
@@ -206,7 +210,12 @@ public class TaskConfigurationService implements Serializable {
         
         // Template preparation is now handled by the dedicated PrepareTemplateDirectoryTask
         // No need for doFirst action - Gradle handles task dependencies automatically via Provider
-        
+
+        // Add debug logging hooks for OpenAPI Generator execution
+        if (extension.isDebug()) {
+            addExecutionDebugLogging(task, specName, extension);
+        }
+
         logger.debug("Configured generate task for spec: {}", specName);
     }
     
@@ -579,7 +588,231 @@ public class TaskConfigurationService implements Serializable {
             System.out.println("  https://github.com/guidedbyte/openapi-modelgen\n");
         }
     }
-    
+
+    /**
+     * Creates the debug configuration task for troubleshooting plugin configuration.
+     *
+     * @param tasks the task container to register the debug task with
+     * @param extension the plugin extension containing configuration
+     * @param project the Gradle project
+     * @param projectLayout the project layout for path resolution
+     */
+    private void createDebugConfigTask(TaskContainer tasks, OpenApiModelGenExtension extension, Project project, ProjectLayout projectLayout) {
+        tasks.register("debugOpenApiConfig", task -> {
+            task.setDescription("Debug OpenAPI Model Generator plugin configuration");
+            task.setGroup(PluginConstants.TASK_GROUP);
+            task.doLast(new DebugConfigAction(extension, project, projectLayout));
+        });
+    }
+
+    /**
+     * Configuration-cache compatible action for the debug configuration task.
+     */
+    private static class DebugConfigAction implements org.gradle.api.Action<org.gradle.api.Task>, Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        // Extract only serializable data at configuration time
+        private final boolean debugMode;
+        private final boolean parallelMode;
+        private final String projectPath;
+        private final String buildDirPath;
+        private final String gradleVersion;
+        private final Map<String, SpecConfigData> specs;
+        private final DefaultConfigData defaults;
+        private final LibraryData libraryData;
+
+        DebugConfigAction(OpenApiModelGenExtension extension, Project project, ProjectLayout projectLayout) {
+            this.debugMode = extension.isDebug();
+            this.parallelMode = extension.isParallel();
+            this.projectPath = project.getProjectDir().getAbsolutePath();
+            this.buildDirPath = projectLayout.getBuildDirectory().getAsFile().get().getAbsolutePath();
+            this.gradleVersion = project.getGradle().getGradleVersion();
+
+            // Extract spec data
+            this.specs = new HashMap<>();
+            for (Map.Entry<String, SpecConfig> entry : extension.getSpecs().entrySet()) {
+                SpecConfig config = entry.getValue();
+                this.specs.put(entry.getKey(), new SpecConfigData(
+                    config.getInputSpec().getOrNull(),
+                    config.getModelPackage().getOrNull(),
+                    config.getOutputDir().getOrNull()
+                ));
+            }
+
+            // Extract defaults data
+            DefaultConfig def = extension.getDefaults();
+            this.defaults = new DefaultConfigData(
+                def.getOutputDir().getOrNull(),
+                def.getUserTemplateDir().getOrNull(),
+                def.getUserTemplateCustomizationsDir().getOrNull(),
+                def.getModelNameSuffix().getOrNull()
+            );
+
+            // Extract library data
+            LibraryTemplateExtractor.LibraryExtractionResult libContent = extension.getLibraryContent();
+            if (libContent != null) {
+                this.libraryData = new LibraryData(
+                    libContent.getTemplates() != null ? libContent.getTemplates().size() : 0,
+                    libContent.getCustomizations() != null ? libContent.getCustomizations().size() : 0,
+                    libContent.getMetadata() != null ? libContent.getMetadata().size() : 0
+                );
+            } else {
+                this.libraryData = null;
+            }
+        }
+
+        private static class SpecConfigData implements Serializable {
+            @Serial private static final long serialVersionUID = 1L;
+            final String inputSpec;
+            final String modelPackage;
+            final String outputDir;
+
+            SpecConfigData(String inputSpec, String modelPackage, String outputDir) {
+                this.inputSpec = inputSpec;
+                this.modelPackage = modelPackage;
+                this.outputDir = outputDir;
+            }
+        }
+
+        private static class DefaultConfigData implements Serializable {
+            @Serial private static final long serialVersionUID = 1L;
+            final String outputDir;
+            final String userTemplateDir;
+            final String userCustomizationsDir;
+            final String modelNameSuffix;
+
+            DefaultConfigData(String outputDir, String userTemplateDir, String userCustomizationsDir, String modelNameSuffix) {
+                this.outputDir = outputDir;
+                this.userTemplateDir = userTemplateDir;
+                this.userCustomizationsDir = userCustomizationsDir;
+                this.modelNameSuffix = modelNameSuffix;
+            }
+        }
+
+        private static class LibraryData implements Serializable {
+            @Serial private static final long serialVersionUID = 1L;
+            final int templateCount;
+            final int customizationCount;
+            final int metadataCount;
+
+            LibraryData(int templateCount, int customizationCount, int metadataCount) {
+                this.templateCount = templateCount;
+                this.customizationCount = customizationCount;
+                this.metadataCount = metadataCount;
+            }
+        }
+
+        @Override
+        public void execute(org.gradle.api.Task task) {
+            System.out.println("\n=== OpenAPI Model Generator Debug Configuration ===");
+
+            // Plugin-level configuration
+            System.out.println("\n📋 Plugin Configuration:");
+            System.out.printf("  Debug mode: %s%n", debugMode);
+            System.out.printf("  Parallel processing: %s%n", parallelMode);
+            System.out.printf("  Project directory: %s%n", projectPath);
+            System.out.printf("  Build directory: %s%n", buildDirPath);
+
+            // Defaults configuration
+            System.out.println("\n📋 Default Configuration:");
+            if (defaults.outputDir != null) {
+                System.out.printf("  Output directory: %s%n", defaults.outputDir);
+            }
+            if (defaults.userTemplateDir != null) {
+                System.out.printf("  User template directory: %s%n", defaults.userTemplateDir);
+            }
+            if (defaults.userCustomizationsDir != null) {
+                System.out.printf("  User customizations directory: %s%n", defaults.userCustomizationsDir);
+            }
+            if (defaults.modelNameSuffix != null) {
+                System.out.printf("  Model name suffix: %s%n", defaults.modelNameSuffix);
+            }
+
+            // Library configuration
+            if (libraryData != null) {
+                System.out.println("\n📚 Library Configuration:");
+                System.out.printf("  Library templates: %d%n", libraryData.templateCount);
+                System.out.printf("  Library customizations: %d%n", libraryData.customizationCount);
+                System.out.printf("  Library metadata files: %d%n", libraryData.metadataCount);
+            }
+
+            // Specifications configuration
+            System.out.println("\n📝 Specifications Configuration:");
+            if (specs.isEmpty()) {
+                System.out.println("  ⚠️  No specifications configured");
+                System.out.println("  💡 Add specs using: openapiModelgen { specs { ... } }");
+            } else {
+                System.out.printf("  Total specifications: %d%n", specs.size());
+                for (Map.Entry<String, SpecConfigData> entry : specs.entrySet()) {
+                    String specName = entry.getKey();
+                    SpecConfigData specConfig = entry.getValue();
+
+                    System.out.printf("\n  📄 Spec: %s%n", specName);
+                    if (specConfig.inputSpec != null) {
+                        System.out.printf("    Input spec: %s%n", specConfig.inputSpec);
+
+                        // Check if file exists
+                        File inputFile = new File(specConfig.inputSpec);
+                        if (!inputFile.isAbsolute()) {
+                            inputFile = new File(projectPath, specConfig.inputSpec);
+                        }
+                        System.out.printf("    File exists: %s%n", inputFile.exists() ? "✅ Yes" : "❌ No");
+                        if (inputFile.exists()) {
+                            System.out.printf("    File size: %d bytes%n", inputFile.length());
+                        }
+                    }
+
+                    if (specConfig.modelPackage != null) {
+                        System.out.printf("    Model package: %s%n", specConfig.modelPackage);
+                    }
+                    if (specConfig.outputDir != null) {
+                        System.out.printf("    Output directory: %s%n", specConfig.outputDir);
+                    }
+                    // Generator is typically "spring" by default
+                    System.out.printf("    Generator: %s (default)%n", "spring");
+                }
+            }
+
+            // Environment information
+            System.out.println("\n🔧 Environment Information:");
+            System.out.printf("  Java version: %s%n", System.getProperty("java.version"));
+            System.out.printf("  Gradle version: %s%n", gradleVersion);
+            System.out.printf("  OS: %s %s%n", System.getProperty("os.name"), System.getProperty("os.version"));
+
+            // Cache information
+            System.out.println("\n💾 Cache Information:");
+            String globalCacheDir = System.getProperty("user.home") + "/.gradle/caches/openapi-modelgen";
+            File globalCache = new File(globalCacheDir);
+            System.out.printf("  Global cache directory: %s%n", globalCacheDir);
+            System.out.printf("  Global cache exists: %s%n", globalCache.exists() ? "✅ Yes" : "❌ No");
+            if (globalCache.exists()) {
+                File[] cacheFiles = globalCache.listFiles();
+                int fileCount = (cacheFiles != null) ? cacheFiles.length : 0;
+                System.out.printf("  Global cache files: %d%n", fileCount);
+            }
+
+            String workingCacheDir = buildDirPath + "/template-work";
+            File workingCache = new File(workingCacheDir);
+            System.out.printf("  Working cache directory: %s%n", workingCacheDir);
+            System.out.printf("  Working cache exists: %s%n", workingCache.exists() ? "✅ Yes" : "❌ No");
+
+            // Troubleshooting tips
+            System.out.println("\n💡 Troubleshooting Tips:");
+            System.out.println("  - Enable debug mode: openapiModelgen { debug true }");
+            System.out.println("  - Clear caches: gradle generateClean");
+            System.out.println("  - Validate OpenAPI specs: https://editor.swagger.io/");
+            System.out.println("  - Check file permissions and paths");
+            if (debugMode) {
+                System.out.println("  - Debug mode is enabled - check logs for detailed information");
+            } else {
+                System.out.println("  - Consider enabling debug mode for more detailed logging");
+            }
+
+            System.out.println("\n=== End Debug Configuration ===\n");
+        }
+    }
+
     /**
      * Applies default OpenAPI Generator configuration optimized for Spring Boot 3 + Lombok.
      * 
@@ -716,8 +949,232 @@ public class TaskConfigurationService implements Serializable {
     }
     
     /**
+     * Adds debug logging hooks to a GenerateTask for OpenAPI Generator execution monitoring.
+     *
+     * @param task the GenerateTask to instrument with debug logging
+     * @param specName the name of the specification being processed
+     * @param extension the plugin extension containing debug configuration
+     */
+    private void addExecutionDebugLogging(GenerateTask task, String specName, OpenApiModelGenExtension extension) {
+        task.doFirst(t -> {
+            logger.info("🚀 Starting OpenAPI generation for spec: {}", specName);
+            try {
+                // Log key configuration details that users often need for troubleshooting
+                logger.debug("=== OpenAPI Generator Execution Debug ===");
+                logger.debug("Spec: {}", specName);
+                logger.debug("Generator: {}", task.getGeneratorName().getOrElse("unknown"));
+                logger.debug("Input spec: {}", task.getInputSpec().getOrElse("not set"));
+                logger.debug("Output directory: {}", task.getOutputDir().getOrElse("not set"));
+                logger.debug("Package name: {}", task.getModelPackage().getOrElse("not set"));
+
+                if (task.getTemplateDir().isPresent()) {
+                    logger.debug("Template directory: {}", task.getTemplateDir().get());
+                } else {
+                    logger.debug("Template directory: using OpenAPI Generator defaults");
+                }
+
+                // Log file existence checks for common issues
+                if (task.getInputSpec().isPresent()) {
+                    String inputSpecPath = task.getInputSpec().get().toString();
+                    File inputFile = new File(inputSpecPath);
+                    if (inputFile.isAbsolute()) {
+                        logger.debug("Input spec file check: exists={}, readable={}", inputFile.exists(), inputFile.canRead());
+                    } else {
+                        File resolvedFile = new File(t.getProject().getProjectDir(), inputSpecPath);
+                        logger.debug("Input spec resolved path: {}", resolvedFile.getAbsolutePath());
+                        logger.debug("Input spec file check: exists={}, readable={}", resolvedFile.exists(), resolvedFile.canRead());
+                    }
+                }
+
+                if (task.getOutputDir().isPresent()) {
+                    String outputDirPath = task.getOutputDir().get();
+                    File outputDir = new File(outputDirPath);
+                    logger.debug("Output directory check: exists={}, writable={}", outputDir.exists(), outputDir.canWrite());
+                    if (!outputDir.exists()) {
+                        logger.debug("Output directory will be created during generation");
+                    }
+                }
+
+                logger.debug("=== End OpenAPI Generator Debug ===");
+            } catch (Exception e) {
+                logger.warn("Error during pre-execution debug logging for spec '{}': {}", specName, e.getMessage());
+            }
+        });
+
+        task.doLast(t -> {
+            try {
+                logger.info("✅ OpenAPI generation completed for spec: {}", specName);
+
+                // Log post-generation information
+                if (task.getOutputDir().isPresent()) {
+                    String outputDirPath = task.getOutputDir().get();
+                    File outputDir = new File(outputDirPath);
+                    if (outputDir.exists()) {
+                        File[] generatedFiles = outputDir.listFiles();
+                        int fileCount = (generatedFiles != null) ? generatedFiles.length : 0;
+                        logger.debug("Generated {} files in output directory: {}", fileCount, outputDir.getAbsolutePath());
+
+                        // Look for common generated files to verify success
+                        if (fileCount > 0) {
+                            logger.debug("Generation appears successful - output directory contains files");
+                        } else {
+                            logger.warn("Output directory is empty - generation may have failed silently");
+                        }
+                    } else {
+                        logger.warn("Output directory does not exist after generation: {}", outputDir.getAbsolutePath());
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Error during post-execution debug logging for spec '{}': {}", specName, e.getMessage());
+            }
+        });
+
+        // Add comprehensive error handling for generation failures
+        addGenerationFailureHandling(task, specName, extension);
+    }
+
+    /**
+     * Adds comprehensive error handling to a GenerateTask to provide actionable error messages.
+     *
+     * @param task the GenerateTask to instrument with error handling
+     * @param specName the name of the specification being processed
+     * @param extension the plugin extension containing debug configuration
+     */
+    private void addGenerationFailureHandling(GenerateTask task, String specName, OpenApiModelGenExtension extension) {
+        // Add error handling through task lifecycle hooks
+        task.doFirst(t -> {
+            // Set up context for potential error logging
+            task.getProject().getExtensions().getExtraProperties().set(
+                "openapiModelgenFailureContext_" + specName,
+                new GenerationContext(specName, task, extension.isDebug()));
+        });
+
+        // Add finalizer that runs even if task fails
+        task.finalizedBy(task.getProject().getTasks().register(
+            "logGenerationFailure" + capitalize(specName), t -> {
+                t.doLast(action -> {
+                    // Check if our generation task failed
+                    if (task.getState().getFailure() != null) {
+                        logGenerationFailure(task, specName, task.getState().getFailure(), extension.isDebug());
+                    }
+                });
+                t.onlyIf(spec -> task.getState().getFailure() != null);
+            }));
+    }
+
+    /**
+     * Logs detailed information about OpenAPI generation failures with actionable guidance.
+     *
+     * @param task the failed GenerateTask
+     * @param specName the name of the specification
+     * @param failure the exception that caused the failure
+     * @param debugEnabled whether debug logging is enabled
+     */
+    private void logGenerationFailure(GenerateTask task, String specName, Throwable failure, boolean debugEnabled) {
+        logger.error("❌ OpenAPI generation FAILED for spec: {}", specName);
+        logger.error("💥 Error: {}", failure.getMessage());
+
+        if (debugEnabled) {
+            // Provide comprehensive context about the failure
+            logger.debug("=== OpenAPI Generation Failure Analysis ===");
+            logger.debug("Spec: {}", specName);
+
+            try {
+                // Log task configuration at time of failure
+                if (task.getGeneratorName().isPresent()) {
+                    logger.debug("Generator: {}", task.getGeneratorName().get());
+                }
+                if (task.getInputSpec().isPresent()) {
+                    String inputSpec = task.getInputSpec().get().toString();
+                    logger.debug("Input spec: {}", inputSpec);
+
+                    // Check if input spec file still exists
+                    File inputFile = new File(inputSpec);
+                    if (!inputFile.isAbsolute()) {
+                        inputFile = new File(task.getProject().getProjectDir(), inputSpec);
+                    }
+                    logger.debug("Input spec file exists: {}", inputFile.exists());
+                }
+
+                if (task.getOutputDir().isPresent()) {
+                    String outputDirPath = task.getOutputDir().get();
+                    File outputDir = new File(outputDirPath);
+                    logger.debug("Output directory: {}", outputDir.getAbsolutePath());
+                    logger.debug("Output directory exists: {}", outputDir.exists());
+                    logger.debug("Output directory writable: {}", outputDir.canWrite());
+                }
+
+                if (task.getTemplateDir().isPresent()) {
+                    logger.debug("Template directory: {}", task.getTemplateDir().get());
+                }
+
+                // Analyze the error and provide specific guidance
+                String errorMessage = failure.getMessage().toLowerCase();
+                logger.debug("=== Troubleshooting Guidance ===");
+
+                if (errorMessage.contains("file not found") || errorMessage.contains("no such file")) {
+                    logger.info("💡 SOLUTION: Input spec file not found");
+                    logger.info("   - Verify the inputSpec path is correct");
+                    logger.info("   - Check if the file exists relative to project directory");
+                    logger.info("   - Consider using an absolute path");
+                } else if (errorMessage.contains("invalid") || errorMessage.contains("parse") || errorMessage.contains("yaml") || errorMessage.contains("json")) {
+                    logger.info("💡 SOLUTION: OpenAPI specification is invalid");
+                    logger.info("   - Validate your OpenAPI spec with: https://editor.swagger.io/");
+                    logger.info("   - Check YAML/JSON syntax");
+                    logger.info("   - Ensure all required OpenAPI fields are present");
+                } else if (errorMessage.contains("permission") || errorMessage.contains("access")) {
+                    logger.info("💡 SOLUTION: File permission issues");
+                    logger.info("   - Check file and directory permissions");
+                    logger.info("   - Ensure output directory is writable");
+                    logger.info("   - Try running with elevated permissions if necessary");
+                } else if (errorMessage.contains("template") || errorMessage.contains("mustache")) {
+                    logger.info("💡 SOLUTION: Template processing error");
+                    logger.info("   - Check custom template syntax");
+                    logger.info("   - Verify template directory structure");
+                    logger.info("   - Consider enabling debug mode for template resolution");
+                } else if (errorMessage.contains("generator") || errorMessage.contains("language")) {
+                    logger.info("💡 SOLUTION: Generator configuration issue");
+                    logger.info("   - Verify generator name is supported");
+                    logger.info("   - Check OpenAPI Generator version compatibility");
+                    logger.info("   - Review generator-specific configuration options");
+                } else {
+                    logger.info("💡 SOLUTION: General troubleshooting steps");
+                    logger.info("   - Enable debug mode: openapiModelgen { debug true }");
+                    logger.info("   - Check OpenAPI Generator logs for more details");
+                    logger.info("   - Try generating with minimal configuration first");
+                    logger.info("   - Verify all required dependencies are present");
+                }
+
+                logger.debug("=== End Failure Analysis ===");
+
+            } catch (Exception e) {
+                logger.warn("Error during failure analysis for spec '{}': {}", specName, e.getMessage());
+            }
+        }
+
+        // Always show basic troubleshooting info
+        logger.error("🔧 Enable debug mode for detailed analysis: openapiModelgen {{ debug true }}");
+        logger.error("📖 Documentation: https://github.com/GuidedByte/openapi-modelgen");
+    }
+
+    /**
+     * Simple context holder for generation failure analysis.
+     */
+    private static class GenerationContext {
+        final String specName;
+        final GenerateTask task;
+        final boolean debugEnabled;
+
+        GenerationContext(String specName, GenerateTask task, boolean debugEnabled) {
+            this.specName = specName;
+            this.task = task;
+            this.debugEnabled = debugEnabled;
+        }
+    }
+
+    /**
      * Capitalizes the first letter of a string.
-     * 
+     *
      * @param str the string to capitalize
      * @return the capitalized string
      */

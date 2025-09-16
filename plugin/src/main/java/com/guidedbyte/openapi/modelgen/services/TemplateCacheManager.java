@@ -1,8 +1,8 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.gradle.api.Project;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TemplateCacheManager implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(TemplateCacheManager.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplateCacheManager.class);
     
     // Thread-safe cache for extracted templates
     private final Map<String, String> extractedTemplatesCache = new ConcurrentHashMap<>();
@@ -49,30 +49,42 @@ public class TemplateCacheManager implements Serializable {
      * @return true if cache is valid
      */
     public boolean isTemplateCacheValid(File cacheFile, String expectedCacheKey, File targetDir) {
+        String cacheLocation = cacheFile.getAbsolutePath();
+        logger.debug("🔍 Checking template cache: {}", cacheLocation);
+
         if (!cacheFile.exists()) {
-            logger.debug("Template cache file does not exist: {}", cacheFile.getAbsolutePath());
+            logger.debug("❌ Cache MISS: Template cache file does not exist: {}", cacheLocation);
             return false;
         }
-        
+
         try {
             Properties props = new Properties();
             try (FileInputStream fis = new FileInputStream(cacheFile)) {
                 props.load(fis);
             }
-            
+
             String actualCacheKey = props.getProperty("cacheKey");
             boolean isValid = expectedCacheKey.equals(actualCacheKey);
-            
+
             if (isValid) {
-                logger.debug("Template cache is valid: {}", cacheFile.getAbsolutePath());
+                logger.debug("✅ Cache HIT: Template cache is valid: {}", cacheLocation);
+
+                // Additional cache performance info
+                if (targetDir.exists()) {
+                    File[] files = targetDir.listFiles();
+                    int fileCount = (files != null) ? files.length : 0;
+                    logger.debug("📊 Cache contains {} template files", fileCount);
+                }
             } else {
-                logger.debug("Template cache key mismatch. Expected: {}, Actual: {}", expectedCacheKey, actualCacheKey);
+                logger.debug("❌ Cache MISS: Template cache key mismatch for {}. Expected: '{}', Actual: '{}'",
+                    cacheLocation, expectedCacheKey, actualCacheKey);
+                logger.debug("💡 Cache invalidation reason: Plugin version or generator configuration changed");
             }
-            
+
             return isValid;
-            
+
         } catch (IOException e) {
-            logger.warn("Error reading template cache file: {}", e.getMessage());
+            logger.warn("❌ Cache ERROR: Error reading template cache file '{}': {}", cacheLocation, e.getMessage());
             return false;
         }
     }
@@ -331,36 +343,58 @@ public class TemplateCacheManager implements Serializable {
      * @return true if cache is valid
      */
     public boolean isWorkingDirectoryCacheValid(File workingDir, String expectedCacheKey) {
+        String workingDirPath = workingDir.getAbsolutePath();
+        logger.debug("🔍 Checking working directory cache: {}", workingDirPath);
+
         if (!workingDir.exists() || !workingDir.isDirectory()) {
-            logger.debug("Working directory does not exist: {}", workingDir.getAbsolutePath());
+            logger.debug("❌ Cache MISS: Working directory does not exist: {}", workingDirPath);
             return false;
         }
-        
+
         File cacheFile = new File(workingDir, ".working-dir-cache");
         if (!cacheFile.exists()) {
-            logger.debug("Working directory cache file does not exist: {}", cacheFile.getAbsolutePath());
+            logger.debug("❌ Cache MISS: Working directory cache file does not exist: {}", cacheFile.getAbsolutePath());
             return false;
         }
-        
+
         try {
             Properties props = new Properties();
             try (FileInputStream fis = new FileInputStream(cacheFile)) {
                 props.load(fis);
             }
-            
+
             String actualCacheKey = props.getProperty("cacheKey");
             boolean isValid = expectedCacheKey.equals(actualCacheKey);
-            
+
             if (isValid) {
-                logger.debug("Working directory cache is valid: {}", workingDir.getAbsolutePath());
+                logger.debug("✅ Cache HIT: Working directory cache is valid: {}", workingDirPath);
+
+                // Provide cache performance metrics
+                File[] templateFiles = workingDir.listFiles((dir, name) ->
+                    name.endsWith(".mustache") || name.endsWith(".hbs") || name.endsWith(".handlebars"));
+                int templateCount = (templateFiles != null) ? templateFiles.length : 0;
+
+                File[] allFiles = workingDir.listFiles();
+                int totalFiles = (allFiles != null) ? allFiles.length : 0;
+
+                logger.debug("📊 Working directory cache stats: {} template files, {} total files",
+                    templateCount, totalFiles);
+
+                // Show cache age for performance insights
+                long lastModified = cacheFile.lastModified();
+                long ageMinutes = (System.currentTimeMillis() - lastModified) / (1000 * 60);
+                logger.debug("📊 Cache age: {} minutes", ageMinutes);
             } else {
-                logger.debug("Working directory cache key mismatch. Expected: {}, Actual: {}", expectedCacheKey, actualCacheKey);
+                logger.debug("❌ Cache MISS: Working directory cache key mismatch for {}. Expected: '{}', Actual: '{}'",
+                    workingDirPath, expectedCacheKey, actualCacheKey);
+                logger.debug("💡 Cache invalidation reason: Template customizations or configuration changed");
             }
-            
+
             return isValid;
-            
+
         } catch (IOException e) {
-            logger.debug("Error reading working directory cache: {}", e.getMessage());
+            logger.debug("❌ Cache ERROR: Error reading working directory cache '{}': {}",
+                cacheFile.getAbsolutePath(), e.getMessage());
             return false;
         }
     }

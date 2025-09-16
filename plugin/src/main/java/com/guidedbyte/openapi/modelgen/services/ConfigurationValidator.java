@@ -6,12 +6,12 @@ import com.guidedbyte.openapi.modelgen.SpecConfig;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.constants.TemplateSourceType;
 import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serial;
@@ -32,7 +32,7 @@ public class ConfigurationValidator implements Serializable {
     }
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(ConfigurationValidator.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(ConfigurationValidator.class);
     
     // Java reserved words for package name validation
     private static final Set<String> JAVA_RESERVED_WORDS = new HashSet<>(Arrays.asList(
@@ -133,7 +133,7 @@ public class ConfigurationValidator implements Serializable {
      * @param errors the list to collect validation errors
      */
     // Note: SpotBugs RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE warnings are acceptable here for defensive programming
-    public void validateSpecConfiguration(ProjectLayout projectLayout, String specName, SpecConfig specConfig, 
+    public void validateSpecConfiguration(ProjectLayout projectLayout, String specName, SpecConfig specConfig,
                                         DefaultConfig defaults, List<String> errors) {
         String specPrefix = "spec '" + specName + "'";
         
@@ -150,22 +150,62 @@ public class ConfigurationValidator implements Serializable {
         // Validate required inputSpec
         if (!specConfig.getInputSpec().isPresent() || specConfig.getInputSpec().get().trim().isEmpty()) {
             errors.add(specPrefix + ": inputSpec is required and cannot be empty");
+            logger.debug("❌ InputSpec validation failed for '{}': inputSpec is required and cannot be empty", specName);
         } else {
             String inputSpecPath = specConfig.getInputSpec().get();
+            logger.debug("🔍 Validating inputSpec for '{}': '{}'", specName, inputSpecPath);
+
             File inputSpecFile = projectLayout.getProjectDirectory().file(inputSpecPath).getAsFile();
+            String absolutePath = inputSpecFile.getAbsolutePath();
+            String projectDir = projectLayout.getProjectDirectory().getAsFile().getAbsolutePath();
+
+            logger.debug("📁 File path resolution for spec '{}': project_dir='{}', input_spec='{}', resolved_path='{}'",
+                specName, projectDir, inputSpecPath, absolutePath);
+
             if (!inputSpecFile.exists()) {
                 errors.add(String.format("%s: inputSpec file does not exist: %s", specPrefix, inputSpecPath));
+                logger.debug("❌ InputSpec file does not exist for '{}': absolute_path='{}', exists={}",
+                    specName, absolutePath, false);
+
+                // Additional troubleshooting information
+                File parentDir = inputSpecFile.getParentFile();
+                if (parentDir != null) {
+                    logger.debug("💡 Parent directory for '{}': path='{}', exists={}, readable={}",
+                        specName, parentDir.getAbsolutePath(), parentDir.exists(), parentDir.canRead());
+
+                    if (parentDir.exists() && parentDir.canRead()) {
+                        File[] siblingFiles = parentDir.listFiles();
+                        if (siblingFiles != null && siblingFiles.length > 0) {
+                            logger.debug("💡 Files in parent directory: {}",
+                                java.util.Arrays.stream(siblingFiles)
+                                    .map(File::getName)
+                                    .limit(10) // Show only first 10 files
+                                    .collect(java.util.stream.Collectors.joining(", ")));
+                        } else {
+                            logger.debug("💡 Parent directory is empty or unreadable");
+                        }
+                    }
+                }
             } else if (!inputSpecFile.isFile()) {
                 errors.add(String.format("%s: inputSpec must be a file, not a directory: %s", specPrefix, inputSpecPath));
+                logger.debug("❌ InputSpec is not a file for '{}': is_directory={}", specName, inputSpecFile.isDirectory());
             } else if (!inputSpecFile.canRead()) {
                 errors.add(String.format("%s: inputSpec file is not readable: %s", specPrefix, inputSpecPath));
+                logger.debug("❌ InputSpec file is not readable for '{}': can_read={}", specName, false);
             } else {
+                logger.debug("✅ InputSpec file validation passed for '{}': exists={}, is_file={}, can_read={}, size={}bytes",
+                    specName, true, true, true, inputSpecFile.length());
+
                 // Validate file extension (case-insensitive)
                 String fileName = inputSpecFile.getName();
-                if (!fileName.toLowerCase().endsWith(".yaml") && 
-                    !fileName.toLowerCase().endsWith(".yml") && 
+                if (!fileName.toLowerCase().endsWith(".yaml") &&
+                    !fileName.toLowerCase().endsWith(".yml") &&
                     !fileName.toLowerCase().endsWith(".json")) {
                     errors.add(specPrefix + ": inputSpec should be a YAML (.yaml/.yml) or JSON (.json) file (case-insensitive): " + inputSpecPath);
+                    logger.debug("⚠️ InputSpec file extension warning for '{}': filename='{}' (should be .yaml/.yml/.json)",
+                        specName, fileName);
+                } else {
+                    logger.debug("✅ InputSpec file extension is valid for '{}': filename='{}'", specName, fileName);
                 }
             }
         }
@@ -298,7 +338,7 @@ public class ConfigurationValidator implements Serializable {
      * @param specs the map of specification configurations
      * @param errors the list to collect validation errors
      */
-    public void validateLibraryConfiguration(Project project, ProjectLayout projectLayout, DefaultConfig defaults, 
+    public void validateLibraryConfiguration(Project project, ProjectLayout projectLayout, DefaultConfig defaults,
                                            Map<String, SpecConfig> specs, List<String> errors) {
         // Only validate if library sources are included in templateSources
         boolean needsLibraryValidation = false;
@@ -362,16 +402,16 @@ public class ConfigurationValidator implements Serializable {
                 logger.debug("No library metadata found in {} files", libraryFiles.size());
                 return;
             }
-            
+
             // Validate each library's metadata
             for (Map.Entry<String, LibraryMetadata> entry : libraryMetadata.entrySet()) {
                 String libraryName = entry.getKey();
                 LibraryMetadata metadata = entry.getValue();
-                
+
                 logger.debug("Validating metadata for library: {}", libraryName);
                 validateSingleLibraryMetadata(libraryName, metadata, specs, errors);
             }
-            
+
             logger.debug("Library metadata validation completed for {} libraries", libraryMetadata.size());
             
         } catch (Exception e) {
@@ -391,7 +431,7 @@ public class ConfigurationValidator implements Serializable {
      * @param specs the map of specification configurations
      * @param errors the list to collect validation errors
      */
-    public void validateSingleLibraryMetadata(String libraryName, LibraryMetadata metadata, 
+    public void validateSingleLibraryMetadata(String libraryName, LibraryMetadata metadata,
                                             Map<String, SpecConfig> specs, List<String> errors) {
         if (metadata == null) return;
         

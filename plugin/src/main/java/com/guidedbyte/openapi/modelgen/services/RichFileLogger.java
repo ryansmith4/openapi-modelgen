@@ -15,20 +15,27 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * A file-based logger that writes rich contextual information to a dedicated log file,
  * bypassing Gradle's logging limitations.
- * 
+ *
  * <p>This logger creates detailed logs with full MDC context that users can monitor
  * in real-time or review after build completion. The log file includes:</p>
  * <ul>
  *   <li>Timestamp</li>
- *   <li>Log level</li>  
+ *   <li>Log level</li>
  *   <li>Component name</li>
  *   <li>Spec being processed</li>
  *   <li>Template being processed (if applicable)</li>
  *   <li>Detailed message</li>
  * </ul>
- * 
+ *
  * <p>Log file location: {@code build/logs/openapi-modelgen-debug.log}</p>
- * 
+ *
+ * <h2>Thread Safety and Virtual Thread Compatibility</h2>
+ * <p>This class is thread-safe using {@code synchronized} methods for file writes.
+ * While {@code synchronized} causes platform thread pinning with virtual threads,
+ * this design choice is appropriate for Gradle's build context where concurrency
+ * is bounded and critical sections are short. See {@link #writeLogEntry(String, String)}
+ * for detailed rationale.</p>
+ *
  * @author GuidedByte Technologies Inc.
  * @since 2.1.0
  */
@@ -164,6 +171,39 @@ public class RichFileLogger {
         }
     }
     
+    /**
+     * Writes a log entry to the file with proper thread safety.
+     *
+     * <p><strong>Virtual Thread Compatibility Note:</strong></p>
+     * <p>This method uses {@code synchronized} which causes platform thread pinning when called
+     * from virtual threads. However, this is acceptable for our use case because:</p>
+     *
+     * <ul>
+     *   <li><strong>Low Contention:</strong> Gradle builds typically have low concurrency
+     *       (10-50 tasks max), so thread pinning impact is minimal</li>
+     *   <li><strong>Short Critical Section:</strong> File writes are quick (~1-2ms), minimizing
+     *       the duration of platform thread pinning</li>
+     *   <li><strong>Build Context:</strong> Unlike web services with thousands of concurrent requests,
+     *       Gradle builds have bounded concurrency with predictable logging patterns</li>
+     *   <li><strong>Reliability:</strong> {@code synchronized} provides proven thread safety with
+     *       simple semantics and no additional complexity</li>
+     * </ul>
+     *
+     * <p><strong>When to Consider ReentrantLock + NIO:</strong></p>
+     * <ul>
+     *   <li>High virtual thread concurrency (100s+ concurrent threads)</li>
+     *   <li>High-volume logging scenarios</li>
+     *   <li>When file write operations become slower</li>
+     *   <li>Future migration to virtual-thread-first architecture</li>
+     * </ul>
+     *
+     * <p>For virtual-thread-optimized approach, consider using {@code ReentrantLock}
+     * with NIO {@code Files.writeString()} instead of {@code synchronized} with
+     * {@code FileWriter}.</p>
+     *
+     * @param level the log level (DEBUG, INFO, WARN, ERROR)
+     * @param message the formatted message to log
+     */
     private synchronized void writeLogEntry(String level, String message) {
         if (writer == null) return;
         

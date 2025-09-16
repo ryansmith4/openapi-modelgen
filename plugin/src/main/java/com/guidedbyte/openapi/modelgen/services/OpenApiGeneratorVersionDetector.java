@@ -5,7 +5,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * @since 2.1.0
  */
 public class OpenApiGeneratorVersionDetector {
-    private static final Logger logger = LoggerFactory.getLogger(OpenApiGeneratorVersionDetector.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(OpenApiGeneratorVersionDetector.class);
     
     private static final String OPENAPI_TOOLS_GROUP = "org.openapitools";
     private static final String OPENAPI_GENERATOR_ARTIFACT = "openapi-generator";

@@ -9,7 +9,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.io.File;
 import java.io.Serial;
@@ -30,7 +30,7 @@ import java.util.Map;
 public class TemplateDirectorySetupAction implements Action<Task>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(TemplateDirectorySetupAction.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplateDirectorySetupAction.class);
     
     private final Map<String, SpecConfig> specs;
     private final DefaultConfig defaults;

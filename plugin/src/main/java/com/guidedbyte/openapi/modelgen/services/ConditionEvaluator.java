@@ -4,7 +4,7 @@ import com.guidedbyte.openapi.modelgen.customization.ConditionSet;
 import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.semver4j.Semver;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import java.util.List;
  * @since 2.0.0
  */
 public class ConditionEvaluator {
-    private static final Logger logger = LoggerFactory.getLogger(ConditionEvaluator.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(ConditionEvaluator.class);
     
     /**
      * Creates a new ConditionEvaluator.

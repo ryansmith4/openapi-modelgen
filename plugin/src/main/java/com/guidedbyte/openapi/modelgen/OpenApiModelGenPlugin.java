@@ -2,6 +2,8 @@ package com.guidedbyte.openapi.modelgen;
 
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.*;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginState;
 import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Plugin;
@@ -11,7 +13,6 @@ import org.gradle.api.artifacts.Dependency;
 import org.jetbrains.annotations.NotNull;
 import org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +84,7 @@ import java.util.stream.Stream;
  * @since 1.0.0
  */
 public class OpenApiModelGenPlugin implements Plugin<Project> {
-    private static final Logger logger = LoggerFactory.getLogger(OpenApiModelGenPlugin.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(OpenApiModelGenPlugin.class);
     
     // Configuration-cache compatible services
     private final ConfigurationValidator configurationValidator;
@@ -136,6 +137,10 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         // Configure tasks after project evaluation
         project.afterEvaluate(proj -> {
             configurationValidator.validateExtensionConfiguration(proj, proj.getLayout(), extension);
+
+            // Set plugin state for global access
+            PluginState.getInstance().setDebugEnabled(extension.isDebug());
+            PluginState.getInstance().setBuildDirectory(proj.getLayout().getBuildDirectory().getAsFile().get());
             
             // Check for library dependencies and process if needed
             if (libraryProcessor.shouldProcessLibraries(extension, customizationsConfig)) {

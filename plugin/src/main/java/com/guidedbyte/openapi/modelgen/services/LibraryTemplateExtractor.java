@@ -2,7 +2,7 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import org.gradle.api.file.FileCollection;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class LibraryTemplateExtractor {
         // Default constructor
     }
     
-    private static final Logger logger = LoggerFactory.getLogger(LibraryTemplateExtractor.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(LibraryTemplateExtractor.class);
     
     private static final String TEMPLATES_BASE_PATH = "META-INF/openapi-templates/";
     private static final String CUSTOMIZATIONS_BASE_PATH = "META-INF/openapi-customizations/";
@@ -173,13 +173,27 @@ public class LibraryTemplateExtractor {
         Map<String, String> allTemplates = new HashMap<>();
         Map<String, String> allCustomizations = new HashMap<>();
         Map<String, LibraryMetadata> allMetadata = new HashMap<>();
-        
+
+        logger.info("🔄 Processing {} template libraries...", libraries.getFiles().size());
+
+        int totalLibraries = 0;
+        int currentLibrary = 0;
+
+        // Count valid libraries first for accurate progress
+        for (File library : libraries) {
+            if (library.exists() && library.isFile()) {
+                totalLibraries++;
+            }
+        }
+
         for (File library : libraries) {
             if (!library.exists() || !library.isFile()) {
                 logger.warn("Skipping invalid library file: {}", library.getAbsolutePath());
                 continue;
             }
-            
+
+            currentLibrary++;
+            logger.info("🔄 Processing library ({}/{}): {}", currentLibrary, totalLibraries, library.getName());
             logger.debug("Extracting content from library: {}", library.getName());
             extractFromJar(library, allTemplates, allCustomizations, allMetadata);
         }

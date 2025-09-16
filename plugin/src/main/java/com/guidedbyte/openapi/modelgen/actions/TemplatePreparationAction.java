@@ -3,11 +3,10 @@ package com.guidedbyte.openapi.modelgen.actions;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
-import com.guidedbyte.openapi.modelgen.util.DebugLogger;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +21,7 @@ import java.nio.file.Files;
  * after creating the working directory, ensuring configuration cache compatibility.
  */
 public class TemplatePreparationAction implements Action<Task> {
-    private static final Logger logger = LoggerFactory.getLogger(TemplatePreparationAction.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplatePreparationAction.class);
     
     private final TemplateConfiguration templateConfig;
     
@@ -33,7 +32,7 @@ public class TemplatePreparationAction implements Action<Task> {
     @Override
     public void execute(Task task) {
         if (!templateConfig.isTemplateProcessingEnabled()) {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "Template processing disabled for generator '{}'", templateConfig.getGeneratorName());
             return;
         }
@@ -44,7 +43,7 @@ public class TemplatePreparationAction implements Action<Task> {
         } catch (Exception e) {
             logger.error("Failed to prepare template working directory for generator '{}': {}", 
                 templateConfig.getGeneratorName(), e.getMessage());
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "Template preparation error details: {}", e.getMessage());
             throw new RuntimeException("Template preparation failed", e);
         }
@@ -67,8 +66,8 @@ public class TemplatePreparationAction implements Action<Task> {
         
         // If no customizations, just create empty directory and return
         if (!templateConfig.hasAnyCustomizations()) {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
-                "No template customizations found for generator '{}'. Created empty template directory for Gradle validation.", 
+            logger.debug(
+                "No template customizations found for generator '{}'. Created empty template directory for Gradle validation.",
                 templateConfig.getGeneratorName());
             return;
         }
@@ -80,7 +79,7 @@ public class TemplatePreparationAction implements Action<Task> {
         }
         
         // Clean and recreate working directory for customization processing
-        DebugLogger.debug(logger, templateConfig.isDebug(), 
+        logger.debug(
             "Working directory cache invalid, cleaning: {}", templateWorkDir.getAbsolutePath());
         deleteDirectory(templateWorkDir);
         
@@ -88,18 +87,41 @@ public class TemplatePreparationAction implements Action<Task> {
             throw new IOException("Failed to create template working directory: " + templateWorkDir.getAbsolutePath());
         }
         
+        // Add progress indicators for long-running operations
+        logger.debug(
+            "🔄 Template preparation started (1/4): Analyzing template sources...");
+
+        int totalSteps = 0;
+        if (templateConfig.hasUserTemplates()) totalSteps++;
+        if (templateConfig.hasUserCustomizations() || templateConfig.hasPluginCustomizations()) totalSteps++;
+        totalSteps++; // Cache update step
+
+        int currentStep = 0;
+
         // Copy user templates if they exist
         if (templateConfig.hasUserTemplates()) {
+            currentStep++;
+            logger.info("🔄 Template preparation ({}/{}): Copying user templates...", currentStep, totalSteps);
             copyUserTemplates(templateWorkDir);
+            logger.debug(
+                "✅ User templates copied successfully");
         }
-        
+
         // Process template customizations if needed
         if (templateConfig.hasUserCustomizations() || templateConfig.hasPluginCustomizations()) {
+            currentStep++;
+            logger.info("🔄 Template preparation ({}/{}): Processing template customizations...", currentStep, totalSteps);
             processTemplateCustomizations(templateWorkDir);
+            logger.debug(
+                "✅ Template customizations processed successfully");
         }
-        
+
         // Update cache marker
+        currentStep++;
+        logger.info("🔄 Template preparation ({}/{}): Updating cache...", currentStep, totalSteps);
         updateWorkingDirectoryCache(templateWorkDir);
+        logger.debug(
+            "✅ Template cache updated successfully");
         
         logger.info("Prepared template working directory: {}", templateWorkDir.getAbsolutePath());
     }
@@ -120,15 +142,15 @@ public class TemplatePreparationAction implements Action<Task> {
             boolean valid = cachedHash.equals(currentHash);
             
             if (!valid) {
-                DebugLogger.debug(logger, templateConfig.isDebug(), 
-                    "Working directory cache invalid - hash mismatch (cached: {}, current: {})", 
-                    cachedHash.substring(0, Math.min(8, cachedHash.length())), 
+                logger.debug(
+                    "Working directory cache invalid - hash mismatch (cached: {}, current: {})",
+                    cachedHash.substring(0, Math.min(8, cachedHash.length())),
                     currentHash.substring(0, Math.min(8, currentHash.length())));
             }
             
             return valid;
         } catch (IOException e) {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "Failed to read working directory cache: {}", e.getMessage());
             return false;
         }
@@ -139,10 +161,10 @@ public class TemplatePreparationAction implements Action<Task> {
             File cacheFile = new File(templateWorkDir, ".working-dir-cache");
             String hash = computeTemplateConfigurationHash();
             Files.writeString(cacheFile.toPath(), hash);
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "Updated working directory cache with hash: {}", hash.substring(0, Math.min(PluginConstants.HASH_DISPLAY_LENGTH, hash.length())));
         } catch (IOException e) {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "Failed to update working directory cache: {}", e.getMessage());
         }
     }
@@ -162,13 +184,13 @@ public class TemplatePreparationAction implements Action<Task> {
             return;
         }
         
-        DebugLogger.debug(logger, templateConfig.isDebug(), 
+        logger.debug(
             "Copying user templates from: {}", userTemplateDir.getAbsolutePath());
         copyDirectory(userTemplateDir, templateWorkDir);
     }
     
     private void processTemplateCustomizations(File templateWorkDir) {
-        DebugLogger.debug(logger, templateConfig.isDebug(), 
+        logger.debug(
             "Processing template customizations for generator: {}", templateConfig.getGeneratorName());
         
         CustomizationEngine customizationEngine = new CustomizationEngine();
@@ -215,14 +237,14 @@ public class TemplatePreparationAction implements Action<Task> {
             
             if (templateWorkDir.exists() && templateWorkDir.isDirectory()) {
                 logger.info("Template working directory is ready for OpenAPI Generator: {}", templateWorkDir.getAbsolutePath());
-                DebugLogger.debug(logger, templateConfig.isDebug(), 
+                logger.debug(
                     "Template working directory validated: {}", templateWorkDir.getAbsolutePath());
             } else {
                 logger.warn("Template working directory does not exist - this may cause generation issues: {}", 
                     templateWorkDir.getAbsolutePath());
             }
         } else {
-            DebugLogger.debug(logger, templateConfig.isDebug(), 
+            logger.debug(
                 "No template customizations - OpenAPI Generator will use default templates");
         }
     }

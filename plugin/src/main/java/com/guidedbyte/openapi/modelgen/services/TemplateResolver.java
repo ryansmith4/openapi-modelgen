@@ -2,10 +2,9 @@ package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
-import com.guidedbyte.openapi.modelgen.util.DebugLogger;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.gradle.api.file.ProjectLayout;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -33,7 +32,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 public class TemplateResolver {
-    private static final Logger logger = LoggerFactory.getLogger(TemplateResolver.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(TemplateResolver.class);
     private final TemplateSourceDiscovery templateSourceDiscovery = new TemplateSourceDiscovery();
     
     /**
@@ -86,41 +85,41 @@ public class TemplateResolver {
         
         boolean debugEnabled = resolvedConfig.isDebug();
         
-        DebugLogger.debug(logger, debugEnabled,
+        logger.debug(
             "=== TEMPLATE RESOLUTION START ===");
-        DebugLogger.debug(logger, debugEnabled,
+        logger.debug(
             "Generator: {}, Spec: {}", generatorName, resolvedConfig.getSpecName());
-        DebugLogger.debug(logger, debugEnabled,
-            "Template dir: {}, Customizations dir: {}", 
+        logger.debug(
+            "Template dir: {}, Customizations dir: {}",
             resolvedConfig.getUserTemplateDir(), resolvedConfig.getUserTemplateCustomizationsDir());
         
         // Get configured template sources (with fallback to defaults)
         List<String> configuredTemplateSources = resolvedConfig.getTemplateSources();
-        DebugLogger.debug(logger, debugEnabled, 
-            "Starting template resolution for generator '{}' with sources: {}", 
+        logger.debug(
+            "Starting template resolution for generator '{}' with sources: {}",
             generatorName, configuredTemplateSources);
         
         if (configuredTemplateSources == null || configuredTemplateSources.isEmpty()) {
             configuredTemplateSources = TemplateSourceDiscovery.ALL_TEMPLATE_SOURCES;
-            DebugLogger.debug(logger, debugEnabled, 
-                "No template sources configured for '{}', using default sources: {}", 
+            logger.debug(
+                "No template sources configured for '{}', using default sources: {}",
                 generatorName, configuredTemplateSources);
         } else {
-            DebugLogger.debug(logger, debugEnabled, 
-                "Using configured template sources for '{}': {}", 
+            logger.debug(
+                "Using configured template sources for '{}': {}",
                 generatorName, configuredTemplateSources);
         }
         
         // Auto-discover which sources are actually available
         boolean hasLibraryDependencies = libraryContent != null;
-        DebugLogger.debug(logger, debugEnabled, 
+        logger.debug(
             "Checking for library dependencies: {}", hasLibraryDependencies);
         
         List<String> availableTemplateSources = templateSourceDiscovery.discoverAvailableSources(
             configuredTemplateSources, resolvedConfig, projectLayout, hasLibraryDependencies
         );
         
-        DebugLogger.debug(logger, debugEnabled, 
+        logger.debug(
             "Available template sources after discovery: {}", availableTemplateSources);
         
         // Convert to boolean flags for backward compatibility with TemplateConfiguration
@@ -133,10 +132,10 @@ public class TemplateResolver {
         boolean hasPluginCustomizations = availableTemplateSources.contains("plugin-customizations") && 
             hasPluginCustomizations(generatorName);
         
-        DebugLogger.debug(logger, debugEnabled, 
+        logger.debug(
             "Template source flags - userTemplates: {}, userCustomizations: {}, libraryTemplates: {}, " +
-            "libraryCustomizations: {}, pluginCustomizations: {}", 
-            hasUserTemplates, hasUserCustomizations, hasLibraryTemplates, 
+            "libraryCustomizations: {}, pluginCustomizations: {}",
+            hasUserTemplates, hasUserCustomizations, hasLibraryTemplates,
             hasLibraryCustomizations, hasPluginCustomizations);
         
         // Resolve paths for user templates and customizations
@@ -146,19 +145,19 @@ public class TemplateResolver {
         if (hasUserTemplates && resolvedConfig.getUserTemplateDir() != null) {
             resolvedUserTemplateDir = projectLayout.getProjectDirectory()
                 .dir(resolvedConfig.getUserTemplateDir()).getAsFile().getAbsolutePath();
-            DebugLogger.debug(logger, debugEnabled, 
+            logger.debug(
                 "Resolved user template directory: {}", resolvedUserTemplateDir);
         }
         
         if (hasUserCustomizations && resolvedConfig.getUserTemplateCustomizationsDir() != null) {
             resolvedUserCustomizationsDir = projectLayout.getProjectDirectory()
                 .dir(resolvedConfig.getUserTemplateCustomizationsDir()).getAsFile().getAbsolutePath();
-            DebugLogger.debug(logger, debugEnabled, 
+            logger.debug(
                 "Resolved user customizations directory: {}", resolvedUserCustomizationsDir);
         }
         
-        DebugLogger.debug(logger, debugEnabled, 
-            "Template resolution summary for '{}': configured={}, available={}", 
+        logger.debug(
+            "Template resolution summary for '{}': configured={}, available={}",
             generatorName, configuredTemplateSources, availableTemplateSources);
         
         // Enhanced debug logging for template resolution
@@ -192,18 +191,18 @@ public class TemplateResolver {
         String templateWorkDirectory = null;
         boolean templateProcessingEnabled = hasUserTemplates || hasUserCustomizations || hasLibraryTemplates || hasLibraryCustomizations || hasPluginCustomizations;
         
-        DebugLogger.debug(logger, debugEnabled, 
+        logger.debug(
             "Template processing enabled: {} (checking: userTemplates={}, userCustomizations={}, " +
             "libraryTemplates={}, libraryCustomizations={}, pluginCustomizations={})",
-            templateProcessingEnabled, hasUserTemplates, hasUserCustomizations, 
+            templateProcessingEnabled, hasUserTemplates, hasUserCustomizations,
             hasLibraryTemplates, hasLibraryCustomizations, hasPluginCustomizations);
         
         if (templateProcessingEnabled) {
             String specName = resolvedConfig.getSpecName();
             templateWorkDirectory = projectLayout.getBuildDirectory()
                 .dir("template-work/" + generatorName + "-" + specName).get().getAsFile().getAbsolutePath();
-            DebugLogger.debug(logger, debugEnabled, 
-                "Template processing enabled for generator '{}', spec '{}', work directory: {}", 
+            logger.debug(
+                "Template processing enabled for generator '{}', spec '{}', work directory: {}",
                 generatorName, specName, templateWorkDirectory);
             
             // Create the work directory but not the marker file during configuration phase
@@ -211,8 +210,8 @@ public class TemplateResolver {
             File workDir = new File(templateWorkDirectory);
             try {
                 boolean created = workDir.mkdirs();
-                DebugLogger.debug(logger, debugEnabled, 
-                    "Ensured template work directory exists: {} (created: {})", 
+                logger.debug(
+                    "Ensured template work directory exists: {} (created: {})",
                     templateWorkDirectory, created);
                 
                 // DO NOT create marker file during configuration phase - this breaks configuration cache
@@ -221,8 +220,8 @@ public class TemplateResolver {
                 logger.warn("Failed to create template work directory '{}': {}", templateWorkDirectory, e.getMessage());
             }
         } else {
-            DebugLogger.debug(logger, debugEnabled, 
-                "No template customizations found for generator '{}'. Will use OpenAPI Generator defaults.", 
+            logger.debug(
+                "No template customizations found for generator '{}'. Will use OpenAPI Generator defaults.",
                 generatorName);
         }
         
@@ -231,8 +230,8 @@ public class TemplateResolver {
         Map<String, String> generatorLibraryCustomizations = Map.of();
         
         if (libraryContent != null) {
-            DebugLogger.debug(logger, debugEnabled, 
-                "Processing library content: {} templates, {} customizations", 
+            logger.debug(
+                "Processing library content: {} templates, {} customizations",
                 libraryContent.getTemplates().size(), libraryContent.getCustomizations().size());
             
             // Filter library templates to only include those for this generator
@@ -243,8 +242,8 @@ public class TemplateResolver {
                     entry -> entry.getKey().substring(generatorPrefix.length()), // Remove generator prefix
                     Map.Entry::getValue));
             
-            DebugLogger.debug(logger, debugEnabled, 
-                "Filtered {} library templates for generator '{}'", 
+            logger.debug(
+                "Filtered {} library templates for generator '{}'",
                 generatorLibraryTemplates.size(), generatorName);
             
             // Same for customizations
@@ -254,13 +253,13 @@ public class TemplateResolver {
                     entry -> entry.getKey().substring(generatorPrefix.length()),
                     Map.Entry::getValue));
             
-            DebugLogger.debug(logger, debugEnabled, 
-                "Filtered {} library customizations for generator '{}'", 
+            logger.debug(
+                "Filtered {} library customizations for generator '{}'",
                 generatorLibraryCustomizations.size(), generatorName);
         }
         
-        DebugLogger.debug(logger, debugEnabled, 
-            "Building TemplateConfiguration for generator '{}' with workDir: {}, processingEnabled: {}", 
+        logger.debug(
+            "Building TemplateConfiguration for generator '{}' with workDir: {}, processingEnabled: {}",
             generatorName, templateWorkDirectory, templateProcessingEnabled);
         
         TemplateConfiguration templateConfig = TemplateConfiguration.builder(generatorName)
@@ -281,7 +280,7 @@ public class TemplateResolver {
             .saveOriginalTemplates(resolvedConfig.isSaveOriginalTemplates())
             .build();
         
-        DebugLogger.debug(logger, debugEnabled, 
+        logger.debug(
             "TemplateConfiguration created successfully for generator '{}'", generatorName);
         
         if (debugEnabled) {

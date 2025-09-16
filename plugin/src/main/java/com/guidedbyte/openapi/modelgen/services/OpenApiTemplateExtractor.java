@@ -4,7 +4,7 @@ import org.gradle.api.file.FileSystemOperations;
 import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.CodegenConfigLoader;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.io.*;
 import java.net.URL;
@@ -20,7 +20,7 @@ import java.util.jar.JarFile;
  * without requiring the CLI dependency.
  */
 public class OpenApiTemplateExtractor {
-    private static final Logger logger = LoggerFactory.getLogger(OpenApiTemplateExtractor.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(OpenApiTemplateExtractor.class);
     
     /**
      * Constructs a new OpenApiTemplateExtractor.

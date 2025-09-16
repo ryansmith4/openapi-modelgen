@@ -3,7 +3,7 @@ package com.guidedbyte.openapi.modelgen.services;
 import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.CodegenConfigLoader;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import java.util.jar.JarFile;
  * @since 1.1.0
  */
 public class CodegenConfigTemplateExtractor {
-    private static final Logger logger = LoggerFactory.getLogger(CodegenConfigTemplateExtractor.class);
+    private static final Logger logger = PluginLoggerFactory.getLogger(CodegenConfigTemplateExtractor.class);
     
     /**
      * Creates a new CodegenConfigTemplateExtractor.
