@@ -20,17 +20,32 @@ import java.io.IOException;
 /**
  * A cacheable task that prepares the template working directory for OpenAPI Generator.
  * This task is properly annotated for Gradle's incremental builds and caching.
+ *
+ * <p>The task handles:</p>
+ * <ul>
+ *   <li>Copying user templates from the user template directory</li>
+ *   <li>Processing template customizations (YAML-based modifications)</li>
+ *   <li>Extracting original templates when requested</li>
+ *   <li>Creating necessary marker files for Gradle validation</li>
+ * </ul>
  */
 @CacheableTask
 public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
     private static final Logger logger = PluginLoggerFactory.getLogger(PrepareTemplateDirectoryTask.class);
     
+    /**
+     * Provides access to Gradle's file system operations for efficient file copying and deletion.
+     *
+     * @return the file system operations service
+     */
     @Inject
     protected abstract FileSystemOperations getFileSystemOperations();
 
     /**
      * The template configuration containing all necessary information for template processing.
      * This is serializable and configuration-cache compatible.
+     *
+     * @return the template configuration property
      */
     @Nested
     public abstract Property<TemplateConfiguration> getTemplateConfiguration();
@@ -38,10 +53,17 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
     /**
      * The output directory where the prepared templates will be placed.
      * Gradle will manage this directory and ensure it exists when needed.
+     *
+     * @return the output directory property
      */
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
+    /**
+     * The main task action that prepares the template directory for OpenAPI Generator.
+     * This method handles the complete template preparation workflow including copying user templates,
+     * processing customizations, and extracting original templates when requested.
+     */
     @TaskAction
     public void prepareTemplates() {
         TemplateConfiguration templateConfig = getTemplateConfiguration().get();

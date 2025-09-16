@@ -167,6 +167,11 @@ public class ResolvedSpecConfig {
         return modelPackage;
     }
     
+    /**
+     * Gets the OpenAPI generator name for this specification.
+     *
+     * @return the generator name (e.g., "spring")
+     */
     public String getGeneratorName() {
         return generatorName;
     }
@@ -212,10 +217,20 @@ public class ResolvedSpecConfig {
         return generateModelDocumentation;
     }
     
+    /**
+     * Gets the resolved OpenAPI Generator config options for this specification.
+     *
+     * @return copy of the config options map (defaults + spec overrides)
+     */
     public Map<String, String> getConfigOptions() {
         return new HashMap<>(configOptions);
     }
     
+    /**
+     * Gets the resolved OpenAPI Generator global properties for this specification.
+     *
+     * @return copy of the global properties map (defaults + spec overrides)
+     */
     public Map<String, String> getGlobalProperties() {
         return new HashMap<>(globalProperties);
     }

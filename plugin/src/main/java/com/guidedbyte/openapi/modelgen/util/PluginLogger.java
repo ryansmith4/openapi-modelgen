@@ -734,9 +734,14 @@ public class PluginLogger implements Logger {
 
     /**
      * Logs template customization diagnostics at the appropriate level.
+     * Routes messages to different log levels based on diagnostic type:
      * - Pattern matches: TRACE
      * - Applied operations: DEBUG
      * - Summary stats: INFO
+     *
+     * @param type the type of diagnostic (e.g., "pattern_match", "operation_applied", "summary")
+     * @param message the log message format string
+     * @param args the message format arguments
      */
     public void customizationDiagnostic(String type, String message, Object... args) {
         switch (type.toLowerCase()) {
@@ -762,9 +767,14 @@ public class PluginLogger implements Logger {
 
     /**
      * Logs performance metrics at the appropriate level.
+     * Routes messages to different log levels based on performance scope:
      * - Detailed timing: DEBUG
      * - Summary metrics: INFO
      * - Build completion: INFO
+     *
+     * @param scope the performance scope (e.g., "build_summary", "operation_timing", "cache_performance")
+     * @param message the log message format string
+     * @param args the message format arguments
      */
     public void performanceMetric(String scope, String message, Object... args) {
         switch (scope.toLowerCase()) {
@@ -784,21 +794,28 @@ public class PluginLogger implements Logger {
     }
 
     /**
-     * Gets the current log level.
+     * Gets the current plugin log level setting.
+     *
+     * @return the current log level from plugin state
      */
     public LogLevel getCurrentLogLevel() {
         return pluginState.getLogLevel();
     }
 
     /**
-     * Gets the underlying SLF4J logger.
+     * Gets the underlying SLF4J logger for direct access when needed.
+     *
+     * @return the underlying SLF4J logger delegate
      */
     public Logger getUnderlyingLogger() {
         return delegate;
     }
 
     /**
-     * Checks if the specified log level is enabled.
+     * Checks if the specified log level is enabled based on current plugin configuration.
+     *
+     * @param level the log level to check
+     * @return true if the specified level is enabled, false otherwise
      */
     public boolean isLevelEnabled(LogLevel level) {
         return pluginState.getLogLevel().includes(level);

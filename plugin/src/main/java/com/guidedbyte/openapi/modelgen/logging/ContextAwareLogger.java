@@ -21,7 +21,14 @@ import org.slf4j.Logger;
  * @since 2.1.0
  */
 public class ContextAwareLogger {
-    
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private ContextAwareLogger() {
+        // Utility class - prevent instantiation
+    }
+
     /**
      * Logs a debug message with automatic SLF4J pattern formatting when debug is enabled.
      * Uses the default pattern.

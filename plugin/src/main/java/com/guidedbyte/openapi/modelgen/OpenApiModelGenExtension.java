@@ -187,7 +187,7 @@ public class OpenApiModelGenExtension {
          * calls a method that doesn't exist on this class, Groovy automatically invokes this
          * method, allowing for flexible, declarative specification naming.</p>
          *
-         * <h3>How it works:</h3>
+         * <p><strong>How it works:</strong></p>
          * <ol>
          *   <li>User writes: {@code pets { inputSpec "pets.yaml" }}</li>
          *   <li>Groovy looks for a {@code pets()} method on SpecsContainer</li>
@@ -197,7 +197,7 @@ public class OpenApiModelGenExtension {
          *   <li>The configured spec is stored in the parent's specs map</li>
          * </ol>
          *
-         * <h3>Supported syntax patterns:</h3>
+         * <p><strong>Supported syntax patterns:</strong></p>
          * <pre>{@code
          * specs {
          *     // Groovy closure syntax (most common)
@@ -214,7 +214,7 @@ public class OpenApiModelGenExtension {
          * }
          * }</pre>
          *
-         * <h3>Naming flexibility:</h3>
+         * <p><strong>Naming flexibility:</strong></p>
          * <p>Any valid Java/Groovy identifier can be used as a specification name:</p>
          * <ul>
          *   <li>{@code userApi}, {@code productCatalog}, {@code authService}</li>

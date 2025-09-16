@@ -344,37 +344,88 @@ public final class BuildProgressTracker {
 
     /**
      * Progress information for a phase or operation.
+     * Contains elapsed time, estimated remaining time, and additional context information.
      */
     public static class ProgressInfo {
+
+        /**
+         * Creates a new ProgressInfo instance.
+         */
+        public ProgressInfo() {
+            // Default constructor
+        }
         private Duration elapsed;
         private Duration estimatedRemaining;
         private Map<String, Object> additionalInfo;
 
+        /**
+         * Sets the elapsed time for this progress info.
+         *
+         * @param elapsed the elapsed duration
+         * @return this instance for method chaining
+         */
         public ProgressInfo withElapsed(Duration elapsed) {
             this.elapsed = elapsed;
             return this;
         }
 
+        /**
+         * Sets the estimated remaining time for this progress info.
+         *
+         * @param estimatedRemaining the estimated remaining duration
+         * @return this instance for method chaining
+         */
         public ProgressInfo withEstimatedRemaining(Duration estimatedRemaining) {
             this.estimatedRemaining = estimatedRemaining;
             return this;
         }
 
+        /**
+         * Sets additional context information for this progress info.
+         *
+         * @param additionalInfo the additional information map
+         * @return this instance for method chaining
+         */
         public ProgressInfo withAdditionalInfo(Map<String, Object> additionalInfo) {
             this.additionalInfo = additionalInfo;
             return this;
         }
 
-        // Getters
+        /**
+         * Gets the elapsed time for this progress info.
+         *
+         * @return the elapsed duration
+         */
         public Duration getElapsed() { return elapsed; }
+
+        /**
+         * Gets the estimated remaining time for this progress info.
+         *
+         * @return the estimated remaining duration
+         */
         public Duration getEstimatedRemaining() { return estimatedRemaining; }
+
+        /**
+         * Gets the additional context information for this progress info.
+         *
+         * @return the additional information map
+         */
         public Map<String, Object> getAdditionalInfo() { return additionalInfo; }
     }
 
     /**
      * Build summary metrics container.
+     * Holds comprehensive metrics about the build including duration, cache performance,
+     * and resource utilization.
      */
     public static class BuildSummaryMetrics {
+
+        /**
+         * Creates a new BuildSummaryMetrics instance with default values.
+         */
+        public BuildSummaryMetrics() {
+            // Default constructor
+        }
         private Duration totalDuration = Duration.ZERO;
         private int specsProcessed = 0;
         private int filesGenerated = 0;
@@ -382,42 +433,112 @@ public final class BuildProgressTracker {
         private double parallelEfficiency = 0.0;
         private long memoryPeakMB = 0;
 
+        /**
+         * Sets the total build duration.
+         *
+         * @param duration the total build duration
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withTotalDuration(Duration duration) {
             this.totalDuration = duration;
             return this;
         }
 
+        /**
+         * Sets the number of specifications processed.
+         *
+         * @param specs the number of specs processed
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withSpecsProcessed(int specs) {
             this.specsProcessed = specs;
             return this;
         }
 
+        /**
+         * Sets the number of files generated.
+         *
+         * @param files the number of files generated
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withFilesGenerated(int files) {
             this.filesGenerated = files;
             return this;
         }
 
+        /**
+         * Sets the cache hit rate percentage.
+         *
+         * @param rate the cache hit rate (0.0 to 1.0)
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withCacheHitRate(double rate) {
             this.cacheHitRate = rate;
             return this;
         }
 
+        /**
+         * Sets the parallel execution efficiency.
+         *
+         * @param efficiency the parallel efficiency (0.0 to 1.0)
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withParallelEfficiency(double efficiency) {
             this.parallelEfficiency = efficiency;
             return this;
         }
 
+        /**
+         * Sets the peak memory usage in megabytes.
+         *
+         * @param memoryMB the peak memory usage in MB
+         * @return this instance for method chaining
+         */
         public BuildSummaryMetrics withMemoryPeakMB(long memoryMB) {
             this.memoryPeakMB = memoryMB;
             return this;
         }
 
-        // Getters
+        /**
+         * Gets the total build duration.
+         *
+         * @return the total build duration
+         */
         public Duration getTotalDuration() { return totalDuration; }
+
+        /**
+         * Gets the number of specifications processed.
+         *
+         * @return the number of specs processed
+         */
         public int getSpecsProcessed() { return specsProcessed; }
+
+        /**
+         * Gets the number of files generated.
+         *
+         * @return the number of files generated
+         */
         public int getFilesGenerated() { return filesGenerated; }
+
+        /**
+         * Gets the cache hit rate percentage.
+         *
+         * @return the cache hit rate (0.0 to 1.0)
+         */
         public double getCacheHitRate() { return cacheHitRate; }
+
+        /**
+         * Gets the parallel execution efficiency.
+         *
+         * @return the parallel efficiency (0.0 to 1.0)
+         */
         public double getParallelEfficiency() { return parallelEfficiency; }
+
+        /**
+         * Gets the peak memory usage in megabytes.
+         *
+         * @return the peak memory usage in MB
+         */
         public long getMemoryPeakMB() { return memoryPeakMB; }
     }
 
