@@ -3,6 +3,10 @@ package com.guidedbyte.openapi.modelgen.actions;
 import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.CustomizationEngine;
+import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import com.guidedbyte.openapi.modelgen.util.BuildProgressTracker;
+import com.guidedbyte.openapi.modelgen.util.EnhancedErrorContext;
+import com.guidedbyte.openapi.modelgen.util.PerformanceMetrics;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
@@ -11,6 +15,7 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Map;
 
 /**
  * Configuration-cache compatible task action that prepares template working directory
@@ -31,21 +36,53 @@ public class TemplatePreparationAction implements Action<Task> {
     
     @Override
     public void execute(Task task) {
-        if (!templateConfig.isTemplateProcessingEnabled()) {
-            logger.debug(
-                "Template processing disabled for generator '{}'", templateConfig.getGeneratorName());
-            return;
-        }
-        
+        PerformanceMetrics.Timer timer = PerformanceMetrics.startTimer("template_preparation");
+        String generatorName = templateConfig.getGeneratorName();
+
+        // Set logging context for this template preparation
+        LoggingContext.setSpec(generatorName);
+        LoggingContext.setComponent("TemplatePreparation");
+
         try {
+            if (!templateConfig.isTemplateProcessingEnabled()) {
+                logger.debug("Template processing disabled for generator '{}'", generatorName);
+                timer.stopAndLog(Map.of("generator", generatorName, "processing_enabled", false));
+                return;
+            }
+
+            // Report phase transition for build progress tracking
+            BuildProgressTracker.ProgressInfo progressInfo = new BuildProgressTracker.ProgressInfo()
+                .withElapsed(timer.getElapsed());
+            BuildProgressTracker.logPhaseTransition("template_preparation", generatorName, progressInfo);
+
             prepareTemplateWorkingDirectory();
             setTemplateDirectoryOnTask(task);
+
+            // Log completion with performance metrics
+            Map<String, Object> context = Map.of(
+                "generator", generatorName,
+                "has_customizations", templateConfig.hasAnyCustomizations(),
+                "has_user_templates", templateConfig.hasUserTemplates()
+            );
+            timer.stopAndLog(context);
+
+            logger.info("Template preparation completed successfully for generator '{}'", generatorName);
+
         } catch (Exception e) {
-            logger.error("Failed to prepare template working directory for generator '{}': {}", 
-                templateConfig.getGeneratorName(), e.getMessage());
-            logger.debug(
-                "Template preparation error details: {}", e.getMessage());
-            throw new RuntimeException("Template preparation failed", e);
+            // Enhanced error logging with context
+            Map<String, Object> errorContext = Map.of(
+                "generator", generatorName,
+                "template_work_dir", templateConfig.getTemplateWorkDir() != null ? templateConfig.getTemplateWorkDir() : "null",
+                "has_customizations", templateConfig.hasAnyCustomizations(),
+                "processing_enabled", templateConfig.isTemplateProcessingEnabled()
+            );
+
+            EnhancedErrorContext.logBuildError("template_preparation", e, errorContext);
+
+            timer.stopAndLog(Map.of("generator", generatorName, "result", "error"));
+            throw new RuntimeException("Template preparation failed for generator '" + generatorName + "'", e);
+        } finally {
+            LoggingContext.clear();
         }
     }
     
@@ -127,31 +164,44 @@ public class TemplatePreparationAction implements Action<Task> {
     }
     
     private boolean isWorkingDirectoryCacheValid(File templateWorkDir) {
+        PerformanceMetrics.Timer timer = PerformanceMetrics.startTimer("working_dir_cache_validation");
+
         if (!templateWorkDir.exists()) {
+            timer.stopAndLog(Map.of("result", "miss", "reason", "dir_not_exists"));
+            PerformanceMetrics.logCachePerformance("working-dir-cache", 0, 1, timer.getElapsed());
             return false;
         }
-        
+
         File cacheFile = new File(templateWorkDir, ".working-dir-cache");
         if (!cacheFile.exists()) {
+            timer.stopAndLog(Map.of("result", "miss", "reason", "cache_file_not_exists"));
+            PerformanceMetrics.logCachePerformance("working-dir-cache", 0, 1, timer.getElapsed());
             return false;
         }
-        
+
         try {
             String cachedHash = Files.readString(cacheFile.toPath()).trim();
             String currentHash = computeTemplateConfigurationHash();
             boolean valid = cachedHash.equals(currentHash);
-            
-            if (!valid) {
+
+            if (valid) {
+                logger.debug("Working directory cache is valid");
+                timer.stopAndLog(Map.of("result", "hit"));
+                PerformanceMetrics.logCachePerformance("working-dir-cache", 1, 0, timer.getElapsed());
+            } else {
                 logger.debug(
                     "Working directory cache invalid - hash mismatch (cached: {}, current: {})",
                     cachedHash.substring(0, Math.min(8, cachedHash.length())),
                     currentHash.substring(0, Math.min(8, currentHash.length())));
+                timer.stopAndLog(Map.of("result", "miss", "reason", "hash_mismatch"));
+                PerformanceMetrics.logCachePerformance("working-dir-cache", 0, 1, timer.getElapsed());
             }
-            
+
             return valid;
         } catch (IOException e) {
-            logger.debug(
-                "Failed to read working directory cache: {}", e.getMessage());
+            logger.debug("Failed to read working directory cache: {}", e.getMessage());
+            timer.stopAndLog(Map.of("result", "error", "error", e.getClass().getSimpleName()));
+            PerformanceMetrics.logCachePerformance("working-dir-cache", 0, 1, timer.getElapsed());
             return false;
         }
     }

@@ -1,6 +1,8 @@
 package com.guidedbyte.openapi.modelgen.services;
 
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
+import com.guidedbyte.openapi.modelgen.util.PerformanceMetrics;
+import com.guidedbyte.openapi.modelgen.util.TemplateProcessingLogger;
 import org.gradle.api.Project;
 import org.slf4j.Logger;
 
@@ -49,11 +51,16 @@ public class TemplateCacheManager implements Serializable {
      * @return true if cache is valid
      */
     public boolean isTemplateCacheValid(File cacheFile, String expectedCacheKey, File targetDir) {
+        PerformanceMetrics.Timer timer = PerformanceMetrics.startTimer("template_cache_validation");
         String cacheLocation = cacheFile.getAbsolutePath();
         logger.debug("🔍 Checking template cache: {}", cacheLocation);
 
         if (!cacheFile.exists()) {
             logger.debug("❌ Cache MISS: Template cache file does not exist: {}", cacheLocation);
+            TemplateProcessingLogger.logTemplateCacheOperation(
+                "cache-validation", TemplateProcessingLogger.CacheOperation.MISS,
+                expectedCacheKey, timer.getElapsed());
+            timer.stopAndLog(Map.of("result", "miss", "reason", "file_not_exists"));
             return false;
         }
 
@@ -70,21 +77,46 @@ public class TemplateCacheManager implements Serializable {
                 logger.debug("✅ Cache HIT: Template cache is valid: {}", cacheLocation);
 
                 // Additional cache performance info
+                int fileCount = 0;
                 if (targetDir.exists()) {
                     File[] files = targetDir.listFiles();
-                    int fileCount = (files != null) ? files.length : 0;
+                    fileCount = (files != null) ? files.length : 0;
                     logger.debug("📊 Cache contains {} template files", fileCount);
                 }
+
+                // Log cache hit with performance metrics
+                TemplateProcessingLogger.logTemplateCacheOperation(
+                    "cache-validation", TemplateProcessingLogger.CacheOperation.HIT,
+                    expectedCacheKey, timer.getElapsed());
+
+                timer.stopAndLog(Map.of("result", "hit", "template_count", fileCount));
+                PerformanceMetrics.logCachePerformance("template-cache", 1, 0, timer.getElapsed());
             } else {
                 logger.debug("❌ Cache MISS: Template cache key mismatch for {}. Expected: '{}', Actual: '{}'",
                     cacheLocation, expectedCacheKey, actualCacheKey);
                 logger.debug("💡 Cache invalidation reason: Plugin version or generator configuration changed");
+
+                // Log cache miss with performance metrics
+                TemplateProcessingLogger.logTemplateCacheOperation(
+                    "cache-validation", TemplateProcessingLogger.CacheOperation.MISS,
+                    expectedCacheKey, timer.getElapsed());
+
+                timer.stopAndLog(Map.of("result", "miss", "reason", "key_mismatch"));
+                PerformanceMetrics.logCachePerformance("template-cache", 0, 1, timer.getElapsed());
             }
 
             return isValid;
 
         } catch (IOException e) {
             logger.warn("❌ Cache ERROR: Error reading template cache file '{}': {}", cacheLocation, e.getMessage());
+
+            // Log cache error
+            TemplateProcessingLogger.logTemplateCacheOperation(
+                "cache-validation", TemplateProcessingLogger.CacheOperation.MISS,
+                expectedCacheKey, timer.getElapsed());
+
+            timer.stopAndLog(Map.of("result", "error", "error", e.getClass().getSimpleName()));
+            PerformanceMetrics.logCachePerformance("template-cache", 0, 1, timer.getElapsed());
             return false;
         }
     }
