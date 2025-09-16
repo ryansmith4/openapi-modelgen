@@ -26,14 +26,34 @@ import com.guidedbyte.openapi.modelgen.logging.pattern.CompiledSLF4JPattern;
  * @since 2.1.0
  */
 public class SLF4JPatternFormatter {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private SLF4JPatternFormatter() {
+        // Utility class - prevent instantiation
+    }
+
     private static final ConcurrentHashMap<String, CompiledSLF4JPattern> PATTERN_CACHE = new ConcurrentHashMap<>();
-    
+
     // Default patterns for easy use
+
+    /** Standard pattern showing spec and template context. */
     public static final String DEFAULT_PATTERN = "[%X{spec}:%X{template}]";
+
+    /** Minimal pattern showing only spec context. */
     public static final String MINIMAL_PATTERN = "[%X{spec}]";
+
+    /** Verbose pattern with component, spec, and template context. */
     public static final String VERBOSE_PATTERN = "[%X{component}] [%X{spec}:%X{template}]";
+
+    /** Debug pattern with pipe-separated component, spec, and template. */
     public static final String DEBUG_PATTERN = "[%X{component}|%X{spec}:%X{template}]";
+
+    /** Aligned pattern with fixed-width spec and template columns. */
     public static final String ALIGNED_PATTERN = "[%-8X{spec}:%-15X{template}]";
+
+    /** Timestamped pattern including time, spec, template, and message. */
     public static final String TIMESTAMPED_PATTERN = "%d{HH:mm:ss} [%X{spec}:%X{template}] %msg";
     
     /**

@@ -430,41 +430,112 @@ public final class EnhancedErrorContext {
         private String failedVariable;
         private String currentPhase;
 
+        /**
+         * Creates a new template context with the specified template name.
+         *
+         * @param templateName the name of the template being processed
+         */
         public TemplateContext(String templateName) {
             this.templateName = templateName;
         }
 
+        /**
+         * Sets the template variables for this context.
+         *
+         * @param variables the template variables to use
+         * @return this context for method chaining
+         */
         public TemplateContext withVariables(Map<String, String> variables) {
             this.variables = new HashMap<>(variables);
             return this;
         }
 
+        /**
+         * Sets the recursive depth for variable expansion.
+         *
+         * @param depth the current recursive depth
+         * @return this context for method chaining
+         */
         public TemplateContext withRecursiveDepth(int depth) {
             this.recursiveDepth = depth;
             return this;
         }
 
+        /**
+         * Sets the template size in bytes.
+         *
+         * @param size the template size in bytes
+         * @return this context for method chaining
+         */
         public TemplateContext withTemplateSize(int size) {
             this.templateSize = size;
             return this;
         }
 
+        /**
+         * Sets the variable that caused a processing failure.
+         *
+         * @param variable the name of the failed variable
+         * @return this context for method chaining
+         */
         public TemplateContext withFailedVariable(String variable) {
             this.failedVariable = variable;
             return this;
         }
 
+        /**
+         * Sets the current processing phase.
+         *
+         * @param phase the current processing phase
+         * @return this context for method chaining
+         */
         public TemplateContext withCurrentPhase(String phase) {
             this.currentPhase = phase;
             return this;
         }
 
         // Getters
+
+        /**
+         * Gets the template name.
+         *
+         * @return the template name
+         */
         public String getTemplateName() { return templateName; }
+
+        /**
+         * Gets the template variables.
+         *
+         * @return the template variables map
+         */
         public Map<String, String> getVariables() { return variables; }
+
+        /**
+         * Gets the recursive depth for variable expansion.
+         *
+         * @return the recursive depth
+         */
         public int getRecursiveDepth() { return recursiveDepth; }
+
+        /**
+         * Gets the template size in bytes.
+         *
+         * @return the template size in bytes
+         */
         public int getTemplateSize() { return templateSize; }
+
+        /**
+         * Gets the variable that caused a processing failure.
+         *
+         * @return the failed variable name, or null if no failure
+         */
         public String getFailedVariable() { return failedVariable; }
+
+        /**
+         * Gets the current processing phase.
+         *
+         * @return the current processing phase
+         */
         public String getCurrentPhase() { return currentPhase; }
     }
 }

@@ -42,15 +42,38 @@ import java.util.function.Supplier;
  * @since 2.1.0
  */
 public class ErrorHandlingUtils {
-    
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private ErrorHandlingUtils() {
+        // Utility class - prevent instantiation
+    }
+
     // Error context constants for consistency
+
+    /** Standard guidance for file not found errors. */
     public static final String FILE_NOT_FOUND_GUIDANCE = "Verify the file exists and the path is correct.";
+
+    /** Standard guidance for permission-related errors. */
     public static final String PERMISSION_GUIDANCE = "Check file permissions and ensure the process has read/write access.";
+
+    /** Standard guidance for YAML syntax errors. */
     public static final String YAML_SYNTAX_GUIDANCE = "Validate YAML syntax using an online YAML validator or IDE.";
+
+    /** Standard guidance for configuration errors. */
     public static final String CONFIG_GUIDANCE = "Review the plugin configuration documentation for correct syntax.";
+
+    /** Standard guidance for template-related errors. */
     public static final String TEMPLATE_GUIDANCE = "Ensure template files exist in the expected directory structure.";
+
+    /** Standard guidance for version-related errors. */
     public static final String VERSION_GUIDANCE = "Verify OpenAPI Generator is properly installed and accessible.";
+
+    /** Standard guidance for library configuration errors. */
     public static final String LIBRARY_GUIDANCE = "Verify library configuration and dependencies. Check library metadata files.";
+
+    /** Standard guidance for Gradle configuration errors. */
     public static final String GRADLE_GUIDANCE = "Check Gradle configuration and ensure all required plugins are applied.";
     
     /**
@@ -274,6 +297,12 @@ public class ErrorHandlingUtils {
      */
     @FunctionalInterface
     public interface FileOperation<T> {
+        /**
+         * Executes the file operation.
+         *
+         * @return the result of the operation
+         * @throws IOException if an I/O error occurs
+         */
         T execute() throws IOException;
     }
     

@@ -244,6 +244,14 @@ public final class PerformanceMetrics {
      * Build metrics container for comprehensive build statistics.
      */
     public static class BuildMetrics {
+
+        /**
+         * Default constructor for BuildMetrics.
+         */
+        public BuildMetrics() {
+            // Default constructor
+        }
+
         private Duration totalDuration = Duration.ZERO;
         private int specsProcessed = 0;
         private int filesGenerated = 0;

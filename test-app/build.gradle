@@ -39,13 +39,11 @@ dependencies {
 
 // Configure our custom plugin
 openapiModelgen {
-    debug true  // Disable debug logging for template resolution
-    
     defaults {
         generator "spring" // Use Spring generator by default (was previously hardcoded)
         userTemplateDir "src/main/templates" // Use explicit user templates
         userTemplateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
-        modelNamePrefix "Api" // Add prefix to test the new feature
+        // modelNamePrefix "Api" // Temporarily disabled due to OpenAPI Generator bug with model prefix + import mappings
         saveOriginalTemplates true // Enable saving original templates
 //        templateSources([
 //            'user-templates',           // Use explicit user templates first
@@ -93,6 +91,13 @@ openapiModelgen {
         pets {
             inputSpec "$projectDir/src/main/resources/openapi/pets.yaml"
             modelPackage "com.guidedbyte.testapp.model.pets"
+            configOptions([
+                    //additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor(force = true);@lombok.AllArgsConstructor", // User controls annotations, no plugin defaults
+                    additionalModelTypeAnnotations: "@lombok.Data;@lombok.experimental.Accessors(fluent = true);@lombok.experimental.SuperBuilder;@lombok.NoArgsConstructor;@lombok.AllArgsConstructor", // User controls annotations, no plugin defaults
+                    generateConstructorWithAllArgs: "false",
+                    generatedConstructorWithRequiredArgs: "false",
+                    supportUrlQuery: "false"
+            ])
         }
         
         orders {
@@ -114,6 +119,10 @@ openapiModelgen {
                 'enablePostProcessFile': 'true', // Orders-specific additional property
                 'jackson': 'true',
                 'beanValidations': 'true'        // Enable bean validations for plain Java
+            ])
+            configOptions([
+                    additionalModelTypeAnnotations: "@jakarta.validation.Valid", // User controls annotations, no plugin defaults
+                    supportUrlQuery: "false"
             ])
             // Spec-specific normalizer rules (override/extend defaults)
             // openapiNormalizer([

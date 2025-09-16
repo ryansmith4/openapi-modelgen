@@ -203,7 +203,6 @@ public class RichFileLogger {
 
                 // On Windows, encourage garbage collection to help with cleanup
                 if (org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) {
-                    System.runFinalization();
                     System.gc();
                 }
             }

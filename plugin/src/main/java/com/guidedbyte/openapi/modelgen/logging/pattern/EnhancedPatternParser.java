@@ -23,6 +23,13 @@ import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
  */
 public class EnhancedPatternParser {
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private EnhancedPatternParser() {
+        // Utility class - prevent instantiation
+    }
+
     private static final Logger logger = PluginLoggerFactory.getLogger(EnhancedPatternParser.class);
     
     /**

@@ -22,6 +22,13 @@ public class ParallelExecutionLoggingAction implements Action<Task>, Serializabl
     private final boolean isParallel;
     private final String phase; // "start" or "end"
     
+    /**
+     * Creates a new parallel execution logging action.
+     *
+     * @param specCount the number of specs being processed
+     * @param isParallel whether parallel processing is enabled
+     * @param phase the execution phase ("start" or "end")
+     */
     public ParallelExecutionLoggingAction(int specCount, boolean isParallel, String phase) {
         this.specCount = specCount;
         this.isParallel = isParallel;

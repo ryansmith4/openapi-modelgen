@@ -568,6 +568,9 @@ public class PluginLogger implements Logger {
 
     /**
      * Logs an informational message with lazy evaluation. Visible at INFO level and above.
+     *
+     * @param message the log message format string
+     * @param argSupplier supplier for the message argument, evaluated only if logging is enabled
      */
     public void info(String message, Supplier<Object> argSupplier) {
         delegate.info(message, argSupplier.get());
@@ -578,6 +581,9 @@ public class PluginLogger implements Logger {
 
     /**
      * Logs a debug message with lazy evaluation. Visible at DEBUG level and above.
+     *
+     * @param message the log message format string
+     * @param argSupplier supplier for the message argument, evaluated only if logging is enabled
      */
     public void debug(String message, Supplier<Object> argSupplier) {
         delegate.debug(message, argSupplier.get());
@@ -588,6 +594,9 @@ public class PluginLogger implements Logger {
 
     /**
      * Logs a trace message with lazy evaluation. Visible only at TRACE level.
+     *
+     * @param message the log message format string
+     * @param argSupplier supplier for the message argument, evaluated only if logging is enabled
      */
     public void trace(String message, Supplier<Object> argSupplier) {
         delegate.debug("[TRACE] " + message, argSupplier.get());
@@ -598,6 +607,8 @@ public class PluginLogger implements Logger {
 
     /**
      * Executes code only if INFO level is enabled.
+     *
+     * @param action the code to execute if INFO level is enabled
      */
     public void ifInfo(Runnable action) {
         if (delegate.isInfoEnabled()) {
@@ -607,6 +618,8 @@ public class PluginLogger implements Logger {
 
     /**
      * Executes code only if DEBUG level is enabled.
+     *
+     * @param action the code to execute if DEBUG level is enabled
      */
     public void ifDebug(Runnable action) {
         if (delegate.isDebugEnabled()) {
@@ -616,6 +629,8 @@ public class PluginLogger implements Logger {
 
     /**
      * Executes code only if TRACE level is enabled.
+     *
+     * @param action the code to execute if TRACE level is enabled
      */
     public void ifTrace(Runnable action) {
         if (delegate.isDebugEnabled()) {

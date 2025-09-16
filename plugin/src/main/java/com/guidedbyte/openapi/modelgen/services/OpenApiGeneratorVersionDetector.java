@@ -28,6 +28,8 @@ import java.util.stream.Stream;
  * @since 2.1.0
  */
 public class OpenApiGeneratorVersionDetector {
+
+
     private static final Logger logger = PluginLoggerFactory.getLogger(OpenApiGeneratorVersionDetector.class);
     
     private static final String OPENAPI_TOOLS_GROUP = "org.openapitools";

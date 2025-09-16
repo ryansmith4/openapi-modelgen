@@ -218,7 +218,7 @@ public class DefaultConfig {
      *   <li><strong>kotlin:</strong> Kotlin data classes</li>
      *   <li><strong>typescript-node:</strong> TypeScript interfaces for Node.js</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Default value: {@code "spring"}</p>
      *
@@ -348,7 +348,7 @@ public class DefaultConfig {
      *   <li>{@code useBeanValidation}: Add Jakarta validation annotations</li>
      *   <li>{@code dateLibrary}: Choose date/time library (java8, legacy, etc.)</li>
      * </ul>
-     * </p>
+     *
      *
      * @return the config options property containing generator-specific configuration settings
      */
@@ -369,7 +369,7 @@ public class DefaultConfig {
      *   <li>{@code apis}: Generate only API classes</li>
      *   <li>{@code supportingFiles}: Generate supporting files</li>
      * </ul>
-     * </p>
+     *
      *
      * @return the global properties controlling overall OpenAPI Generator behavior
      */
@@ -390,7 +390,7 @@ public class DefaultConfig {
      *   <li>{@code generatedBy}: Plugin identification string</li>
      *   <li>{@code pluginVersion}: Plugin version number</li>
      * </ul>
-     * </p>
+     *
      *
      * @return the template variables property containing custom variables for Mustache templates
      */
@@ -410,7 +410,7 @@ public class DefaultConfig {
      *   <li>{@code LocalDate -> java.time.LocalDate}</li>
      *   <li>{@code BigDecimal -> java.math.BigDecimal}</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Mappings are merged with spec-level mappings, with spec-level taking precedence.</p>
      *
@@ -432,7 +432,7 @@ public class DefaultConfig {
      *   <li>{@code string+date -> LocalDate}</li>
      *   <li>{@code string+date-time -> LocalDateTime}</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Mappings are merged with spec-level mappings, with spec-level taking precedence.</p>
      *
@@ -455,7 +455,7 @@ public class DefaultConfig {
      *   <li>{@code beanValidations}: Enable Jakarta Bean Validation annotations</li>
      *   <li>{@code reactive}: Enable reactive programming support</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Properties are merged with spec-level properties, with spec-level taking precedence.</p>
      *
@@ -478,7 +478,7 @@ public class DefaultConfig {
      *   <li>{@code SIMPLIFY_ONEOF_ANYOF -> true}: Simplify oneOf/anyOf schemas</li>
      *   <li>{@code KEEP_ONLY_FIRST_TAG_IN_OPERATION -> true}: Use only first tag per operation</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Rules are merged with spec-level rules, with spec-level taking precedence.</p>
      *
@@ -591,7 +591,7 @@ public class DefaultConfig {
      *   <li><strong>kotlin:</strong> Kotlin data classes with null safety and modern syntax</li>
      *   <li><strong>typescript-node:</strong> TypeScript interfaces for Node.js applications</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Each generator supports different libraries and configuration options via additionalProperties.</p>
      *
@@ -616,7 +616,7 @@ public class DefaultConfig {
      *   <li>{@code Category} → {@code ApiCategory}</li>
      *   <li>{@code Order} → {@code ApiOrder}</li>
      * </ul>
-     * </p>
+     *
      *
      * @param value the prefix to prepend to all generated model class names (e.g., "Api", "Generated")
      */
@@ -637,7 +637,7 @@ public class DefaultConfig {
      *   <li>{@code Category} → {@code CategoryDto}</li>
      *   <li>{@code Order} → {@code OrderDto}</li>
      * </ul>
-     * </p>
+     *
      *
      * @param value the suffix to append to all generated model class names (e.g., "Dto", "Model")
      */
@@ -657,7 +657,7 @@ public class DefaultConfig {
      *   <li>Bean validation constraints</li>
      *   <li>Equals and hashCode methods</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Test generation respects the target testing framework and follows established patterns
      * for the chosen generator and library combination.</p>
@@ -680,7 +680,7 @@ public class DefaultConfig {
      *   <li>Error handling and exception mapping</li>
      *   <li>Security and authentication integration</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>Test generation includes mock setups and follows best practices for the target framework
      * (e.g., Spring Boot Test, MockMvc for Spring generators).</p>

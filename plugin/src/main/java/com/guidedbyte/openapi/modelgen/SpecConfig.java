@@ -202,7 +202,7 @@ public class SpecConfig {
      *   <li>Use plain Java for legacy services and Spring for modern services</li>
      *   <li>Generate Kotlin data classes for specific microservices</li>
      * </ul>
-     * </p>
+     *
      *
      * @return the generator override property for this specification
      * @see <a href="https://openapi-generator.tech/docs/generators">Available OpenAPI Generators</a>
@@ -528,7 +528,7 @@ public class SpecConfig {
      *   <li>{@code "specs/user-service.json"}</li>
      *   <li>{@code "$projectDir/api-definitions/orders.yaml"}</li>
      * </ul>
-     * </p>
+     *
      *
      * @param value the path to the OpenAPI specification file
      */
@@ -550,7 +550,7 @@ public class SpecConfig {
      *   <li>{@code "org.mycompany.service.dto"}</li>
      *   <li>{@code "com.acme.backend.generated.orders"}</li>
      * </ul>
-     * </p>
+     *
      *
      * @param value the Java package name for generated model classes
      */
@@ -572,7 +572,7 @@ public class SpecConfig {
      *   <li><strong>kotlin:</strong> Kotlin data classes with null safety</li>
      *   <li><strong>typescript-node:</strong> TypeScript interfaces for Node.js</li>
      * </ul>
-     * </p>
+     *
      *
      * <p>When not set, inherits the generator from default configuration.</p>
      *

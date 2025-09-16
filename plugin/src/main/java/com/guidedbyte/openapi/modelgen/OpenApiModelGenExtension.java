@@ -175,6 +175,13 @@ public class OpenApiModelGenExtension {
     public class SpecsContainer {
 
         /**
+         * Default constructor for SpecsContainer.
+         */
+        public SpecsContainer() {
+            // Default constructor for Gradle extension
+        }
+
+        /**
          * Groovy dynamic method dispatch for OpenAPI specification configuration.
          *
          * <p>This method enables users to define OpenAPI specifications using any valid identifier
