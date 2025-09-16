@@ -42,6 +42,7 @@ openapiModelgen {
     debug true  // Disable debug logging for template resolution
     
     defaults {
+        generator "spring" // Use Spring generator by default (was previously hardcoded)
         userTemplateDir "src/main/templates" // Use explicit user templates
         userTemplateCustomizationsDir "src/main/templateCustomizations" // Use user YAML customizations
         modelNamePrefix "Api" // Add prefix to test the new feature
@@ -97,6 +98,7 @@ openapiModelgen {
         orders {
             inputSpec "$projectDir/src/main/resources/openapi/orders.yaml"
             modelPackage "com.guidedbyte.testapp.model.orders"
+            generator "java" // Use plain Java generator for orders (demonstrates different generator)
             modelNamePrefix "Custom" // Override default prefix for orders
             modelNameSuffix "Entity" // Override suffix for orders to demonstrate per-spec config
             // NOTE: importMappings and typeMappings commented out due to OpenAPI Generator bug
@@ -108,9 +110,10 @@ openapiModelgen {
             //     'string+date-time': 'Instant'   // Override default mapping for orders
             // ])
             additionalProperties([
-                'reactive': 'false',            // Override reactive setting for orders
+                'library': 'native',            // Use native library for plain Java generator
                 'enablePostProcessFile': 'true', // Orders-specific additional property
-                'jackson': 'true'
+                'jackson': 'true',
+                'beanValidations': 'true'        // Enable bean validations for plain Java
             ])
             // Spec-specific normalizer rules (override/extend defaults)
             // openapiNormalizer([

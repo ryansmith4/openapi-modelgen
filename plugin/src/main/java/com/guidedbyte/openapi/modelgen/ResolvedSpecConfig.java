@@ -431,6 +431,9 @@ public class ResolvedSpecConfig {
             if (defaults.getUserTemplateCustomizationsDir().isPresent()) {
                 this.userTemplateCustomizationsDir = defaults.getUserTemplateCustomizationsDir().get();
             }
+            if (defaults.getGenerator().isPresent()) {
+                this.generatorName = defaults.getGenerator().get();
+            }
             if (defaults.getModelNamePrefix().isPresent()) {
                 this.modelNamePrefix = defaults.getModelNamePrefix().get();
             }
@@ -506,6 +509,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getUserTemplateCustomizationsDir().isPresent()) {
                 this.userTemplateCustomizationsDir = spec.getUserTemplateCustomizationsDir().get();
+            }
+            if (spec.getGenerator().isPresent()) {
+                this.generatorName = spec.getGenerator().get();
             }
             if (spec.getModelNamePrefix().isPresent()) {
                 this.modelNamePrefix = spec.getModelNamePrefix().get();
