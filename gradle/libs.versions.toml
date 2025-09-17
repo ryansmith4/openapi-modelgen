@@ -18,7 +18,7 @@ spring-dependency-management = "1.1.4"
 # ===============================================================================================
 # Note: We maintain two versions for compatibility testing
 openapi-generator-plugin = "7.14.0"          # Latest for test-app and testing
-openapi-generator-plugin-compat = "7.10.0"   # Minimum supported for compileOnly
+openapi-generator-plugin-compat = "7.14.0"   # Minimum supported for compileOnly
 
 # ===============================================================================================
 # SECURITY-CRITICAL DEPENDENCIES
