@@ -26,7 +26,7 @@ openapi-generator-plugin-compat = "7.10.0"   # Minimum supported for compileOnly
 # These versions are specifically chosen to address known CVEs:
 # - snakeyaml: 2.3 (fixes CVE-2022-1471 - CRITICAL)
 # - commons-lang3: 3.18.0 (fixes CVE-2025-48924 - MEDIUM)
-snakeyaml = "2.3"
+snakeyaml = "2.5"
 commons-lang3 = "3.18.0"
 
 # ===============================================================================================
