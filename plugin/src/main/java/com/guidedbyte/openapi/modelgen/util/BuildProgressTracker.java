@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -387,7 +388,7 @@ public final class BuildProgressTracker {
          * @return this instance for method chaining
          */
         public ProgressInfo withAdditionalInfo(Map<String, Object> additionalInfo) {
-            this.additionalInfo = additionalInfo;
+            this.additionalInfo = additionalInfo != null ? new HashMap<>(additionalInfo) : null;
             return this;
         }
 
@@ -410,7 +411,9 @@ public final class BuildProgressTracker {
          *
          * @return the additional information map
          */
-        public Map<String, Object> getAdditionalInfo() { return additionalInfo; }
+        public Map<String, Object> getAdditionalInfo() {
+            return additionalInfo != null ? new HashMap<>(additionalInfo) : null;
+        }
     }
 
     /**

@@ -40,6 +40,23 @@ dependencies {
     testImplementation gradleTestKit()
 }
 
+// Force dependency resolution for security vulnerabilities
+configurations.all {
+    resolutionStrategy {
+        // CVE-2025-48924: Force commons-lang3 to secure version 3.18.0+
+        force 'org.apache.commons:commons-lang3:3.18.0'
+
+        // Explicit resolution for all commons-lang3 transitive dependencies
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.apache.commons' &&
+                details.requested.name == 'commons-lang3') {
+                details.useVersion '3.18.0'
+                details.because 'Security fix for CVE-2025-48924 - Uncontrolled Recursion vulnerability'
+            }
+        }
+    }
+}
+
 // Configure compilation warnings
 compileJava {
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
@@ -66,7 +83,7 @@ test {
 
 // Checkstyle configuration for code style enforcement
 checkstyle {
-    toolVersion = '10.12.4'
+    toolVersion = '11.0.1'  // Updated to latest version to fix CVE-2025-48734 in commons-beanutils
     configFile = file("${projectDir}/config/checkstyle/checkstyle.xml")
     configDirectory = file("${projectDir}/config/checkstyle")
     ignoreFailures = true   // Don't fail build on style violations (for now)

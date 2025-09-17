@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.util;
 
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -70,11 +71,11 @@ public final class TemplateProcessingLogger {
         LoggingContext.setComponent("TemplateResolver");
         try {
             logger.debug("TEMPLATE_RESOLUTION: source={} priority={} customized={} fallback={}",
-                source.name().toLowerCase().replace('_', '-'),
+                StringUtils.toRootLowerCase(source.name()).replace('_', '-'),
                 priority,
                 customized,
                 source.getFallbackSource() != null ?
-                    source.getFallbackSource().name().toLowerCase().replace('_', '-') : "none");
+                    StringUtils.toRootLowerCase(source.getFallbackSource().name()).replace('_', '-') : "none");
         } finally {
             // Keep template context for subsequent operations
         }

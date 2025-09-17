@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.utils;
 
 import com.guidedbyte.openapi.modelgen.ResolvedSpecConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.semver4j.Semver;
 import org.slf4j.Logger;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
@@ -166,7 +167,7 @@ public final class VersionUtils {
 
         // Remove leading 'v' prefix if present
         String normalized = version.trim();
-        if (normalized.toLowerCase().startsWith("v")) {
+        if (StringUtils.toRootLowerCase(normalized).startsWith("v")) {
             normalized = normalized.substring(1);
         }
 
@@ -194,7 +195,7 @@ public final class VersionUtils {
                     } else {
                         sb.append('.');
                     }
-                    sb.append(part.toLowerCase());
+                    sb.append(StringUtils.toRootLowerCase(part));
                 }
             }
         }

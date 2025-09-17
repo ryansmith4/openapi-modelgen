@@ -2,6 +2,7 @@ package com.guidedbyte.openapi.modelgen.util;
 
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import com.guidedbyte.openapi.modelgen.services.RichFileLogger;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
@@ -650,7 +651,7 @@ public class PluginLogger implements Logger {
      * @param args the message format arguments
      */
     public void customizationDiagnostic(String type, String message, Object... args) {
-        switch (type.toLowerCase()) {
+        switch (StringUtils.toRootLowerCase(type)) {
             case "pattern_match":
             case "template_diff":
             case "condition_evaluation":
@@ -683,7 +684,7 @@ public class PluginLogger implements Logger {
      * @param args the message format arguments
      */
     public void performanceMetric(String scope, String message, Object... args) {
-        switch (scope.toLowerCase()) {
+        switch (StringUtils.toRootLowerCase(scope)) {
             case "build_summary":
             case "completion":
             case "cache_performance":

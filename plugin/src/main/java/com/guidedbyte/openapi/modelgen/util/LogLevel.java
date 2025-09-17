@@ -1,5 +1,7 @@
 package com.guidedbyte.openapi.modelgen.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Logging levels for the OpenAPI Model Generator plugin, aligned with SLF4J standard levels.
  *
@@ -181,7 +183,7 @@ public enum LogLevel {
             return INFO;
         }
 
-        String normalized = logLevelString.trim().toUpperCase();
+        String normalized = StringUtils.toRootUpperCase(logLevelString.trim());
 
         try {
             return LogLevel.valueOf(normalized);
@@ -219,7 +221,7 @@ public enum LogLevel {
     public static LogLevel fromLegacyAndGradle(boolean debugEnabled, String gradleLogLevel) {
         // Handle Gradle log levels - map directly to SLF4J equivalents
         if (gradleLogLevel != null) {
-            String normalized = gradleLogLevel.toUpperCase();
+            String normalized = StringUtils.toRootUpperCase(gradleLogLevel);
             switch (normalized) {
                 case "QUIET":
                     return ERROR;  // Only errors in quiet mode

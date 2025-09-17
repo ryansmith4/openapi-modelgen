@@ -6,6 +6,7 @@ import com.guidedbyte.openapi.modelgen.customization.*;
 import com.guidedbyte.openapi.modelgen.logging.ContextAwareLogger;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import com.guidedbyte.openapi.modelgen.util.TemplateCustomizationDiagnostics;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -1193,7 +1194,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml"));
+            StringUtils.toRootLowerCase(name).endsWith(".yaml") || StringUtils.toRootLowerCase(name).endsWith(".yml"));
         
         if (yamlFiles != null) {
             for (File yamlFile : yamlFiles) {
@@ -1339,7 +1340,7 @@ public class CustomizationEngine {
                     String fileName = entryName.substring(searchPrefix.length());
                     
                     // Only include direct files (no subdirectories) that are YAML files (case-insensitive)
-                    if (!fileName.contains("/") && (fileName.toLowerCase().endsWith(".yaml") || fileName.toLowerCase().endsWith(".yml"))) {
+                    if (!fileName.contains("/") && (StringUtils.toRootLowerCase(fileName).endsWith(".yaml") || StringUtils.toRootLowerCase(fileName).endsWith(".yml"))) {
                         customizations.add(fileName);
                     }
                 }
@@ -1359,7 +1360,7 @@ public class CustomizationEngine {
         
         if (dir.exists() && dir.isDirectory()) {
             java.io.File[] files = dir.listFiles((file) -> 
-                file.isFile() && (file.getName().toLowerCase().endsWith(".yaml") || file.getName().toLowerCase().endsWith(".yml")));
+                file.isFile() && (StringUtils.toRootLowerCase(file.getName()).endsWith(".yaml") || StringUtils.toRootLowerCase(file.getName()).endsWith(".yml")));
             
             if (files != null) {
                 for (java.io.File file : files) {
@@ -1419,7 +1420,7 @@ public class CustomizationEngine {
         }
         
         File[] yamlFiles = userCustomizationsDir.listFiles((dir, name) -> 
-            name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml"));
+            StringUtils.toRootLowerCase(name).endsWith(".yaml") || StringUtils.toRootLowerCase(name).endsWith(".yml"));
         
         if (yamlFiles == null) {
             return;

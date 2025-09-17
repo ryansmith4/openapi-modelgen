@@ -140,4 +140,14 @@
     <Match>
         <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR"/>
     </Match>
+
+    <!-- Exclude MS_EXPOSE_REP for singleton pattern implementation -->
+    <!-- The PluginState class implements the standard singleton pattern where getInstance() intentionally
+         returns a reference to the single instance. This is the correct implementation for a singleton,
+         and returning a copy would break the singleton pattern's purpose. -->
+    <Match>
+        <Class name="com.guidedbyte.openapi.modelgen.util.PluginState"/>
+        <Method name="getInstance"/>
+        <Bug pattern="MS_EXPOSE_REP"/>
+    </Match>
 </FindBugsFilter>

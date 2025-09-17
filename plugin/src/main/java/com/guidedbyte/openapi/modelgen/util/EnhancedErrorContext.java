@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.util;
 
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -273,7 +274,7 @@ public final class EnhancedErrorContext {
 
         // Add suggestions based on error type
         if (error.getMessage() != null) {
-            String message = error.getMessage().toLowerCase();
+            String message = StringUtils.toRootLowerCase(error.getMessage());
             if (message.contains("permission") || message.contains("access")) {
                 suggestions.add("Check file/directory permissions");
                 suggestions.add("Verify the build process has necessary access rights");
@@ -315,9 +316,9 @@ public final class EnhancedErrorContext {
         Map<String, Object> suggestions = new HashMap<>();
 
         // Analyze error patterns
-        boolean hasFilePathErrors = errors.stream().anyMatch(error -> error.toLowerCase().contains("file") || error.toLowerCase().contains("path"));
-        boolean hasYamlErrors = errors.stream().anyMatch(error -> error.toLowerCase().contains("yaml") || error.toLowerCase().contains("syntax"));
-        boolean hasPermissionErrors = errors.stream().anyMatch(error -> error.toLowerCase().contains("permission") || error.toLowerCase().contains("access"));
+        boolean hasFilePathErrors = errors.stream().anyMatch(error -> StringUtils.toRootLowerCase(error).contains("file") || StringUtils.toRootLowerCase(error).contains("path"));
+        boolean hasYamlErrors = errors.stream().anyMatch(error -> StringUtils.toRootLowerCase(error).contains("yaml") || StringUtils.toRootLowerCase(error).contains("syntax"));
+        boolean hasPermissionErrors = errors.stream().anyMatch(error -> StringUtils.toRootLowerCase(error).contains("permission") || StringUtils.toRootLowerCase(error).contains("access"));
 
         suggestions.put("check_file_paths", hasFilePathErrors);
         suggestions.put("validate_yaml_syntax", hasYamlErrors);
@@ -407,16 +408,16 @@ public final class EnhancedErrorContext {
     }
 
     private static String formatSuggestionKey(String key) {
-        return key.replace('_', ' ').substring(0, 1).toUpperCase() + key.replace('_', ' ').substring(1);
+        return StringUtils.toRootUpperCase(key.replace('_', ' ').substring(0, 1)) + key.replace('_', ' ').substring(1);
     }
 
     private static boolean isVariableRelatedError(Exception error) {
         String message = error.getMessage();
         if (message == null) return false;
-        return message.toLowerCase().contains("variable") ||
-               message.toLowerCase().contains("expansion") ||
-               message.toLowerCase().contains("substitution") ||
-               message.toLowerCase().contains("mustache");
+        return StringUtils.toRootLowerCase(message).contains("variable") ||
+               StringUtils.toRootLowerCase(message).contains("expansion") ||
+               StringUtils.toRootLowerCase(message).contains("substitution") ||
+               StringUtils.toRootLowerCase(message).contains("mustache");
     }
 
     /**
@@ -508,7 +509,7 @@ public final class EnhancedErrorContext {
          *
          * @return the template variables map
          */
-        public Map<String, String> getVariables() { return variables; }
+        public Map<String, String> getVariables() { return new HashMap<>(variables); }
 
         /**
          * Gets the recursive depth for variable expansion.

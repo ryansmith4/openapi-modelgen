@@ -491,7 +491,7 @@ public class TaskConfigurationService implements Serializable {
                 if (!anythingDeleted) {
                     System.out.println("No generated files or caches to clean");
                 } else {
-                    System.out.println("\nSuccessfully cleaned all generated models and template caches");
+                    System.out.printf("%nSuccessfully cleaned all generated models and template caches%n");
                     System.out.println("Next generation will extract fresh templates and rebuild caches");
                 }
             });
@@ -555,8 +555,8 @@ public class TaskConfigurationService implements Serializable {
         
         @Override
         public void execute(org.gradle.api.Task task) {
-            System.out.println("\n=== OpenAPI Model Generator Plugin ===\n");
-            System.out.println("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.\n");
+            System.out.printf("%n=== OpenAPI Model Generator Plugin ===%n%n");
+            System.out.printf("This plugin generates Java DTOs from OpenAPI specifications with Lombok support.%n%n");
             System.out.println("Available tasks:");
             System.out.println("  generateAllModels     - Generate models for all configured specifications");
             
@@ -572,7 +572,7 @@ public class TaskConfigurationService implements Serializable {
             }
             
             System.out.println("  generateHelp          - Show this help information");
-            System.out.println("\nConfiguration Example:");
+            System.out.printf("%nConfiguration Example:%n");
             System.out.println("  openapiModelgen {");
             System.out.println("    specs {");
             System.out.println("      pets {");
@@ -581,8 +581,8 @@ public class TaskConfigurationService implements Serializable {
             System.out.println("      }");
             System.out.println("    }");
             System.out.println("  }");
-            System.out.println("\nFor complete documentation, visit:");
-            System.out.println("  https://github.com/guidedbyte/openapi-modelgen\n");
+            System.out.printf("%nFor complete documentation, visit:%n");
+            System.out.printf("  https://github.com/guidedbyte/openapi-modelgen%n%n");
         }
     }
 
@@ -700,16 +700,16 @@ public class TaskConfigurationService implements Serializable {
 
         @Override
         public void execute(org.gradle.api.Task task) {
-            System.out.println("\n=== OpenAPI Model Generator Debug Configuration ===");
+            System.out.printf("%n=== OpenAPI Model Generator Debug Configuration ===%n");
 
             // Plugin-level configuration
-            System.out.println("\n📋 Plugin Configuration:");
+            System.out.printf("%n📋 Plugin Configuration:%n");
             System.out.printf("  Parallel processing: %s%n", parallelMode);
             System.out.printf("  Project directory: %s%n", projectPath);
             System.out.printf("  Build directory: %s%n", buildDirPath);
 
             // Defaults configuration
-            System.out.println("\n📋 Default Configuration:");
+            System.out.printf("%n📋 Default Configuration:%n");
             if (defaults.outputDir != null) {
                 System.out.printf("  Output directory: %s%n", defaults.outputDir);
             }
@@ -725,14 +725,14 @@ public class TaskConfigurationService implements Serializable {
 
             // Library configuration
             if (libraryData != null) {
-                System.out.println("\n📚 Library Configuration:");
+                System.out.printf("%n📚 Library Configuration:%n");
                 System.out.printf("  Library templates: %d%n", libraryData.templateCount);
                 System.out.printf("  Library customizations: %d%n", libraryData.customizationCount);
                 System.out.printf("  Library metadata files: %d%n", libraryData.metadataCount);
             }
 
             // Specifications configuration
-            System.out.println("\n📝 Specifications Configuration:");
+            System.out.printf("%n📝 Specifications Configuration:%n");
             if (specs.isEmpty()) {
                 System.out.println("  ⚠️  No specifications configured");
                 System.out.println("  💡 Add specs using: openapiModelgen { specs { ... } }");
@@ -742,7 +742,7 @@ public class TaskConfigurationService implements Serializable {
                     String specName = entry.getKey();
                     SpecConfigData specConfig = entry.getValue();
 
-                    System.out.printf("\n  📄 Spec: %s%n", specName);
+                    System.out.printf("%n  📄 Spec: %s%n", specName);
                     if (specConfig.inputSpec != null) {
                         System.out.printf("    Input spec: %s%n", specConfig.inputSpec);
 
@@ -769,13 +769,13 @@ public class TaskConfigurationService implements Serializable {
             }
 
             // Environment information
-            System.out.println("\n🔧 Environment Information:");
+            System.out.printf("%n🔧 Environment Information:%n");
             System.out.printf("  Java version: %s%n", System.getProperty("java.version"));
             System.out.printf("  Gradle version: %s%n", gradleVersion);
             System.out.printf("  OS: %s %s%n", System.getProperty("os.name"), System.getProperty("os.version"));
 
             // Cache information
-            System.out.println("\n💾 Cache Information:");
+            System.out.printf("%n💾 Cache Information:%n");
             String globalCacheDir = System.getProperty("user.home") + "/.gradle/caches/openapi-modelgen";
             File globalCache = new File(globalCacheDir);
             System.out.printf("  Global cache directory: %s%n", globalCacheDir);
@@ -792,14 +792,14 @@ public class TaskConfigurationService implements Serializable {
             System.out.printf("  Working cache exists: %s%n", workingCache.exists() ? "✅ Yes" : "❌ No");
 
             // Troubleshooting tips
-            System.out.println("\n💡 Troubleshooting Tips:");
+            System.out.printf("%n💡 Troubleshooting Tips:%n");
             System.out.println("  - Enable debug mode: openapiModelgen { debug true }");
             System.out.println("  - Clear caches: gradle generateClean");
             System.out.println("  - Validate OpenAPI specs: https://editor.swagger.io/");
             System.out.println("  - Check file permissions and paths");
             System.out.println("  - Use --debug flag for detailed logging");
 
-            System.out.println("\n=== End Debug Configuration ===\n");
+            System.out.printf("%n=== End Debug Configuration ===%n%n");
         }
     }
 
@@ -965,7 +965,7 @@ public class TaskConfigurationService implements Serializable {
 
                 // Log file existence checks for common issues
                 if (task.getInputSpec().isPresent()) {
-                    String inputSpecPath = task.getInputSpec().get().toString();
+                    String inputSpecPath = task.getInputSpec().get();
                     File inputFile = new File(inputSpecPath);
                     if (inputFile.isAbsolute()) {
                         logger.debug("Input spec file check: exists={}, readable={}", inputFile.exists(), inputFile.canRead());
@@ -1031,10 +1031,6 @@ public class TaskConfigurationService implements Serializable {
      * @param extension the plugin extension containing debug configuration
      */
     private void addGenerationFailureHandling(GenerateTask task, String specName, OpenApiModelGenExtension extension) {
-        // Capture only serializable values during configuration time for configuration cache compatibility
-        String taskPath = task.getPath();
-        String taskName = task.getName();
-
         // Add error handling through task lifecycle hooks without capturing Project reference
         task.doFirst(t -> {
             // Log context setup - no project state needed
@@ -1070,7 +1066,7 @@ public class TaskConfigurationService implements Serializable {
                     logger.debug("Generator: {}", task.getGeneratorName().get());
                 }
                 if (task.getInputSpec().isPresent()) {
-                    String inputSpec = task.getInputSpec().get().toString();
+                    String inputSpec = task.getInputSpec().get();
                     logger.debug("Input spec: {}", inputSpec);
 
                     // Check if input spec file still exists
@@ -1094,7 +1090,7 @@ public class TaskConfigurationService implements Serializable {
                 }
 
                 // Analyze the error and provide specific guidance
-                String errorMessage = failure.getMessage().toLowerCase();
+                String errorMessage = StringUtils.toRootLowerCase(failure.getMessage());
                 logger.debug("=== Troubleshooting Guidance ===");
 
                 if (errorMessage.contains("file not found") || errorMessage.contains("no such file")) {
@@ -1141,20 +1137,6 @@ public class TaskConfigurationService implements Serializable {
         logger.error("Documentation: https://github.com/GuidedByte/openapi-modelgen");
     }
 
-    /**
-     * Simple context holder for generation failure analysis.
-     */
-    private static class GenerationContext {
-        final String specName;
-        final GenerateTask task;
-        final boolean debugEnabled;
-
-        GenerationContext(String specName, GenerateTask task, boolean debugEnabled) {
-            this.specName = specName;
-            this.task = task;
-            this.debugEnabled = debugEnabled;
-        }
-    }
 
     /**
      * Capitalizes the first letter of a string.

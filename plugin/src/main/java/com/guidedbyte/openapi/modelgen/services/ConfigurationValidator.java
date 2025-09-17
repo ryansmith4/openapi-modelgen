@@ -198,9 +198,9 @@ public class ConfigurationValidator implements Serializable {
 
                 // Validate file extension (case-insensitive)
                 String fileName = inputSpecFile.getName();
-                if (!fileName.toLowerCase().endsWith(".yaml") &&
-                    !fileName.toLowerCase().endsWith(".yml") &&
-                    !fileName.toLowerCase().endsWith(".json")) {
+                if (!StringUtils.toRootLowerCase(fileName).endsWith(".yaml") &&
+                    !StringUtils.toRootLowerCase(fileName).endsWith(".yml") &&
+                    !StringUtils.toRootLowerCase(fileName).endsWith(".json")) {
                     errors.add(specPrefix + ": inputSpec should be a YAML (.yaml/.yml) or JSON (.json) file (case-insensitive): " + inputSpecPath);
                     logger.debug("⚠️ InputSpec file extension warning for '{}': filename='{}' (should be .yaml/.yml/.json)",
                         specName, fileName);

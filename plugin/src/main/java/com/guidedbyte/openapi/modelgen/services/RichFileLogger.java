@@ -201,27 +201,10 @@ public class RichFileLogger {
                 enabled = false;
                 // No persistent FileWriter to close - each write operation manages its own handles
 
-                // On Windows, encourage garbage collection to help with cleanup
-                if (org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS) {
-                    System.gc();
-                }
             }
         }
     }
 
-    /**
-     * Registers a global shutdown hook to close all RichFileLogger instances.
-     */
-    private static void registerShutdownHook() {
-        if (!shutdownHookRegistered) {
-            synchronized (RichFileLogger.class) {
-                if (!shutdownHookRegistered) {
-                    Runtime.getRuntime().addShutdownHook(new Thread(RichFileLogger::closeAll));
-                    shutdownHookRegistered = true;
-                }
-            }
-        }
-    }
 
     /**
      * Closes all RichFileLogger instances.

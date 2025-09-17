@@ -6,6 +6,7 @@ import com.guidedbyte.openapi.modelgen.customization.Replacement;
 import com.guidedbyte.openapi.modelgen.customization.ConditionSet;
 import com.guidedbyte.openapi.modelgen.services.EvaluationContext;
 import com.guidedbyte.openapi.modelgen.services.LoggingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -372,7 +373,7 @@ public final class TemplateCustomizationDiagnostics {
 
         if (firstPatternWord.length() > 3) {
             for (int i = 0; i < Math.min(templateLines.length, 20); i++) {
-                if (templateLines[i].toLowerCase().contains(firstPatternWord.toLowerCase())) {
+                if (StringUtils.toRootLowerCase(templateLines[i]).contains(StringUtils.toRootLowerCase(firstPatternWord))) {
                     logger.trace("  → Similar content found on line {}: '{}'",
                         i + 1, truncateLine(templateLines[i].trim(), 60));
                     break;
@@ -381,20 +382,6 @@ public final class TemplateCustomizationDiagnostics {
         }
     }
 
-    private static void provideConditionFailureSuggestions(String key, Object expected, Object actual, EvaluationContext context) {
-        logger.trace("CONDITION_FAILURE_SUGGESTION for '{}': expected='{}' actual='{}'", key, expected, actual);
-
-        if (actual == null) {
-            logger.trace("  → Variable '{}' is not available. Check spelling or ensure it's provided in templateVariables.", key);
-        } else if (!actual.toString().equals(expected.toString())) {
-            logger.trace("  → Value mismatch for '{}'. Available value is '{}', expected '{}'.", key, actual, expected);
-
-            // Suggest case sensitivity issues
-            if (actual.toString().equalsIgnoreCase(expected.toString())) {
-                logger.trace("  → Case sensitivity issue detected. Consider using '{}' instead of '{}'.", actual, expected);
-            }
-        }
-    }
 
     private static void provideCustomizationOptimizationSuggestions(CustomizationConfig config, int applied, int skipped) {
         logger.debug("OPTIMIZATION_SUGGESTIONS: applied={} skipped={}", applied, skipped);
