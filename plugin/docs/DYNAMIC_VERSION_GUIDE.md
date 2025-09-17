@@ -1,3 +1,7 @@
+---
+render_with_liquid: false
+---
+
 # Dynamic Version System for Documentation
 
 This project uses a dynamic version system that automatically keeps documentation up-to-date with the latest plugin releases.

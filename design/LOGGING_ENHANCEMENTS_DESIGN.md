@@ -1,3 +1,7 @@
+---
+render_with_liquid: false
+---
+
 # OpenAPI Model Generator Logging Enhancements Design
 
 ## Executive Summary

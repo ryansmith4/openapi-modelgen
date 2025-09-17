@@ -1,4 +1,8 @@
-er# OpenAPI Model Generator Plugin - Release 2.1 Design Document
+---
+render_with_liquid: false
+---
+
+# OpenAPI Model Generator Plugin - Release 2.1 Design Document
 
 ## Executive Summary
 

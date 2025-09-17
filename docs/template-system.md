@@ -1,3 +1,7 @@
+---
+render_with_liquid: false
+---
+
 # Template System Architecture
 
 This document provides detailed technical documentation of the OpenAPI Model Generator Plugin's advanced template system, including the multi-source template resolution, library template support, conflict resolution, and working directory organization.

@@ -1,3 +1,7 @@
+---
+render_with_liquid: false
+---
+
 # Configuration Guide
 
 This guide covers all configuration options, defaults, and DSL syntax for the OpenAPI Model Generator plugin.
