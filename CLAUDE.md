@@ -21,6 +21,7 @@ Gradle plugin wrapping OpenAPI Generator with Java DTOs, Lombok support, custom 
 **MANDATORY**: Plugin MUST remain configuration cache compatible.
 
 ### Requirements
+
 1. **No `Project` in Actions**: Use `ProjectLayout`, `DirectoryProperty` instead
 1. **Static Logging Only**: `LoggerFactory.getLogger(Class)`, never `project.getLogger()`
 1. **Config vs Execution Separation**: All discovery at config time, serializable objects only
@@ -53,17 +54,20 @@ openapi-modelgen/
 ⚠️ **test-app is STANDALONE - ALWAYS use `cd test-app &&`**
 
 **test-app tasks:**
+
 - Generate: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generatePets`
 - Generate all: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generateAllModels`
 - Clean: `cd test-app && /c/gradle/gradle-8.5/bin/gradle generateClean`
 
 **Plugin tasks:**
+
 - Test: `/c/gradle/gradle-8.5/bin/gradle plugin:test`
 - Build: `/c/gradle/gradle-8.5/bin/gradle clean build`
 
 ## Configuration
 
 ### DSL Syntax (method calls, not assignment)
+
 ```gradle
 openapiModelgen {
     defaults {
@@ -87,6 +91,7 @@ openapiModelgen {
 ```
 
 ### Template Variables
+
 - **Built-in**: `{{currentYear}}`, `{{generatedBy}}`, `{{pluginVersion}}`
 - **User**: Configurable with recursive expansion
 - **Usage**: Available in all Mustache templates
@@ -95,7 +100,8 @@ openapiModelgen {
 
 **Template Precedence**: User templates > User YAML customizations > Plugin YAML > OpenAPI defaults
 
-Templates processed in spec-specific working directories (`build/template-work/{generator}-{specName}/`) with multi-level caching (session → local → global).
+Templates processed in spec-specific working directories
+(`build/template-work/{generator}-{specName}/`) with multi-level caching (session → local → global).
 
 ## Key Technical Details
 
@@ -110,12 +116,14 @@ Templates processed in spec-specific working directories (`build/template-work/{
 ## Version Management
 
 **Version Catalogs** (`gradle/libs.versions.toml`):
+
 - **Centralized**: All dependency versions in one place
 - **Security tracking**: Documents security-critical version choices
 - **Composite build**: Shared via `dependencyResolutionManagement` in settings.gradle
 - **Categories**: Plugins, security-critical dependencies, core libraries, test frameworks
 
 **Security-Critical Dependencies**:
+
 ```toml
 [versions]
 # Security fixes - DO NOT downgrade
@@ -124,6 +132,7 @@ commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
 ```
 
 **Bundles** for common use cases:
+
 - `plugin-core`: Essential plugin dependencies
 - `plugin-test`: Testing framework dependencies  
 - `test-app-web`: Spring Boot web stack
@@ -147,7 +156,7 @@ commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
 
 ## Known Limitations
 
-**OpenAPI Generator Bug**: `modelNamePrefix`/`modelNameSuffix` breaks `typeMappings`. 
+**OpenAPI Generator Bug**: `modelNamePrefix`/`modelNameSuffix` breaks `typeMappings`.
 **Workaround**: Don't use both together.
 
 ## ⚠️ CRITICAL COMMAND PATTERNS

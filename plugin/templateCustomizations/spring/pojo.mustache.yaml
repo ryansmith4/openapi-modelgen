@@ -1,3 +1,0 @@
-replacements:
-  - find: "test"
-    replace: "replaced"

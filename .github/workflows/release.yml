@@ -66,32 +66,55 @@ jobs:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
-      - name: Generate changelog
+      - name: Update CHANGELOG.md
+        run: |
+          chmod +x scripts/update-changelog.sh
+          ./scripts/update-changelog.sh ${{ steps.extract_version.outputs.version }}
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Commit updated changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for v${{ steps.extract_version.outputs.version }}" || echo "No changes to commit"
+
+      - name: Generate release notes from changelog
         id: changelog
         run: |
-          # Get the previous release tag
-          PREVIOUS_TAG=$(git tag -l "v*" --sort=-version:refname | grep -v "^${GITHUB_REF#refs/tags/}$" | head -n1)
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous release found, showing all commits"
-            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+          # Extract the content between the new version header and the next version/section
+          VERSION="${{ steps.extract_version.outputs.version }}"
+
+          # Get the release notes from the updated CHANGELOG.md
+          RELEASE_NOTES=$(awk -v version="$VERSION" '
+            BEGIN { in_section = 0; content = "" }
+            /^## \[v/ {
+              if (in_section) exit
+              if ($0 ~ "\\[v" version "\\]") {
+                in_section = 1
+                next
+              }
+            }
+            /^## / && in_section { exit }
+            in_section && !/^## / {
+              if (content != "") content = content "\n"
+              content = content $0
+            }
+            END { print content }
+          ' CHANGELOG.md)
+
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="Release v$VERSION - see CHANGELOG.md for details"
           fi
-          
-          echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.extract_version.outputs.version }}"
-          
-          # Generate changelog from commits
-          CHANGELOG=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD | grep -E '^- (feat|fix|refactor|docs|test|chore|perf)' | head -20)
-          
-          if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="- Initial release"
-          fi
-          
-          # Save changelog to output
+
+          # Save to output
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "## Changes in ${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "## Release v$VERSION" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...v${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release

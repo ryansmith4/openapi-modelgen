@@ -1,6 +1,8 @@
 # OpenAPI Model Generator Gradle Plugin
 
-A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI specifications with enterprise-grade features including template customization, incremental builds, performance optimizations, and automatic version detection.
+A comprehensive Gradle plugin for generating Java DTOs from multiple OpenAPI specifications with enterprise-grade
+features including template customization, incremental builds, performance optimizations, and automatic version
+detection.
 
 ## 🚀 Quick Start
 
@@ -63,6 +65,7 @@ compileJava.dependsOn generateAllModels
 ## ✨ Key Features
 
 ### Core Functionality
+
 - **Multi-spec support**: Generate models from multiple OpenAPI specifications in a single project
 - **Template customization system**: YAML-based template modifications with comprehensive validation
 - **Template precedence hierarchy**: User templates > User YAML customizations > Plugin YAML > OpenAPI defaults
@@ -71,6 +74,7 @@ compileJava.dependsOn generateAllModels
 - **Lombok integration**: Full annotation support with constructor conflict resolution
 
 ### Performance & Enterprise Features
+
 - **Multi-level caching system**: 90% faster no-change builds, 70% faster incremental builds
 - **Parallel multi-spec processing**: Thread-safe concurrent generation
 - **Cross-build performance optimization**: Global cache persistence
@@ -78,6 +82,7 @@ compileJava.dependsOn generateAllModels
 - **Content-based change detection**: SHA-256 hashing for reliable template change detection
 
 ### Developer Experience
+
 - **Command-line options**: Override any configuration via CLI parameters
 - **Comprehensive testing**: 247+ test methods across 27 test classes (100% pass rate)
 - **Method-call DSL**: Type-safe configuration with validation and CLI overrides
@@ -85,13 +90,19 @@ compileJava.dependsOn generateAllModels
 ## 📖 Documentation
 
 ### Configuration
+
 - **[Configuration Guide](docs/configuration.md)** - Complete configuration options, defaults, and DSL syntax
 - **[Template System](docs/template-system.md)** - Template customization, YAML modifications, and libraries
 
 ### Advanced Topics
+
 - **[Performance](docs/performance.md)** - Caching system, parallel processing, and optimization
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues, debug options, and known limitations
 - **[Development](docs/development.md)** - Building, testing, and contributing
+
+### Release Information
+
+- **[CHANGELOG](CHANGELOG.md)** - Release notes and version history
 
 ## 💡 Important: DSL Syntax
 
