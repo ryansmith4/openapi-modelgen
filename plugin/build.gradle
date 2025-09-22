@@ -367,7 +367,7 @@ Add to your build.gradle:
 
 ```groovy
 plugins {
-    id 'com.guidedbyte.openapi-modelgen' version '1.0.0'
+    id 'com.guidedbyte.openapi-modelgen' version '2.1.0'
 }
 ```
 """
