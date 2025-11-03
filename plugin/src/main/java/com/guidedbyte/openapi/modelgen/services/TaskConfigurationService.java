@@ -323,7 +323,16 @@ public class TaskConfigurationService implements Serializable {
             }
             logger.debug("Configured {} type mappings for spec: {}", typeMappings.size(), specName);
         }
-        
+
+        // Apply schema mappings from resolved config
+        Map<String, String> schemaMappings = resolvedConfig.getSchemaMappings();
+        if (!schemaMappings.isEmpty()) {
+            for (Map.Entry<String, String> entry : schemaMappings.entrySet()) {
+                task.getSchemaMappings().put(entry.getKey(), entry.getValue());
+            }
+            logger.debug("Configured {} schema mappings for spec: {}", schemaMappings.size(), specName);
+        }
+
         // Apply additional properties from resolved config
         Map<String, String> additionalProperties = resolvedConfig.getAdditionalProperties();
         if (!additionalProperties.isEmpty()) {

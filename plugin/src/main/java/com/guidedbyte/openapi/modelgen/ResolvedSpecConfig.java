@@ -26,7 +26,7 @@ import java.util.Map;
  *   <li>Generation control flags (validateSpec, generateTests, generateDocs)</li>
  *   <li>Template customization settings (applyPluginCustomizations)</li>
  *   <li>OpenAPI Generator options and template variables</li>
- *   <li>Type and import mappings (importMappings, typeMappings, additionalProperties, openapiNormalizer)</li>
+ *   <li>Type and import mappings (importMappings, typeMappings, schemaMappings, additionalProperties, openapiNormalizer)</li>
  * </ul>
  * 
  * <p>This class simplifies method signatures throughout the plugin by providing
@@ -123,6 +123,7 @@ public class ResolvedSpecConfig {
     private final Map<String, String> templateVariables;
     private final Map<String, String> importMappings;
     private final Map<String, String> typeMappings;
+    private final Map<String, String> schemaMappings;
     private final Map<String, String> additionalProperties;
     private final Map<String, String> openapiNormalizer;
     
@@ -148,6 +149,7 @@ public class ResolvedSpecConfig {
         this.templateVariables = new HashMap<>(builder.templateVariables);
         this.importMappings = new HashMap<>(builder.importMappings);
         this.typeMappings = new HashMap<>(builder.typeMappings);
+        this.schemaMappings = new HashMap<>(builder.schemaMappings);
         this.additionalProperties = new HashMap<>(builder.additionalProperties);
         this.openapiNormalizer = new HashMap<>(builder.openapiNormalizer);
     }
@@ -253,13 +255,22 @@ public class ResolvedSpecConfig {
     
     /**
      * Gets the resolved type mappings for this specification.
-     * 
+     *
      * @return merged map of OpenAPI types to Java types (defaults + spec overrides)
      */
     public Map<String, String> getTypeMappings() {
         return new HashMap<>(typeMappings);
     }
-    
+
+    /**
+     * Gets the resolved schema mappings for this specification.
+     *
+     * @return merged map of OpenAPI schema names to Java class names (defaults + spec overrides)
+     */
+    public Map<String, String> getSchemaMappings() {
+        return new HashMap<>(schemaMappings);
+    }
+
     /**
      * Gets the resolved additional properties for this specification.
      * 
@@ -350,6 +361,7 @@ public class ResolvedSpecConfig {
         private Map<String, String> templateVariables = new HashMap<>();
         private Map<String, String> importMappings = new HashMap<>();
         private Map<String, String> typeMappings = new HashMap<>();
+        private Map<String, String> schemaMappings = new HashMap<>();
         private Map<String, String> additionalProperties = new HashMap<>();
         private Map<String, String> openapiNormalizer = new HashMap<>();
         
@@ -460,6 +472,9 @@ public class ResolvedSpecConfig {
             if (defaults.getTypeMappings().isPresent()) {
                 this.typeMappings.putAll(defaults.getTypeMappings().get());
             }
+            if (defaults.getSchemaMappings().isPresent()) {
+                this.schemaMappings.putAll(defaults.getSchemaMappings().get());
+            }
             if (defaults.getAdditionalProperties().isPresent()) {
                 this.additionalProperties.putAll(defaults.getAdditionalProperties().get());
             }
@@ -541,6 +556,9 @@ public class ResolvedSpecConfig {
             }
             if (spec.getTypeMappings().isPresent()) {
                 this.typeMappings.putAll(spec.getTypeMappings().get());
+            }
+            if (spec.getSchemaMappings().isPresent()) {
+                this.schemaMappings.putAll(spec.getSchemaMappings().get());
             }
             if (spec.getAdditionalProperties().isPresent()) {
                 this.additionalProperties.putAll(spec.getAdditionalProperties().get());

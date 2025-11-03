@@ -363,6 +363,29 @@ defaults {
 }
 ```
 
+### Schema Mappings
+
+Map OpenAPI schema names to custom Java class names. This allows you to rename generated model classes or map them to existing classes:
+
+```gradle
+defaults {
+    schemaMappings([
+        'Pet': 'Animal',                 // Rename Pet schema to Animal class
+        'User': 'Person',                // Rename User schema to Person class
+        'OrderRequest': 'PurchaseOrder', // Rename OrderRequest to PurchaseOrder
+        'ApiResponse': 'Response'        // Rename ApiResponse to Response
+    ])
+}
+```
+
+**Use Cases:**
+- **Rename generated classes**: Map schema names to more meaningful class names
+- **Avoid naming conflicts**: Resolve conflicts with existing classes in your project
+- **Standardize naming**: Apply consistent naming conventions across multiple specs
+- **Reuse existing classes**: Map OpenAPI schemas to your existing model classes
+
+**Note:** When a schema mapping is defined, OpenAPI Generator will use the mapped name for the generated class. If you're mapping to an existing class, ensure the schema structure matches your existing class definition.
+
 ### OpenAPI Normalizer Rules
 
 Transform and normalize OpenAPI specifications before code generation:
@@ -390,10 +413,23 @@ Common normalizer rules:
 
 ### Mapping Precedence
 
-All mapping properties follow the same merge pattern:
+All mapping properties (`importMappings`, `typeMappings`, `schemaMappings`, `additionalProperties`, `openapiNormalizer`) follow the same merge pattern:
 1. **Default-level mappings** are applied first
 1. **Spec-level mappings** are merged in, with spec values taking precedence for duplicate keys
 1. **Final merged mappings** are passed to OpenAPI Generator
+
+**Example:**
+```gradle
+defaults {
+    schemaMappings(['Pet': 'Animal', 'User': 'Person'])
+}
+specs {
+    api {
+        schemaMappings(['Pet': 'Cat', 'Order': 'PurchaseOrder'])
+        // Result: Pet->Cat (spec overrides), User->Person (from defaults), Order->PurchaseOrder (spec only)
+    }
+}
+```
 
 ## Spec-Level Overrides
 
@@ -437,6 +473,11 @@ openapiModelgen {
             // Spec-specific mappings (merged with defaults)
             importMappings([
                 'OrderStatus': 'com.example.orders.OrderStatus'
+            ])
+
+            schemaMappings([
+                'Order': 'PurchaseOrder',
+                'OrderItem': 'LineItem'
             ])
         }
     }
@@ -588,6 +629,12 @@ openapiModelgen {
             'integer+int64': 'Long'
         ])
 
+        schemaMappings([
+            'Pet': 'Animal',
+            'User': 'Person',
+            'ApiResponse': 'Response'
+        ])
+
         additionalProperties([
             'library': 'spring-boot',
             'beanValidations': 'true',
@@ -631,6 +678,11 @@ openapiModelgen {
             // Additional mappings for this spec
             importMappings([
                 'OrderStatus': 'com.example.orders.OrderStatus'
+            ])
+
+            schemaMappings([
+                'Order': 'PurchaseOrder',    // Override default mapping
+                'OrderItem': 'LineItem'       // Additional mapping for this spec
             ])
         }
     }
@@ -676,6 +728,69 @@ openapiModelgen {
     }
 }
 ```
+
+### Schema Mappings Example
+
+Rename generated model classes or resolve naming conflicts:
+
+```gradle
+openapiModelgen {
+    defaults {
+        // Global schema mappings applied to all specs
+        schemaMappings([
+            'Pet': 'Animal',              // Rename Pet to Animal
+            'User': 'Person',             // Rename User to Person
+            'ApiResponse': 'Response'     // Rename ApiResponse to Response
+        ])
+    }
+
+    specs {
+        pets {
+            inputSpec 'src/main/resources/openapi/pets.yaml'
+            modelPackage 'com.example.pets'
+            // Uses global mappings: Pet -> Animal
+        }
+
+        store {
+            inputSpec 'src/main/resources/openapi/store.yaml'
+            modelPackage 'com.example.store'
+
+            // Override and extend mappings for this spec
+            schemaMappings([
+                'Pet': 'Product',           // Override: Pet -> Product (not Animal)
+                'Order': 'PurchaseOrder',   // Add: Order -> PurchaseOrder
+                'Category': 'ProductCategory' // Add: Category -> ProductCategory
+            ])
+            // Result: Pet->Product, Order->PurchaseOrder, Category->ProductCategory,
+            //         User->Person (from defaults), ApiResponse->Response (from defaults)
+        }
+    }
+}
+```
+
+**Common Use Cases:**
+
+1. **Avoid conflicts with existing classes:**
+   ```gradle
+   schemaMappings(['User': 'ApiUser'])  // Your project already has a User class
+   ```
+
+2. **Apply naming conventions:**
+   ```gradle
+   schemaMappings([
+       'pet': 'PetEntity',
+       'user': 'UserEntity',
+       'order': 'OrderEntity'
+   ])
+   ```
+
+3. **Simplify schema names:**
+   ```gradle
+   schemaMappings([
+       'PetStoreApiResponse': 'Response',
+       'PetStoreApiError': 'Error'
+   ])
+   ```
 
 ## Best Practices
 

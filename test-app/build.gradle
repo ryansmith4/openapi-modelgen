@@ -55,6 +55,10 @@ openapiModelgen {
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
         ])
+        // Schema mappings - maps OpenAPI schema names to custom Java class names
+        schemaMappings([
+            'Pet': 'Animal'  // Maps Pet schema to Animal class name
+        ])
         // NOTE: importMappings and typeMappings commented out due to OpenAPI Generator bug
         // When using modelNamePrefix/Suffix, these mappings don't work correctly
         // See: https://github.com/OpenAPITools/openapi-generator/issues/19043

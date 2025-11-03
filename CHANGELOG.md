@@ -5,7 +5,26 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Development towards v2.1.0
+## [Unreleased] - Development towards v2.1.1
+
+### ✨ Features
+
+- **Schema Mappings**: Added `schemaMappings` configuration option for OpenAPI Generator
+  - Map OpenAPI schema names to custom Java class names at global and spec levels
+  - Supports renaming generated classes and resolving naming conflicts
+  - Follows same merge pattern as `typeMappings` with spec-level overrides
+  - Configuration cache compatible
+  - Example: `schemaMappings(['Pet': 'Animal', 'User': 'Person'])`
+  - See [configuration.md](docs/configuration.md#schema-mappings) for details
+
+### 📚 Documentation
+
+- Added comprehensive schema mappings documentation with use cases and examples
+- Updated configuration.md with schema mappings section and examples
+
+---
+
+## [v2.1.0] - 2025-01-XX
 
 ### 🔒 Security
 

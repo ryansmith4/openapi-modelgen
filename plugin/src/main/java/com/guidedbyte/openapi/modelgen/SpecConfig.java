@@ -38,6 +38,7 @@ import java.util.Map;
  *   <li><strong>configOptions:</strong> Spec-specific OpenAPI Generator options</li>
  *   <li><strong>importMappings:</strong> Additional or override import mappings (merged with defaults)</li>
  *   <li><strong>typeMappings:</strong> Additional or override type mappings (merged with defaults)</li>
+ *   <li><strong>schemaMappings:</strong> Additional or override schema mappings (merged with defaults)</li>
  *   <li><strong>additionalProperties:</strong> Additional or override OpenAPI Generator properties (merged with defaults)</li>
  *   <li><strong>openapiNormalizer:</strong> Additional or override OpenAPI normalizer rules (merged with defaults)</li>
  *   <li><strong>saveOriginalTemplates:</strong> Override default setting for saving original templates to orig/ subdirectory</li>
@@ -111,6 +112,7 @@ public class SpecConfig {
     private final MapProperty<String, String> templateVariables;
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
+    private final MapProperty<String, String> schemaMappings;
     private final MapProperty<String, String> additionalProperties;
     private final MapProperty<String, String> openapiNormalizer;
     private final Property<Boolean> saveOriginalTemplates;
@@ -147,6 +149,7 @@ public class SpecConfig {
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.schemaMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.openapiNormalizer = project.getObjects().mapProperty(String.class, String.class);
         this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
@@ -466,7 +469,23 @@ public class SpecConfig {
     public MapProperty<String, String> getTypeMappings() {
         return typeMappings;
     }
-    
+
+    /**
+     * Gets the schema mappings override property for this specification.
+     *
+     * <p>This property allows providing additional or overriding schema mappings for this
+     * specific specification. These mappings are merged with default schema mappings,
+     * with spec-level mappings taking precedence.</p>
+     *
+     * <p>Schema mappings allow mapping schema names to specific model class names,
+     * useful for customizing generated class names for particular schemas.</p>
+     *
+     * @return the schema mappings override property for this specification
+     */
+    public MapProperty<String, String> getSchemaMappings() {
+        return schemaMappings;
+    }
+
     /**
      * Gets the additional properties override property for this specification.
      *
@@ -722,13 +741,23 @@ public class SpecConfig {
     /**
      * Sets type mappings for this specification.
      * These are merged with default type mappings, with spec taking precedence.
-     * 
+     *
      * @param mappings map of OpenAPI types to Java types
      */
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
     }
-    
+
+    /**
+     * Sets schema mappings for this specification.
+     * These are merged with default schema mappings, with spec taking precedence.
+     *
+     * @param mappings map of OpenAPI schema names to Java class names
+     */
+    public void schemaMappings(Map<String, String> mappings) {
+        this.schemaMappings.set(mappings);
+    }
+
     /**
      * Sets additional properties for this specification.
      * These are merged with default additional properties, with spec taking precedence.

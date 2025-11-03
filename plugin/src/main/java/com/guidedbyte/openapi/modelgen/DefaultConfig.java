@@ -34,6 +34,7 @@ import java.util.Map;
  *   <li><strong>generateModelDocumentation:</strong> Enable/disable model documentation generation (default: false)</li>
  *   <li><strong>importMappings:</strong> Map type names to fully qualified import statements (merged with spec-level mappings)</li>
  *   <li><strong>typeMappings:</strong> Map OpenAPI types to Java types (merged with spec-level mappings)</li>
+ *   <li><strong>schemaMappings:</strong> Map OpenAPI schema names to Java class names (merged with spec-level mappings)</li>
  *   <li><strong>additionalProperties:</strong> Additional properties passed to OpenAPI Generator (merged with spec-level properties)</li>
  *   <li><strong>openapiNormalizer:</strong> OpenAPI normalizer rules to transform input specifications (merged with spec-level rules)</li>
  *   <li><strong>saveOriginalTemplates:</strong> Save original OpenAPI Generator templates to orig/ subdirectory (default: false)</li>
@@ -116,6 +117,7 @@ public class DefaultConfig {
     private final MapProperty<String, String> templateVariables;
     private final MapProperty<String, String> importMappings;
     private final MapProperty<String, String> typeMappings;
+    private final MapProperty<String, String> schemaMappings;
     private final MapProperty<String, String> additionalProperties;
     private final MapProperty<String, String> openapiNormalizer;
     private final Property<Boolean> saveOriginalTemplates;
@@ -149,6 +151,7 @@ public class DefaultConfig {
         this.templateVariables = project.getObjects().mapProperty(String.class, String.class);
         this.importMappings = project.getObjects().mapProperty(String.class, String.class);
         this.typeMappings = project.getObjects().mapProperty(String.class, String.class);
+        this.schemaMappings = project.getObjects().mapProperty(String.class, String.class);
         this.additionalProperties = project.getObjects().mapProperty(String.class, String.class);
         this.openapiNormalizer = project.getObjects().mapProperty(String.class, String.class);
         this.saveOriginalTemplates = project.getObjects().property(Boolean.class);
@@ -441,7 +444,28 @@ public class DefaultConfig {
     public MapProperty<String, String> getTypeMappings() {
         return typeMappings;
     }
-    
+
+    /**
+     * Gets the schema mappings property.
+     *
+     * <p>This property maps OpenAPI schema names to specific Java class names in generated code.
+     * Allows customization of generated class names for particular schemas.</p>
+     *
+     * <p>Example mappings:
+     * <ul>
+     *   <li>{@code Pet -> Animal}</li>
+     *   <li>{@code User -> Person}</li>
+     *   <li>{@code OrderRequest -> PurchaseOrder}</li>
+     * </ul>
+     *
+     * <p>Mappings are merged with spec-level mappings, with spec-level taking precedence.</p>
+     *
+     * @return the schema mappings property mapping OpenAPI schema names to Java class names
+     */
+    public MapProperty<String, String> getSchemaMappings() {
+        return schemaMappings;
+    }
+
     /**
      * Gets the additional properties.
      *
@@ -761,14 +785,25 @@ public class DefaultConfig {
     /**
      * Sets OpenAPI type to Java type mappings.
      * These mappings are merged with spec-level mappings, with spec taking precedence.
-     * 
+     *
      * @param mappings map of OpenAPI types (e.g., 'string+uuid') to Java types (e.g., 'UUID')
      */
     @Option(option = "type-mappings", description = "Map OpenAPI types to Java types")
     public void typeMappings(Map<String, String> mappings) {
         this.typeMappings.set(mappings);
     }
-    
+
+    /**
+     * Sets OpenAPI schema name to Java class name mappings.
+     * These mappings are merged with spec-level mappings, with spec taking precedence.
+     *
+     * @param mappings map of OpenAPI schema names (e.g., 'Pet') to Java class names (e.g., 'Animal')
+     */
+    @Option(option = "schema-mappings", description = "Map OpenAPI schema names to Java class names")
+    public void schemaMappings(Map<String, String> mappings) {
+        this.schemaMappings.set(mappings);
+    }
+
     /**
      * Sets additional properties passed to the OpenAPI Generator.
      * These properties are merged with spec-level properties, with spec taking precedence.

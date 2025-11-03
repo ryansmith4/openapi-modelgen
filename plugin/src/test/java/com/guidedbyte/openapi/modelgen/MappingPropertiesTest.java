@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for importMappings, typeMappings, additionalProperties, and openapiNormalizer configuration properties.
- * 
+ * Tests for importMappings, typeMappings, schemaMappings, additionalProperties, and openapiNormalizer configuration properties.
+ *
  * <p>Validates that the mapping properties are properly configured and merged:</p>
  * <ul>
  *   <li>Default-level mappings are applied</li>
@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>Empty mappings are handled correctly</li>
  *   <li>Additional properties are passed to OpenAPI Generator</li>
  *   <li>OpenAPI normalizer rules are configured and merged</li>
+ *   <li>Schema mappings are properly configured and merged</li>
  * </ul>
  */
 public class MappingPropertiesTest extends BaseTestKitTest {
@@ -246,7 +247,7 @@ public class MappingPropertiesTest extends BaseTestKitTest {
                 id 'java'
                 id 'com.guidedbyte.openapi-modelgen'
             }
-            
+
             openapiModelgen {
                 defaults {
                     outputDir "build/generated"
@@ -266,8 +267,141 @@ public class MappingPropertiesTest extends BaseTestKitTest {
         BuildResult result = createGradleRunner(testProjectDir)
             .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
             .build();
-        
+
         // Should handle empty normalizer rules without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+
+    @Test
+    void testSchemaMappingsConfigurationWorks() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    schemaMappings([
+                        'Pet': 'Animal',
+                        'User': 'Person'
+                    ])
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        schemaMappings([
+                            'Pet': 'Cat',              // Override default
+                            'Order': 'PurchaseOrder'   // Additional mapping
+                        ])
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+
+        // Should compile and configure schema mappings without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+
+    @Test
+    void testEmptySchemaMappingsHandledCorrectly() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    schemaMappings([:])  // Empty map
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        // No schema mappings defined at spec level
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+
+        // Should handle empty schema mappings without errors
+        assertTrue(result.getOutput().contains("generateTest"));
+        assertFalse(result.getOutput().contains("FAILED"));
+    }
+
+    @Test
+    void testAllMappingTypesWorkTogether() throws IOException {
+        String buildFileContent = """
+            plugins {
+                id 'java'
+                id 'com.guidedbyte.openapi-modelgen'
+            }
+
+            openapiModelgen {
+                defaults {
+                    outputDir "build/generated"
+                    importMappings([
+                        'UUID': 'java.util.UUID'
+                    ])
+                    typeMappings([
+                        'string+uuid': 'UUID'
+                    ])
+                    schemaMappings([
+                        'Pet': 'Animal'
+                    ])
+                    additionalProperties([
+                        'library': 'spring-boot'
+                    ])
+                    openapiNormalizer([
+                        'REFACTOR_ALLOF_WITH_PROPERTIES_ONLY': 'true'
+                    ])
+                }
+                specs {
+                    test {
+                        inputSpec "src/main/resources/openapi/test.yaml"
+                        modelPackage "com.example.model"
+                        importMappings([
+                            'BigDecimal': 'java.math.BigDecimal'
+                        ])
+                        typeMappings([
+                            'string+date': 'LocalDate'
+                        ])
+                        schemaMappings([
+                            'User': 'Person'
+                        ])
+                        additionalProperties([
+                            'reactive': 'true'
+                        ])
+                        openapiNormalizer([
+                            'SIMPLIFY_ONEOF_ANYOF': 'true'
+                        ])
+                    }
+                }
+            }
+            """;
+        Files.write(buildFile.toPath(), buildFileContent.getBytes());
+
+        BuildResult result = createGradleRunner(testProjectDir)
+            .withArguments("tasks", "--group=openapi modelgen", "--stacktrace")
+            .build();
+
+        // Should compile and configure all mapping types without errors
         assertTrue(result.getOutput().contains("generateTest"));
         assertFalse(result.getOutput().contains("FAILED"));
     }
