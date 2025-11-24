@@ -44,7 +44,7 @@ dependencies {
 configurations.all {
     resolutionStrategy {
         // CVE-2025-48924: Force commons-lang3 to secure version 3.18.0+
-        force 'org.apache.commons:commons-lang3:3.18.0'
+        force 'org.apache.commons:commons-lang3:3.20.0'
 
         // Explicit resolution for all commons-lang3 transitive dependencies
         eachDependency { DependencyResolveDetails details ->
