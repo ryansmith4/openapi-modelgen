@@ -371,7 +371,7 @@ public class TaskConfigurationService implements Serializable {
      * <p>This method ensures proper tracking of inputs and outputs for Gradle's
      * incremental build and build cache features.</p>
      *
-     * <h3>Key Design Decisions:</h3>
+     * <p><strong>Key Design Decisions:</strong></p>
      * <ul>
      *   <li>Each spec automatically gets its own output subdirectory (e.g., build/generated/openapi/pets,
      *       build/generated/openapi/orders) unless explicitly overridden at the spec level.

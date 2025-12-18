@@ -29,7 +29,7 @@ import java.io.IOException;
  *   <li>Creating necessary marker files for Gradle validation</li>
  * </ul>
  *
- * <h3>Caching and Up-to-Date Behavior:</h3>
+ * <p><strong>Caching and Up-to-Date Behavior:</strong></p>
  * <p>The task uses Gradle's standard caching mechanisms with an additional safety check:</p>
  * <ul>
  *   <li>Inputs are tracked via {@code @Nested TemplateConfiguration} (includes user templates,
