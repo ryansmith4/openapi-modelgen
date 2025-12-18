@@ -85,7 +85,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
                   result.getOutput().contains("BUILD SUCCESSFUL"));
         
         // Verify generated files exist
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/minimal");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/minimal/src/main/java/com/example/minimal");
         assertTrue(generatedDir.exists(), "Generated directory should exist");
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -143,7 +143,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateMinimal")).getOutcome());
         
         // Verify generated files exist
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/minimal");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/minimal/src/main/java/com/example/minimal");
         assertTrue(generatedDir.exists());
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -259,7 +259,7 @@ public class LiveTemplatePrecedenceTest extends BaseTestKitTest {
         // Then: Template variables should be expanded in generated files
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateMinimal")).getOutcome());
         
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/minimal");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/minimal/src/main/java/com/example/minimal");
         assertTrue(generatedDir.exists());
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));

@@ -345,6 +345,7 @@ public class ResolvedSpecConfig {
         private String modelPackage;
         private String generatorName = PluginConstants.DEFAULT_GENERATOR_NAME;
         private String outputDir = "build/" + PluginConstants.GENERATED_DIR + "/" + PluginConstants.SOURCES_DIR + "/" + PluginConstants.OPENAPI_DIR;
+        private boolean specOverridesOutputDir = false; // Track if spec explicitly set outputDir
         private String userTemplateDir;
         private String userTemplateCustomizationsDir;
         private String modelNamePrefix; // No default value
@@ -505,6 +506,7 @@ public class ResolvedSpecConfig {
             // Optional overrides
             if (spec.getOutputDir().isPresent()) {
                 this.outputDir = spec.getOutputDir().get();
+                this.specOverridesOutputDir = true; // User explicitly set outputDir at spec level
             }
             if (spec.getUserTemplateDir().isPresent()) {
                 this.userTemplateDir = spec.getUserTemplateDir().get();
@@ -576,7 +578,21 @@ public class ResolvedSpecConfig {
             if (modelPackage == null || modelPackage.trim().isEmpty()) {
                 throw new IllegalArgumentException("modelPackage is required for spec: " + specName);
             }
-            
+
+            // CRITICAL: Append specName to outputDir when not explicitly overridden at spec level
+            // This prevents build cache conflicts when multiple specs share the same default outputDir.
+            // OpenAPI Generator's @OutputDirectory caches the entire directory, so shared directories
+            // can cause one spec's cache restore to overwrite files from other specs.
+            // By giving each spec its own subdirectory, we ensure clean cache separation.
+            if (!specOverridesOutputDir) {
+                // Normalize path separators and ensure no trailing slash before appending
+                String normalizedDir = outputDir.replace('\\', '/');
+                while (normalizedDir.endsWith("/")) {
+                    normalizedDir = normalizedDir.substring(0, normalizedDir.length() - 1);
+                }
+                this.outputDir = normalizedDir + "/" + specName;
+            }
+
             return new ResolvedSpecConfig(this);
         }
     }

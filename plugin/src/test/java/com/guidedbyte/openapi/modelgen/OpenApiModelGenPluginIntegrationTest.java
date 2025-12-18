@@ -107,7 +107,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify generated files exist
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/pets/src/main/java/com/example/model/pets");
         assertTrue(generatedDir.exists(), "Generated directory should exist");
         
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith("Dto.java"));
@@ -292,7 +292,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify custom template was used (check for custom comment in generated files)
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/pets/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
         assertNotNull(generatedFiles);
         assertTrue(generatedFiles.length > 0);
@@ -376,7 +376,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         // Then: Generated files should contain Lombok annotations
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/pets/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
         assertNotNull(generatedFiles);
         assertTrue(generatedFiles.length > 0);
@@ -428,7 +428,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         // Then: Template variables should be resolved
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/pets/src/main/java/com/example/model/pets");
         File[] generatedFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
         assertNotNull(generatedFiles);
         assertTrue(generatedFiles.length > 0);

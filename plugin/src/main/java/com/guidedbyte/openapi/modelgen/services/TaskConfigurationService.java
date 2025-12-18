@@ -67,7 +67,7 @@ public class TaskConfigurationService implements Serializable {
         ProjectLayout projectLayout = project.getLayout();
         ObjectFactory objectFactory = project.getObjects();
         ProviderFactory providerFactory = project.getProviders();
-        
+
         // Create individual tasks for each spec
         extension.getSpecs().forEach((specName, specConfig) -> {
             String taskName = PluginConstants.TASK_PREFIX + capitalize(specName);
@@ -93,7 +93,7 @@ public class TaskConfigurationService implements Serializable {
             tasks.register(taskName, GenerateTask.class, task -> {
                 // Configure the task with the prepare task provider
                 configureGenerateTask(task, extension, specConfig, specName, project, projectLayout, objectFactory, providerFactory, finalPrepareTask);
-                
+
                 // Configure incremental build support
                 configureIncrementalBuild(task, projectLayout, extension, specConfig);
             });
@@ -124,7 +124,7 @@ public class TaskConfigurationService implements Serializable {
         }
         
         // Create clean task for removing generated code and caches
-        createCleanTask(tasks, extension, projectLayout);
+        createCleanTask(tasks, extension, projectLayout, project);
         
         // Create help task with usage information
         createHelpTask(tasks, extension);
@@ -367,39 +367,113 @@ public class TaskConfigurationService implements Serializable {
     
     /**
      * Configures incremental build support for a GenerateTask.
-     * 
+     *
+     * <p>This method ensures proper tracking of inputs and outputs for Gradle's
+     * incremental build and build cache features.</p>
+     *
+     * <h3>Key Design Decisions:</h3>
+     * <ul>
+     *   <li>Each spec automatically gets its own output subdirectory (e.g., build/generated/openapi/pets,
+     *       build/generated/openapi/orders) unless explicitly overridden at the spec level.
+     *       This prevents build cache conflicts where one spec's cached output could overwrite
+     *       another spec's files.</li>
+     *   <li>We use upToDateWhen to check if THIS SPECIFIC SPEC's model package
+     *       directory exists and contains generated files.</li>
+     *   <li>We do NOT add unnecessary internal properties that could cause cache misses.</li>
+     * </ul>
+     *
      * @param task the GenerateTask to configure
      * @param projectLayout the project layout for path resolution
      * @param extension the plugin extension containing configuration
      * @param specConfig the specification configuration
      */
-    public void configureIncrementalBuild(GenerateTask task, ProjectLayout projectLayout, 
+    public void configureIncrementalBuild(GenerateTask task, ProjectLayout projectLayout,
                                         OpenApiModelGenExtension extension, SpecConfig specConfig) {
-        
+
         // Input files - resolve inputSpec path relative to project directory
         String inputSpecPath = task.getInputSpec().get();
         File inputSpecFile = projectLayout.getProjectDirectory().file(inputSpecPath).getAsFile();
         task.getInputs().file(inputSpecFile)
                 .withPropertyName("openApiSpecFile")
                 .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE);
-        
-        // Template directory - Skip this as GenerateTask already declares templateDir inputs
-        // if (task.getTemplateDir().isPresent()) {
-        //     File templateDir = new File(task.getTemplateDir().get());
-        //     if (templateDir.exists()) {
-        //         task.getInputs().dir(templateDir)
-        //                 .withPropertyName("templateDir")
-        //                 .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE);
-        //     }
-        // }
-        
-        // Output directory - Skip this as GenerateTask already declares its outputs
-        // task.getOutputs().dir(task.getOutputDir()).withPropertyName("outputDir");
-        
-        // Configuration properties that affect output
-        Map<String, Object> outputAffectingProps = extractOutputAffectingProperties(extension, specConfig);
-        configureInternalProperties(task, projectLayout, outputAffectingProps);
-        
+
+        // VERSION TRACKING FOR BUILD CACHE INVALIDATION
+        // Include plugin and OpenAPI Generator versions as inputs so cache is automatically
+        // invalidated when either version changes. This prevents stale cache issues after upgrades.
+        String pluginVersion = com.guidedbyte.openapi.modelgen.utils.VersionUtils.getCurrentPluginVersion();
+        if (pluginVersion != null) {
+            task.getInputs().property("openapi.modelgen.pluginVersion", pluginVersion);
+            logger.debug("Added plugin version to cache key: {}", pluginVersion);
+        }
+
+        // Note: OpenAPI Generator version is already tracked by OpenAPI Generator's GenerateTask
+        // as part of its classpath (task implementation version). No need to duplicate.
+
+        // NOTE: Each spec automatically gets its own output subdirectory (via ResolvedSpecConfig),
+        // so build cache conflicts are avoided. No need to disable caching.
+
+        // IMPORTANT: We intentionally do NOT declare outputDir as task.getOutputs().dir()
+        // because multiple specs may share the same base outputDir. When multiple tasks
+        // declare the same directory as output, Gradle's behavior is undefined and can
+        // cause tasks to be incorrectly skipped or cached incorrectly.
+        //
+        // Instead, we rely on:
+        // 1. OpenAPI Generator's own output declarations (which are more specific)
+        // 2. Our upToDateWhen check below (which verifies spec-specific outputs)
+
+        // Configure up-to-date check to detect missing outputs for THIS SPECIFIC SPEC
+        // This ensures tasks re-run after 'clean' even if inputs haven't changed
+        task.getOutputs().upToDateWhen(t -> {
+            // Check 1: Output directory must be configured
+            if (!task.getOutputDir().isPresent()) {
+                logger.debug("No output directory configured, task will run");
+                return false;
+            }
+
+            // Check 2: Model package must be configured
+            if (!task.getModelPackage().isPresent()) {
+                logger.debug("No model package configured, task will run");
+                return false;
+            }
+
+            String outputDirPath = task.getOutputDir().get();
+            String modelPackage = task.getModelPackage().get();
+
+            // Convert model package to directory path (com.example.api -> com/example/api)
+            String packagePath = modelPackage.replace('.', '/');
+
+            // The full path where this spec's models should be generated
+            // OpenAPI Generator outputs to: {outputDir}/src/main/java/{packagePath}/
+            File modelPackageDir = new File(outputDirPath, "src/main/java/" + packagePath);
+
+            // Check 3: The specific model package directory must exist
+            if (!modelPackageDir.exists()) {
+                logger.debug("Model package directory doesn't exist, task will run: {}", modelPackageDir);
+                return false;
+            }
+
+            // Check 4: The directory must contain at least one .java file
+            File[] javaFiles = modelPackageDir.listFiles((dir, name) -> name.endsWith(".java"));
+            if (javaFiles == null || javaFiles.length == 0) {
+                logger.debug("Model package directory has no .java files, task will run: {}", modelPackageDir);
+                return false;
+            }
+
+            logger.debug("Found {} generated files in {}, deferring to Gradle up-to-date check",
+                        javaFiles.length, modelPackageDir);
+
+            // Outputs exist for this specific spec - defer to Gradle's normal up-to-date check
+            // based on input file timestamps, configuration properties, etc.
+            return true;
+        });
+
+        // NOTE: We intentionally do NOT add internal properties as inputs.
+        // Previously, internal.templateCacheDirectory and internal.debugProperties
+        // were added as input properties, which could cause inconsistent cache behavior:
+        // - Absolute paths change between machines/environments
+        // - Debug property Maps may serialize inconsistently
+        // The OpenAPI Generator's GenerateTask handles its own input/output tracking.
+
         logger.debug("Configured incremental build for task: {}", task.getName());
     }
     
@@ -428,14 +502,18 @@ public class TaskConfigurationService implements Serializable {
     }
     
     /**
-     * Creates the clean task for removing generated code and clearing caches.
-     * 
+     * Creates the clean task for removing generated code and clearing plugin caches.
+     *
+     * <p>This task cleans plugin-specific caches (template work directories, global template cache).
+     * For Gradle's build cache issues, users should use the built-in {@code gradle cleanBuildCache}.</p>
+     *
      * @param tasks the task container to register the clean task with
      * @param extension the plugin extension containing configuration
      * @param projectLayout the project layout for path resolution
+     * @param project the Gradle project (unused, kept for API compatibility)
      */
-    private void createCleanTask(TaskContainer tasks, OpenApiModelGenExtension extension, ProjectLayout projectLayout) {
-        // Extract serializable data at configuration time
+    private void createCleanTask(TaskContainer tasks, OpenApiModelGenExtension extension,
+                                  ProjectLayout projectLayout, Project project) {
         Map<String, String> specOutputDirs = new HashMap<>();
         for (Map.Entry<String, SpecConfig> entry : extension.getSpecs().entrySet()) {
             String specName = entry.getKey();
@@ -496,13 +574,19 @@ public class TaskConfigurationService implements Serializable {
                 // Also clear the session cache managed by TemplateCacheManager
                 // Since this is in-memory, we can't clear it from here, but the deletion
                 // of working directories and global cache will force cache misses
-                
+
                 if (!anythingDeleted) {
                     System.out.println("No generated files or caches to clean");
                 } else {
                     System.out.printf("%nSuccessfully cleaned all generated models and template caches%n");
                     System.out.println("Next generation will extract fresh templates and rebuild caches");
                 }
+
+                // Show helpful tips for persistent issues
+                System.out.println();
+                System.out.println("If you experience intermittent generation issues, also try:");
+                System.out.println("   gradle cleanBuildCache     (clears Gradle's build cache)");
+                System.out.println("   --no-build-cache           (bypasses cache for one build)");
             });
         });
     }
@@ -842,56 +926,7 @@ public class TaskConfigurationService implements Serializable {
         
         // Global properties - let OpenAPI Generator use its defaults
     }
-    
-    /**
-     * Extracts properties that affect output generation for incremental builds.
-     * 
-     * @param extension the plugin extension containing configuration
-     * @param specConfig the specification configuration
-     * @return map of properties that affect output generation
-     */
-    private Map<String, Object> extractOutputAffectingProperties(OpenApiModelGenExtension extension, SpecConfig specConfig) {
-        Map<String, Object> outputAffecting = new HashMap<>();
-        
-        // Spec configuration that affects output
-        outputAffecting.put("inputSpec", specConfig.getInputSpec().getOrNull());
-        outputAffecting.put("modelPackage", specConfig.getModelPackage().getOrNull());
-        outputAffecting.put("modelNamePrefix", specConfig.getModelNamePrefix().getOrNull());
-        outputAffecting.put("modelNameSuffix", specConfig.getModelNameSuffix().getOrNull());
-        
-        // Config options that affect output
-        if (specConfig.getConfigOptions().isPresent()) {
-            for (Map.Entry<String, String> entry : specConfig.getConfigOptions().get().entrySet()) {
-                outputAffecting.put("configOptions." + entry.getKey(), entry.getValue());
-            }
-        }
-        
-        return outputAffecting;
-    }
-    
-    /**
-     * Configures internal properties for incremental builds.
-     * 
-     * @param task the GenerateTask to configure
-     * @param projectLayout the project layout for path resolution
-     * @param additionalProps additional properties to include
-     */
-    private void configureInternalProperties(GenerateTask task, ProjectLayout projectLayout, Map<String, Object> additionalProps) {
-        // Mark internal properties that shouldn't trigger rebuilds
-        task.getInputs().property("internal.templateCacheDirectory", 
-                projectLayout.getBuildDirectory().dir("plugin-templates").get().getAsFile().getAbsolutePath())
-                .optional(true);
-        
-        // Add debug properties
-        Map<String, String> debugProps = new HashMap<>();
-        for (Map.Entry<String, Object> entry : additionalProps.entrySet()) {
-            debugProps.put(entry.getKey(), String.valueOf(entry.getValue()));
-        }
-        
-        task.getInputs().property("internal.debugProperties", debugProps).optional(true);
-    }
-    
-    
+
     /**
      * Expands template variables recursively (e.g., {{copyright}} containing {{currentYear}}).
      * 

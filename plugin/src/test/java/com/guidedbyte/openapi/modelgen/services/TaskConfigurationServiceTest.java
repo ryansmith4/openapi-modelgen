@@ -137,9 +137,11 @@ class TaskConfigurationServiceTest {
         // Then
         assertEquals("test-spec.yaml", task.getInputSpec().get());
         assertEquals("com.example.test", task.getModelPackage().get());
-        // OutputDir should be absolute path ending with the expected relative path
+        // OutputDir should be absolute path ending with the expected relative path + spec name
+        // (spec name "test" is appended when not explicitly overridden at spec level)
         String outputDir = task.getOutputDir().get();
-        assertTrue(outputDir.endsWith("build" + File.separator + "generated" + File.separator + "sources" + File.separator + "openapi"));
+        assertTrue(outputDir.endsWith("build" + File.separator + "generated" + File.separator + "sources" + File.separator + "openapi" + File.separator + "test"),
+                "OutputDir should end with spec-specific subdirectory, but was: " + outputDir);
         assertEquals("Dto", task.getModelNameSuffix().get());
     }
 

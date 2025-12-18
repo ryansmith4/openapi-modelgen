@@ -89,7 +89,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
                   result.getOutput().contains("BUILD SUCCESSFUL"));
         
         // Verify generated files contain plugin template content
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/test/src/main/java/com/example/test");
         assertTrue(generatedDir.exists(), "Generated directory should exist");
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -140,7 +140,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
         // Verify generated files exist
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/test/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -192,7 +192,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
         // Then: Should succeed despite defaults having validateSpec true
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/test/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));
@@ -311,7 +311,7 @@ public class TemplatePrecedenceTest extends BaseTestKitTest {
         // Then: Generated files should contain expanded variables
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generateTest")).getOutcome());
         
-        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/test");
+        File generatedDir = new File(testProjectDir, "build/generated/sources/openapi/test/src/main/java/com/example/test");
         assertTrue(generatedDir.exists());
         
         File[] javaFiles = generatedDir.listFiles((dir, name) -> name.endsWith(".java"));

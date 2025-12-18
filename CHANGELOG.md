@@ -5,9 +5,22 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Development towards v2.1.1
+## [v2.2.0] - 2025-12-18
 
 ### ✨ Features
+
+- **Automatic Java Integration**: Plugin now automatically integrates with Java plugin
+  - Automatically registers generated source directories with main sourceSet
+  - Automatically wires `compileJava` to depend on `generateAllModels`
+  - **No manual `sourceSets` or `dependsOn` configuration required**
+  - Each spec's generated sources registered individually for correct IDE support
+
+- **Spec-Specific Output Directories**: Each spec now generates to its own subdirectory
+  - Default outputDir structure: `build/generated/sources/openapi/{specName}/src/main/java/`
+  - Example: `pets` spec → `build/generated/sources/openapi/pets/src/main/java/`
+  - Example: `orders` spec → `build/generated/sources/openapi/orders/src/main/java/`
+  - **Prevents Gradle build cache conflicts** that caused intermittent missing files
+  - Explicit `outputDir` at spec level still respected (no spec name appended)
 
 - **Schema Mappings**: Added `schemaMappings` configuration option for OpenAPI Generator
   - Map OpenAPI schema names to custom Java class names at global and spec levels
@@ -17,10 +30,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example: `schemaMappings(['Pet': 'Animal', 'User': 'Person'])`
   - See [configuration.md](docs/configuration.md#schema-mappings) for details
 
+### 🐛 Bug Fixes
+
+- **Fixed Intermittent Code Generation Failures**: Resolved issue where generated models were sometimes missing after `clean build`
+  - Root cause: OpenAPI Generator's `@OutputDirectory` annotation cached the entire shared outputDir
+  - When Gradle restored cached outputs for one spec, it could overwrite files from other specs
+  - Solution: Each spec now has its own output subdirectory, ensuring isolated cache entries
+  - Issue reported in [OPENAPI_MODELGEN_BUG_REPORT.md](OPENAPI_MODELGEN_BUG_REPORT.md)
+
+- **Fixed Missing Task Dependencies**: `compileJava` now automatically depends on `generateAllModels`
+  - Previously required manual `compileJava.dependsOn generateAllModels` configuration
+  - Now handled automatically when Java plugin is present
+
+### 🔧 Improvements
+
+- **Improved Incremental Build Tracking**: Template customization directories are now properly tracked
+  - YAML customization file changes now correctly invalidate task outputs
+  - Uses `@InputDirectory` annotation for content-based change detection
+
+- **Enhanced Task Output Validation**: PrepareTemplateDirectoryTask now validates outputs exist
+  - Added `upToDateWhen` check to detect missing or incomplete outputs
+  - Tasks automatically re-run if output directory or marker file is missing
+
+### 💥 Breaking Changes
+
+- **Output Directory Structure Changed**: Generated files now in spec-specific subdirectories
+  - **Before**: `build/generated/sources/openapi/src/main/java/{package}/`
+  - **After**: `build/generated/sources/openapi/{specName}/src/main/java/{package}/`
+  - **Migration**: Remove manual `sourceSets` configuration - plugin handles it automatically
+  - **Opt-out**: Set explicit `outputDir` at spec level to use custom path without spec name
+
 ### 📚 Documentation
 
 - Added comprehensive schema mappings documentation with use cases and examples
 - Updated configuration.md with schema mappings section and examples
+- Updated README Quick Start to remove manual sourceSet/dependsOn configuration
+- Added migration notes for users upgrading from v2.1.x
 
 ---
 

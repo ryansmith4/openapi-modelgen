@@ -10,10 +10,16 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 import org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +166,81 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             }
             
             taskConfigurationService.createTasksForSpecs(proj, extension);
+
+            // Integrate with Java plugin if present (automatic source set and compile dependency setup)
+            configureJavaIntegration(proj, extension);
         });
+    }
+
+    /**
+     * Configures automatic integration with the Java plugin when present.
+     *
+     * <p>This method handles:</p>
+     * <ul>
+     *   <li>Registering generated sources with the main source set (one directory per spec)</li>
+     *   <li>Wiring compileJava to depend on generateAllModels</li>
+     * </ul>
+     *
+     * <p>Each spec automatically gets its own output subdirectory to prevent build cache conflicts.
+     * For example, with specs "pets" and "orders", the plugin registers:</p>
+     * <ul>
+     *   <li>{@code build/generated/sources/openapi/pets/src/main/java}</li>
+     *   <li>{@code build/generated/sources/openapi/orders/src/main/java}</li>
+     * </ul>
+     *
+     * <p>This eliminates the need for users to manually configure sourceSets or task dependencies.</p>
+     *
+     * @param project the Gradle project
+     * @param extension the plugin extension containing configuration
+     */
+    private void configureJavaIntegration(Project project, OpenApiModelGenExtension extension) {
+        // Only integrate if Java plugin is applied
+        if (!project.getPlugins().hasPlugin(JavaPlugin.class)) {
+            logger.debug("Java plugin not found - skipping automatic source set integration");
+            return;
+        }
+
+        // Skip if no specs are configured
+        if (extension.getSpecs().isEmpty()) {
+            logger.debug("No specs configured - skipping Java integration");
+            return;
+        }
+
+        try {
+            JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+            SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+
+            // Collect all unique output directories from specs
+            extension.getSpecs().forEach((specName, specConfig) -> {
+                ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
+                String outputDir = resolvedConfig.getOutputDir();
+
+                // The OpenAPI Generator outputs to {outputDir}/src/main/java
+                File generatedSourcesDir = new File(project.getProjectDir(), outputDir + "/src/main/java");
+
+                // Register with source set if not already present
+                if (!mainSourceSet.getJava().getSrcDirs().contains(generatedSourcesDir)) {
+                    mainSourceSet.getJava().srcDir(generatedSourcesDir);
+                    logger.info("Registered generated sources directory: {}", generatedSourcesDir.getAbsolutePath());
+                }
+            });
+
+            // Wire compileJava to depend on generateAllModels
+            TaskProvider<?> generateAllModelsTask = project.getTasks().named(PluginConstants.TASK_ALL_MODELS);
+            project.getTasks().withType(JavaCompile.class).configureEach(compileTask -> {
+                // Only configure main compile task (compileJava), not test compile
+                if (compileTask.getName().equals("compileJava")) {
+                    compileTask.dependsOn(generateAllModelsTask);
+                    logger.info("Configured {} to depend on {}", compileTask.getName(), PluginConstants.TASK_ALL_MODELS);
+                }
+            });
+
+            logger.info("Java plugin integration configured successfully");
+
+        } catch (Exception e) {
+            logger.warn("Failed to configure Java plugin integration: {}. " +
+                       "Manual configuration may be required.", e.getMessage());
+        }
     }
 
     /**

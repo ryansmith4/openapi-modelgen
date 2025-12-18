@@ -48,19 +48,17 @@ openapiModelgen {
 ./gradlew generateHelp
 ```
 
-### 4. Integrate with Build
+### 4. Build Integration (Automatic)
 
-```gradle
-sourceSets {
-    main {
-        java {
-            srcDirs += file("build/generated/sources/openapi/src/main/java")
-        }
-    }
-}
+**No manual configuration required!** The plugin automatically:
+- Registers generated source directories with the main sourceSet
+- Wires `compileJava` to depend on `generateAllModels`
 
-compileJava.dependsOn generateAllModels
-```
+Each spec generates to its own subdirectory for build cache isolation:
+- `pets` → `build/generated/sources/openapi/pets/src/main/java/`
+- `orders` → `build/generated/sources/openapi/orders/src/main/java/`
+
+Just run `./gradlew build` and everything works.
 
 ## ✨ Key Features
 

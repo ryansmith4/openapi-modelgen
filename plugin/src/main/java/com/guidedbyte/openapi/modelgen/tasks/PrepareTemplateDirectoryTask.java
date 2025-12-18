@@ -28,10 +28,56 @@ import java.io.IOException;
  *   <li>Extracting original templates when requested</li>
  *   <li>Creating necessary marker files for Gradle validation</li>
  * </ul>
+ *
+ * <h3>Caching and Up-to-Date Behavior:</h3>
+ * <p>The task uses Gradle's standard caching mechanisms with an additional safety check:</p>
+ * <ul>
+ *   <li>Inputs are tracked via {@code @Nested TemplateConfiguration} (includes user templates,
+ *       customizations directories, template variables, etc.)</li>
+ *   <li>Outputs are tracked via {@code @OutputDirectory}</li>
+ *   <li>An {@code upToDateWhen} check verifies the output directory exists with the marker file,
+ *       ensuring the task re-runs if outputs are missing (e.g., after external deletion)</li>
+ * </ul>
  */
 @CacheableTask
 public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
     private static final Logger logger = PluginLoggerFactory.getLogger(PrepareTemplateDirectoryTask.class);
+
+    /**
+     * Constructor that configures the up-to-date check for output validation.
+     * This ensures the task re-runs if the output directory is missing or incomplete,
+     * providing a safety net similar to the GenerateTask's upToDateWhen check.
+     */
+    public PrepareTemplateDirectoryTask() {
+        // Add upToDateWhen check to detect missing or incomplete outputs
+        // This is a safety net - if outputs are deleted externally, the task will re-run
+        getOutputs().upToDateWhen(task -> {
+            // Get the output directory - if not set, task must run
+            if (!getOutputDirectory().isPresent()) {
+                logger.debug("Output directory not configured, task will run");
+                return false;
+            }
+
+            File outputDir = getOutputDirectory().get().getAsFile();
+
+            // If output directory doesn't exist, task must run
+            if (!outputDir.exists()) {
+                logger.debug("Output directory doesn't exist, task will run: {}", outputDir);
+                return false;
+            }
+
+            // Check for marker file that indicates successful completion
+            File markerFile = new File(outputDir, PluginConstants.TEMPLATE_MARKER_FILE);
+            if (!markerFile.exists()) {
+                logger.debug("Marker file missing, task will run: {}", markerFile);
+                return false;
+            }
+
+            // Outputs appear valid, defer to Gradle's normal up-to-date check
+            // based on input files (templates, customizations) and properties
+            return true;
+        });
+    }
     
     /**
      * Provides access to Gradle's file system operations for efficient file copying and deletion.

@@ -150,7 +150,8 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
                     pets {
                         inputSpec "${project.projectDir}/src/main/resources/openapi-spec/pets.yaml"
                         modelPackage "com.example.model.pets"
-                        outputDir "build/generated/sources/openapi"
+                        // Note: outputDir not set at spec level, so it will use default + spec name subdirectory
+                        // (build/generated/sources/openapi/pets)
                     }
                 }
             }
@@ -166,7 +167,7 @@ public class SimpleIntegrationTest extends BaseTestKitTest {
         assertEquals(TaskOutcome.SUCCESS, Objects.requireNonNull(result.task(":generatePets")).getOutcome());
         
         // Verify generated files exist in the default location (build/generated/sources/openapi)
-        File generatedPackageDir = new File(testProjectDir, "build/generated/sources/openapi/src/main/java/com/example/model/pets");
+        File generatedPackageDir = new File(testProjectDir, "build/generated/sources/openapi/pets/src/main/java/com/example/model/pets");
         assertTrue(generatedPackageDir.exists(), "Generated directory should exist");
         
         File[] generatedFiles = generatedPackageDir.listFiles((dir, name) -> name.endsWith(".java"));

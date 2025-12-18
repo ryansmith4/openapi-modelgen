@@ -120,6 +120,22 @@ public class TemplateConfiguration implements Serializable {
     @Input
     @Optional
     public String getUserCustomizationsDirectory() { return userCustomizationsDirectory; }
+
+    /**
+     * Gets the user customizations directory as a file input for Gradle's incremental build tracking.
+     * This ensures that changes to YAML customization files properly invalidate the task.
+     * Without this, only the path string is tracked, not the actual file contents.
+     */
+    @InputDirectory
+    @Optional
+    @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    public java.io.File getUserCustomizationsDirectoryAsFile() {
+        if (userCustomizationsDirectory == null) {
+            return null;
+        }
+        java.io.File dir = new java.io.File(userCustomizationsDirectory);
+        return dir.exists() && dir.isDirectory() ? dir : null;
+    }
     @Input
     public Map<String, String> getTemplateVariables() { return templateVariables != null ? Collections.unmodifiableMap(templateVariables) : null; }
     @Input

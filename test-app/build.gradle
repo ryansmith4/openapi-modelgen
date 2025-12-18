@@ -55,10 +55,14 @@ openapiModelgen {
         templateVariables([
                 header: "Copyright (c) {{currentYear}} GuidedByte Technologies Inc."
         ])
-        // Schema mappings - maps OpenAPI schema names to custom Java class names
-        schemaMappings([
-            'Pet': 'Animal'  // Maps Pet schema to Animal class name
-        ])
+        // NOTE: schemaMappings requires a corresponding importMappings entry!
+        // Example (commented out - requires existing Animal class):
+        // schemaMappings(['Pet': 'Animal'])
+        // importMappings(['Animal': 'com.example.existing.Animal'])
+        //
+        // Without importMappings, OpenAPI Generator assumes mapped class is in same package,
+        // which causes compilation errors if the class doesn't exist.
+
         // NOTE: importMappings and typeMappings commented out due to OpenAPI Generator bug
         // When using modelNamePrefix/Suffix, these mappings don't work correctly
         // See: https://github.com/OpenAPITools/openapi-generator/issues/19043
@@ -137,14 +141,16 @@ openapiModelgen {
     }
 }
 
-// Add generated sources to compilation
-sourceSets {
-    main {
-        java {
-            srcDirs += file("${layout.buildDirectory.get()}/generated/sources/openapi/src/main/java")
-        }
-    }
-}
+// NOTE: Generated sources are now automatically added by the plugin.
+// The following manual configuration is no longer needed:
+//
+// sourceSets {
+//     main {
+//         java {
+//             srcDirs += file("${layout.buildDirectory.get()}/generated/sources/openapi/src/main/java")
+//         }
+//     }
+// }
 
 tasks.register('listPluginVersions') {
     doLast {
@@ -167,7 +173,10 @@ tasks.register('listPluginVersions') {
     }
 }
 
-// Ensure DTOs are generated before compilation
-afterEvaluate {
-    compileJava.dependsOn generateAllModels
-}
+// NOTE: Task dependency (compileJava.dependsOn generateAllModels) is now
+// automatically configured by the plugin when the Java plugin is present.
+// The following manual configuration is no longer needed:
+//
+// afterEvaluate {
+//     compileJava.dependsOn generateAllModels
+// }

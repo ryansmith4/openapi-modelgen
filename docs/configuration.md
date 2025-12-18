@@ -59,11 +59,20 @@ The plugin comes pre-configured with sensible defaults for **Spring Boot 3 + Jak
 
 ```gradle
 generatorName = "spring"                           // OpenAPI Generator name
-outputDir = "build/generated/sources/openapi"     // Generated code output directory
+outputDir = "build/generated/sources/openapi"     // Base output directory (see note below)
 userTemplateDir = null                             // Custom template directory (not set by default)
 userTemplateCustomizationsDir = null              // YAML customizations directory (not set by default)
 modelNameSuffix = "Dto"                           // Suffix for generated model classes
 ```
+
+> **Note: Spec-Specific Output Directories (v2.2.0+)**
+>
+> Each spec automatically generates to its own subdirectory under the base `outputDir`:
+> - `pets` spec → `build/generated/sources/openapi/pets/src/main/java/`
+> - `orders` spec → `build/generated/sources/openapi/orders/src/main/java/`
+>
+> This prevents Gradle build cache conflicts when multiple specs share the same base directory.
+> If you explicitly set `outputDir` at the **spec level**, it will be used as-is without appending the spec name.
 
 ### Generation Control
 
@@ -384,7 +393,50 @@ defaults {
 - **Standardize naming**: Apply consistent naming conventions across multiple specs
 - **Reuse existing classes**: Map OpenAPI schemas to your existing model classes
 
-**Note:** When a schema mapping is defined, OpenAPI Generator will use the mapped name for the generated class. If you're mapping to an existing class, ensure the schema structure matches your existing class definition.
+**⚠️ IMPORTANT: schemaMappings Requires importMappings**
+
+When using `schemaMappings`, you **MUST** also provide corresponding `importMappings` entries, otherwise OpenAPI Generator will assume the mapped class is in the same package and **compilation will fail** for models that reference the mapped schema.
+
+**Correct Usage:**
+```gradle
+defaults {
+    // Map Pet schema to existing Animal class
+    schemaMappings([
+        'Pet': 'Animal'
+    ])
+
+    // REQUIRED: Tell generator where to import Animal from
+    importMappings([
+        'Animal': 'com.example.domain.Animal'  // Full import path
+    ])
+}
+```
+
+**What Happens Without importMappings:**
+```java
+// Generated code will try to import from SAME package (won't compile):
+package com.example.api.model;
+
+import com.example.api.model.Animal;  // ❌ Animal doesn't exist here!
+
+public class PetOwner {
+    private Animal pet;  // Compilation error
+}
+```
+
+**With Both Mappings:**
+```java
+// Generated code imports correctly:
+package com.example.api.model;
+
+import com.example.domain.Animal;  // ✅ Correct import!
+
+public class PetOwner {
+    private Animal pet;  // Compiles successfully
+}
+```
+
+**Note:** When a schema mapping is defined, OpenAPI Generator will NOT generate a class for that schema. If you're mapping to an existing class, ensure the schema structure matches your existing class definition.
 
 ### OpenAPI Normalizer Rules
 
@@ -731,16 +783,23 @@ openapiModelgen {
 
 ### Schema Mappings Example
 
-Rename generated model classes or resolve naming conflicts:
+Map schemas to existing classes (requires both schemaMappings and importMappings):
 
 ```gradle
 openapiModelgen {
     defaults {
         // Global schema mappings applied to all specs
         schemaMappings([
-            'Pet': 'Animal',              // Rename Pet to Animal
-            'User': 'Person',             // Rename User to Person
-            'ApiResponse': 'Response'     // Rename ApiResponse to Response
+            'Pet': 'Animal',              // Map Pet to existing Animal class
+            'User': 'Person',             // Map User to existing Person class
+            'ApiResponse': 'Response'     // Map ApiResponse to existing Response class
+        ])
+
+        // REQUIRED: Provide import paths for mapped classes
+        importMappings([
+            'Animal': 'com.example.domain.Animal',
+            'Person': 'com.example.domain.Person',
+            'Response': 'com.example.common.Response'
         ])
     }
 
@@ -748,7 +807,7 @@ openapiModelgen {
         pets {
             inputSpec 'src/main/resources/openapi/pets.yaml'
             modelPackage 'com.example.pets'
-            // Uses global mappings: Pet -> Animal
+            // Uses global mappings: Pet -> Animal from com.example.domain
         }
 
         store {
@@ -761,6 +820,13 @@ openapiModelgen {
                 'Order': 'PurchaseOrder',   // Add: Order -> PurchaseOrder
                 'Category': 'ProductCategory' // Add: Category -> ProductCategory
             ])
+
+            // REQUIRED: Provide import paths for spec-specific mappings
+            importMappings([
+                'Product': 'com.example.catalog.Product',
+                'PurchaseOrder': 'com.example.orders.PurchaseOrder',
+                'ProductCategory': 'com.example.catalog.ProductCategory'
+            ])
             // Result: Pet->Product, Order->PurchaseOrder, Category->ProductCategory,
             //         User->Person (from defaults), ApiResponse->Response (from defaults)
         }
@@ -772,23 +838,34 @@ openapiModelgen {
 
 1. **Avoid conflicts with existing classes:**
    ```gradle
-   schemaMappings(['User': 'ApiUser'])  // Your project already has a User class
+   // Your project already has a User class in domain package
+   schemaMappings(['User': 'ApiUser'])
+   importMappings(['ApiUser': 'com.example.api.ApiUser'])
    ```
 
-2. **Apply naming conventions:**
+2. **Map to existing domain entities:**
    ```gradle
    schemaMappings([
-       'pet': 'PetEntity',
-       'user': 'UserEntity',
-       'order': 'OrderEntity'
+       'Pet': 'PetEntity',
+       'User': 'UserEntity',
+       'Order': 'OrderEntity'
+   ])
+   importMappings([
+       'PetEntity': 'com.example.domain.PetEntity',
+       'UserEntity': 'com.example.domain.UserEntity',
+       'OrderEntity': 'com.example.domain.OrderEntity'
    ])
    ```
 
-3. **Simplify schema names:**
+3. **Simplify verbose schema names:**
    ```gradle
    schemaMappings([
        'PetStoreApiResponse': 'Response',
        'PetStoreApiError': 'Error'
+   ])
+   importMappings([
+       'Response': 'com.example.common.Response',
+       'Error': 'com.example.common.Error'
    ])
    ```
 

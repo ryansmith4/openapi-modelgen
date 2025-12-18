@@ -6,6 +6,8 @@ Gradle plugin wrapping OpenAPI Generator with Java DTOs, Lombok support, custom 
 
 ## Key Features
 
+- **Automatic Java Integration**: Auto-registers sourceSets and compileJava dependencies
+- **Spec-Specific OutputDirs**: Each spec → `build/generated/sources/openapi/{specName}/` (prevents cache conflicts)
 - **Template Precedence**: user > plugin YAML > OpenAPI defaults
 - **YAML Customizations**: Modify templates without full overrides
 - **Multi-Level Caching**: 90% faster no-change builds, 70% faster incremental
@@ -14,7 +16,7 @@ Gradle plugin wrapping OpenAPI Generator with Java DTOs, Lombok support, custom 
 - **Configuration Cache Compatible**: Full Gradle compatibility
 - **Template Variables**: Recursive expansion ({{copyright}} → {{currentYear}})
 - **Lombok Integration**: Full annotation support
-- **Comprehensive Testing**: 247+ test methods across 27 test classes passing
+- **Comprehensive Testing**: 257+ test methods across 27 test classes passing
 
 ## ⚠️ CRITICAL: Configuration Cache Compatibility
 
@@ -145,7 +147,7 @@ commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
 - **Services**: `plugin/src/main/java/.../services/`
 - **Tests**: `plugin/src/test/java/.../`
 - **YAML customizations**: `plugin/src/main/resources/templateCustomizations/`
-- **Generated output**: `test-app/build/generated-sources/openapi/`
+- **Generated output**: `build/generated/sources/openapi/{specName}/src/main/java/` (per-spec subdirs)
 - **Global cache**: `~/.gradle/caches/openapi-modelgen/`
 
 ## Common Issues
