@@ -5,6 +5,15 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.2.1] - 2025-12-18
+
+### 🐛 Bug Fixes
+
+- **Fixed CI Workflow**: Updated CI workflow to use correct spec-specific output directory path
+  - Changed verification path from `/openapi/src/main/java/` to `/openapi/pets/src/main/java/`
+
+---
+
 ## [v2.2.0] - 2025-12-18
 
 ### ✨ Features
