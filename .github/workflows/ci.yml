@@ -55,8 +55,8 @@ jobs:
           
       - name: Verify generated code
         run: |
-          # Check that models were generated correctly
-          ls -la test-app/build/generated/sources/openapi/src/main/java/com/guidedbyte/testapp/model/
+          # Check that models were generated correctly (v2.2.0+ uses spec-specific subdirectories)
+          ls -la test-app/build/generated/sources/openapi/pets/src/main/java/com/guidedbyte/testapp/model/
           # Verify Lombok annotations are present
           grep -r "@lombok.Data" test-app/build/generated/sources/openapi/ || echo "Lombok annotations not found"
           
