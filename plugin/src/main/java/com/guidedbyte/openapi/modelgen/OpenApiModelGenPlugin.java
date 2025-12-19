@@ -13,8 +13,8 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 import org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin;
 import org.slf4j.Logger;
@@ -139,7 +139,13 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         // Create our extension
         OpenApiModelGenExtension extension = project.getExtensions()
             .create("openapiModelgen", OpenApiModelGenExtension.class, project);
-        
+
+        // Register generated sources EARLY (before afterEvaluate) when Java plugin is applied
+        // This ensures IntelliJ sync captures the source sets correctly in multi-module projects
+        project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
+            configureJavaSourceSetsEarly(project);
+        });
+
         // Configure tasks after project evaluation
         project.afterEvaluate(proj -> {
             configurationValidator.validateExtensionConfiguration(proj, proj.getLayout(), extension);
@@ -167,78 +173,82 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
             
             taskConfigurationService.createTasksForSpecs(proj, extension);
 
-            // Integrate with Java plugin if present (automatic source set and compile dependency setup)
-            configureJavaIntegration(proj, extension);
+            // Wire compileJava to depend on generateAllModels (source set registration done earlier)
+            configureCompileJavaDependency(proj, extension);
         });
     }
 
     /**
-     * Configures automatic integration with the Java plugin when present.
+     * Registers generated source directories EARLY in the build lifecycle.
      *
-     * <p>This method handles:</p>
-     * <ul>
-     *   <li>Registering generated sources with the main source set (one directory per spec)</li>
-     *   <li>Wiring compileJava to depend on generateAllModels</li>
-     * </ul>
+     * <p>This method is called during plugin application (via {@code plugins.withType(JavaPlugin.class)})
+     * to ensure IntelliJ sync captures the source sets correctly in multi-module projects.</p>
      *
-     * <p>Each spec automatically gets its own output subdirectory to prevent build cache conflicts.
-     * For example, with specs "pets" and "orders", the plugin registers:</p>
-     * <ul>
-     *   <li>{@code build/generated/sources/openapi/pets/src/main/java}</li>
-     *   <li>{@code build/generated/sources/openapi/orders/src/main/java}</li>
-     * </ul>
+     * <p>Uses a convention-based path that doesn't require extension evaluation.
+     * All specs generate to: {@code build/generated/sources/openapi/{specName}/src/main/java}</p>
      *
-     * <p>This eliminates the need for users to manually configure sourceSets or task dependencies.</p>
+     * <p><strong>Configuration cache compatible:</strong> uses ProjectLayout instead of Project for
+     * file resolution.</p>
+     *
+     * @param project the Gradle project
+     */
+    private void configureJavaSourceSetsEarly(Project project) {
+        try {
+            JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+            SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+
+            // Use ProjectLayout for configuration cache compatibility
+            DirectoryProperty buildDir = project.getLayout().getBuildDirectory();
+
+            // Register the convention-based base directory early
+            // All specs generate to: build/generated/sources/openapi/{specName}/src/main/java
+            // By registering the base, Gradle/IntelliJ can discover all spec subdirectories
+            mainSourceSet.getJava().srcDir(
+                buildDir.dir("generated/sources/openapi")
+            );
+
+            logger.debug("Registered generated sources base directory for IntelliJ compatibility");
+
+        } catch (Exception e) {
+            logger.warn("Failed to register generated sources directory early: {}. " +
+                       "IntelliJ may not recognize generated sources until manual sync.", e.getMessage());
+        }
+    }
+
+    /**
+     * Wires compileJava to depend on generateAllModels (after evaluation).
+     *
+     * <p>This method is called in afterEvaluate to ensure the generateAllModels task exists.
+     * Configuration cache compatible using named() instead of getByName().</p>
      *
      * @param project the Gradle project
      * @param extension the plugin extension containing configuration
      */
-    private void configureJavaIntegration(Project project, OpenApiModelGenExtension extension) {
+    private void configureCompileJavaDependency(Project project, OpenApiModelGenExtension extension) {
         // Only integrate if Java plugin is applied
         if (!project.getPlugins().hasPlugin(JavaPlugin.class)) {
-            logger.debug("Java plugin not found - skipping automatic source set integration");
+            logger.debug("Java plugin not found - skipping compileJava dependency setup");
             return;
         }
 
         // Skip if no specs are configured
         if (extension.getSpecs().isEmpty()) {
-            logger.debug("No specs configured - skipping Java integration");
+            logger.debug("No specs configured - skipping compileJava dependency setup");
             return;
         }
 
         try {
-            JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-            SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-
-            // Collect all unique output directories from specs
-            extension.getSpecs().forEach((specName, specConfig) -> {
-                ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
-                String outputDir = resolvedConfig.getOutputDir();
-
-                // The OpenAPI Generator outputs to {outputDir}/src/main/java
-                File generatedSourcesDir = new File(project.getProjectDir(), outputDir + "/src/main/java");
-
-                // Register with source set if not already present
-                if (!mainSourceSet.getJava().getSrcDirs().contains(generatedSourcesDir)) {
-                    mainSourceSet.getJava().srcDir(generatedSourcesDir);
-                    logger.info("Registered generated sources directory: {}", generatedSourcesDir.getAbsolutePath());
-                }
-            });
-
-            // Wire compileJava to depend on generateAllModels
             TaskProvider<?> generateAllModelsTask = project.getTasks().named(PluginConstants.TASK_ALL_MODELS);
-            project.getTasks().withType(JavaCompile.class).configureEach(compileTask -> {
-                // Only configure main compile task (compileJava), not test compile
-                if (compileTask.getName().equals("compileJava")) {
-                    compileTask.dependsOn(generateAllModelsTask);
-                    logger.info("Configured {} to depend on {}", compileTask.getName(), PluginConstants.TASK_ALL_MODELS);
-                }
+
+            // Use named().configure() - configuration cache compatible
+            project.getTasks().named("compileJava").configure(compileTask -> {
+                compileTask.dependsOn(generateAllModelsTask);
             });
 
-            logger.info("Java plugin integration configured successfully");
+            logger.info("Configured compileJava to depend on {}", PluginConstants.TASK_ALL_MODELS);
 
         } catch (Exception e) {
-            logger.warn("Failed to configure Java plugin integration: {}. " +
+            logger.warn("Failed to configure compileJava dependency: {}. " +
                        "Manual configuration may be required.", e.getMessage());
         }
     }

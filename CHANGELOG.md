@@ -5,6 +5,25 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.2.2] - 2025-12-18
+
+### 🐛 Bug Fixes
+
+- **Fixed IntelliJ Multi-Module Source Recognition**: Resolved issue where IntelliJ couldn't find generated DTOs in multi-module projects
+  - Root cause: Source set registration happened in `afterEvaluate`, which was too late for IntelliJ sync in cross-module dependency scenarios
+  - Solution: Register generated sources base directory early via `plugins.withType(JavaPlugin.class)` callback
+  - Uses convention-based path (`build/generated/sources/openapi`) that doesn't require extension evaluation
+  - Configuration cache compatible using `ProjectLayout.getBuildDirectory()`
+
+### 🔧 Technical Details
+
+- Split `configureJavaIntegration()` into two methods for proper timing:
+  - `configureJavaSourceSetsEarly()` - Registers source directories during plugin application (before `afterEvaluate`)
+  - `configureCompileJavaDependency()` - Wires task dependencies in `afterEvaluate`
+- This ensures IntelliJ captures source sets correctly during Gradle sync, enabling proper import resolution across modules
+
+---
+
 ## [v2.2.1] - 2025-12-18
 
 ### 🐛 Bug Fixes
