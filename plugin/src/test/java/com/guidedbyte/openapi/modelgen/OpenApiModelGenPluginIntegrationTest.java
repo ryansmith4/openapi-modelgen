@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.testutil.GeneratorVersion;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -75,7 +76,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -121,7 +122,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -156,7 +157,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -206,7 +207,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -260,7 +261,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -309,7 +310,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -343,7 +344,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -393,7 +394,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -444,7 +445,7 @@ public class OpenApiModelGenPluginIntegrationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             

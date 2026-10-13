@@ -129,10 +129,11 @@ plugin-core = [
     "commons-lang3"
 ]
 
-# Plugin test dependencies  
+# Plugin test dependencies
+# NOTE: the OpenAPI Generator artifacts are deliberately NOT in this bundle. plugin/build.gradle adds
+# them at the version selected by -PopenapiGeneratorVersion (default: openapi-generator-plugin above)
+# so the test matrix can pin older generators without conflict resolution pulling the catalog version.
 plugin-test = [
-    "openapi-generator-gradle-plugin",
-    "openapi-generator",
     "junit-jupiter",
     "mockito-core"
 ]

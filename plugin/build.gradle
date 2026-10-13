@@ -16,26 +16,36 @@ repositories {
     mavenCentral()
 }
 
+// OpenAPI Generator version under test. Single source of truth for the test classpath, the
+// TestKit build scripts (via the 'openapi.generator.version' system property) and any
+// ProjectBuilder-based unit test that instantiates GenerateTask.
+// Override with: gradle plugin:test -PopenapiGeneratorVersion=7.21.0
+def generatorVersionUnderTest = providers.gradleProperty('openapiGeneratorVersion')
+        .orElse(libs.versions.openapi.generator.plugin.asProvider())
+
 dependencies {
     implementation gradleApi()
-    
-    // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled
-    // Consumer projects must provide their own version (7.10.0+)
+
+    // OpenAPI Generator plugin as compileOnly - available for compilation but not bundled.
+    // Consumer projects must provide their own version (7.10.0 through 7.26.0 tested).
+    // Kept at the MINIMUM supported version so nothing newer leaks into main code; the
+    // GenerateTaskPropertyBridge adapts at runtime to the 7.22+ task API.
     compileOnly libs.openapi.generator.gradle.plugin.compat
-    
+
     // OpenAPI Generator core for CodegenConfig API - also compileOnly
     compileOnly libs.openapi.generator.compat
-    
+
     // Static analysis annotations for @SuppressFBWarnings - compileOnly so not bundled
     compileOnly libs.spotbugs.annotations
-    
+
     // Plugin core dependencies (includes security-critical versions)
     implementation libs.bundles.plugin.core
-    
-    // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime
-    testRuntimeOnly libs.openapi.generator.gradle.plugin
-    testImplementation libs.openapi.generator.gradle.plugin
-    testImplementation libs.openapi.generator
+
+    // For TestKit tests, we need the OpenAPI Generator plugin available in the test runtime,
+    // at the version under test (see generatorVersionUnderTest above)
+    testRuntimeOnly "org.openapitools:openapi-generator-gradle-plugin:${generatorVersionUnderTest.get()}"
+    testImplementation "org.openapitools:openapi-generator-gradle-plugin:${generatorVersionUnderTest.get()}"
+    testImplementation "org.openapitools:openapi-generator:${generatorVersionUnderTest.get()}"
     testImplementation libs.bundles.plugin.test
     testImplementation gradleTestKit()
 }
@@ -69,7 +79,10 @@ test {
     
     // Set system properties for TestKit
     systemProperty 'gradle.user.home', gradle.gradleUserHomeDir
-    
+
+    // Tell tests which OpenAPI Generator version is on the classpath (see GeneratorVersion test helper)
+    systemProperty 'openapi.generator.version', generatorVersionUnderTest.get()
+
     // Configure test execution
     testLogging {
         events "passed", "skipped", "failed"
