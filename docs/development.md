@@ -65,7 +65,8 @@ openapi-modelgen/
 
 ### Runtime Dependencies
 
-- **OpenAPI Generator 7.10.0+** (provided by consumer projects)
+- **OpenAPI Generator 7.10.0 through 7.26.0** (provided by consumer projects; every version in the
+  CI matrix under [Running Tests](#running-tests) is verified on each build)
 - **Gradle 8.0+** (for plugin execution)
 
 ## Building
@@ -109,7 +110,7 @@ The project uses Gradle version catalogs for centralized dependency management:
 snakeyaml = "2.3"                    # Fixes CVE-2022-1471 (CRITICAL)
 commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
 
-openapi-generator = "7.14.0"
+openapi-generator = "7.26.0"
 gradle-plugin-publish = "1.3.0"
 lombok = "1.18.36"
 
@@ -166,6 +167,29 @@ The plugin includes comprehensive testing with **247+ test methods across 27 tes
 ```bash
 ./gradlew plugin:test --info
 ```
+
+**Run against a specific OpenAPI Generator version**:
+```bash
+./gradlew plugin:test -PopenapiGeneratorVersion=7.21.0
+```
+
+The `openapiGeneratorVersion` property (default: the catalog version, currently 7.26.0) selects the
+generator artifacts on the test classpath and is passed to tests as the `openapi.generator.version`
+system property. TestKit tests read it through the `GeneratorVersion` helper so their generated
+`plugins {}` blocks always match the injected classpath. CI runs the suite against 7.10.0 (minimum),
+7.14.0, 7.21.0 (last version before the lazy task API rewrite) and 7.26.0 on Java 17 and 21:
+
+```bash
+for v in 7.10.0 7.14.0 7.21.0 7.26.0; do
+  ./gradlew plugin:test -PopenapiGeneratorVersion=$v
+done
+```
+
+The plugin compiles against the minimum version (7.10.0) on purpose. `GenerateTaskPropertyBridge`
+adapts to the 7.22+ task API at runtime, and the matrix, not the compile step, proves that newer
+versions work. A unit test (`NoDirectGenerateTaskFilePropertyAccessTest`) fails the build if main
+code links directly to `GenerateTask.getInputSpec()`, `getOutputDir()`, `getTemplateDir()` or
+`getSchemaLocation()`.
 
 ### Test Categories
 

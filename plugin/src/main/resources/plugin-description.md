@@ -23,11 +23,11 @@ Key Features:
 Requirements:
 • Java 17+
 • Gradle 8.0+  
-• OpenAPI Generator 7.10.0+ (must be applied by consumer project)
+• OpenAPI Generator 7.10.0 through 7.26.0 (must be applied by consumer project; newer versions log a warning)
 
 Basic Usage:
 plugins {
-    id 'org.openapi.generator' version '7.11.0'  // Or your preferred version 7.10.0+
+    id 'org.openapi.generator' version '7.26.0'  // Any version from 7.10.0 through 7.26.0 is tested
     id 'com.guidedbyte.openapi-modelgen'
 }
 
@@ -61,7 +61,7 @@ Generated Tasks:
 The plugin includes comprehensive caching with global persistence across builds and thread-safe parallel processing.
 It provides YAML customizations to enhance code readability while using OpenAPI Generator's official APIs for clean
 template access. Features dynamic plugin customization discovery, template variable expansion, and saveOriginalTemplates
-functionality. It automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0+)
+functionality. It automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0 through 7.26.0 tested, including the 7.22+ lazy task API)
 and integrates seamlessly with corporate dependency management.
 
 For detailed documentation and examples visit: <https://github.com/guidedbyte/openapi-modelgen>

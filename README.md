@@ -12,7 +12,7 @@ detection.
 
 ```gradle
 plugins {
-    id 'org.openapi.generator' version '7.14.0'  // Or your preferred version 7.10.0+
+    id 'org.openapi.generator' version '7.26.0'  // Any version from 7.10.0 through 7.26.0 is tested
     id 'com.guidedbyte.openapi-modelgen' version '@version@'
 }
 ```
@@ -316,7 +316,28 @@ plugins {
 
 - **Java 17+**
 - **Gradle 8.0+**
-- **OpenAPI Generator 7.10.0+** (must be provided by consumer project)
+- **OpenAPI Generator 7.10.0 through 7.26.0** (must be provided by consumer project; see below)
+
+### OpenAPI Generator Compatibility
+
+Every CI run tests the plugin against OpenAPI Generator 7.10.0, 7.14.0, 7.21.0 and 7.26.0, and any
+release in that range works. Newer releases usually work too; the plugin logs a warning at configuration
+time naming the tested range when you are outside it.
+
+OpenAPI Generator 7.22.0 rewrote its Gradle task to the lazy configuration API (`inputSpec`, `outputDir`
+and `templateDir` became `RegularFileProperty` / `DirectoryProperty`) and now runs generation in a Gradle
+Worker with classloader isolation. The plugin adapts to either task API at runtime, so no configuration
+change is needed when you upgrade. What to expect on 7.22.0 and later:
+
+- One extra "Worker isolation" log line per generation task (7.23.0+).
+- Classes referenced by name in generator options (a custom normalizer or generator class) must be
+  declared on the `openApiGeneratorExtra` configuration on 7.25.0+. See
+  [Custom generator classes on OpenAPI Generator 7.23+](docs/configuration.md#custom-generator-classes-on-openapi-generator-723).
+- Generated DTOs differ cosmetically from 7.14.0 output (Jackson and Lombok annotation placement,
+  collection defaults).
+- On 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and
+  `generateJsonSetterNullsAnnotations=false` unless you set them, which silences two warnings per spec
+  without changing generated code.
 
 ## 🤝 Contributing
 

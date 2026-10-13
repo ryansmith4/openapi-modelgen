@@ -62,7 +62,7 @@ public final class PluginConstants {
     /** Minimum tested OpenAPI Generator version. */
     public static final String MIN_OPENAPI_GENERATOR_VERSION = "7.10.0";
     /** Maximum tested OpenAPI Generator version. */
-    public static final String MAX_OPENAPI_GENERATOR_VERSION = "7.14.0";
+    public static final String MAX_OPENAPI_GENERATOR_VERSION = "7.26.0";
     /** Fallback version for OpenAPI Generator when detection fails. */
     public static final String FALLBACK_OPENAPI_GENERATOR_VERSION = "7.11.0";
     /**

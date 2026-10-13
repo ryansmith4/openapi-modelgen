@@ -282,8 +282,12 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
                 project.getLogger().warn("OpenAPI Generator version {} is below the minimum tested version {}. " +
                     "Consider upgrading to ensure compatibility with all plugin features.", version, minTestedVersion);
             } else if (VersionUtils.isVersionAbove(version, maxTestedVersion)) {
-                project.getLogger().info("OpenAPI Generator version {} is newer than the maximum tested version {}. " +
-                    "The plugin should work but some features may behave differently.", version, maxTestedVersion);
+                // Warn, do not fail: a hard upper gate would break on every future generator minor.
+                project.getLogger().warn("OpenAPI Generator version {} is newer than the maximum tested version {}. " +
+                    "This plugin is tested with OpenAPI Generator {} through {} and will most likely work, " +
+                    "but if generation fails with an error mentioning GenerateTask, see the compatibility section " +
+                    "of the README: https://github.com/guidedbyte/openapi-modelgen#openapi-generator-compatibility",
+                    version, maxTestedVersion, minTestedVersion, maxTestedVersion);
             } else {
                 project.getLogger().debug("OpenAPI Generator version {} is within the tested compatibility range", version);
             }

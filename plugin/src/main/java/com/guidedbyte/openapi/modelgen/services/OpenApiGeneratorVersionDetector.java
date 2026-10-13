@@ -73,11 +73,11 @@ public class OpenApiGeneratorVersionDetector {
             "version-conditional template customizations to work correctly.\n\n" +
             "Please ensure the OpenAPI Generator plugin is properly configured:\n" +
             "  plugins {\n" +
-            "    id 'org.openapi.generator' version '7.14.0'\n" +
+            "    id 'org.openapi.generator' version '7.26.0'\n" +
             "  }\n\n" +
             "Or add the dependency explicitly:\n" +
             "  dependencies {\n" +
-            "    implementation 'org.openapitools:openapi-generator:7.14.0'\n" +
+            "    implementation 'org.openapitools:openapi-generator:7.26.0'\n" +
             "  }"
         );
     }
