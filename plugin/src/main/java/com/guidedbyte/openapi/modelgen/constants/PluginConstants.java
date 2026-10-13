@@ -65,6 +65,12 @@ public final class PluginConstants {
     public static final String MAX_OPENAPI_GENERATOR_VERSION = "7.14.0";
     /** Fallback version for OpenAPI Generator when detection fails. */
     public static final String FALLBACK_OPENAPI_GENERATOR_VERSION = "7.11.0";
+    /**
+     * First OpenAPI Generator version that warns when {@code generateJsonIncludeAnnotations} and
+     * {@code generateJsonSetterNullsAnnotations} are unset. The plugin defaults both to {@code false}
+     * from this version on, unless the user sets them.
+     */
+    public static final String JACKSON_ANNOTATION_OPTIONS_MIN_VERSION = "7.25.0";
     /** Literal string returned when version cannot be determined. */
     public static final String UNKNOWN_VERSION = "unknown";
     

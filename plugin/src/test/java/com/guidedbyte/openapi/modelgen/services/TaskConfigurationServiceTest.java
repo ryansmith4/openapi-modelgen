@@ -106,7 +106,8 @@ class TaskConfigurationServiceTest {
         // Then
         assertEquals("Generate models for test OpenAPI specification", task.getDescription());
         assertEquals("openapi modelgen", task.getGroup());
-        assertEquals("test-spec.yaml", task.getInputSpec().get());
+        assertEquals(new File(project.getProjectDir(), "test-spec.yaml").getAbsolutePath(),
+                GenerateTaskPropertyBridge.absolutePath(task, GenerateTaskPropertyBridge.FileProperty.INPUT_SPEC).get());
         assertEquals("com.example.test", task.getModelPackage().get());
         assertEquals("spring", task.getGeneratorName().get());
         assertFalse(task.getValidateSpec().get(), "Validation should be disabled from defaults");
@@ -135,11 +136,12 @@ class TaskConfigurationServiceTest {
                 project, projectLayout, objectFactory, providerFactory, templateConfig, null);
         
         // Then
-        assertEquals("test-spec.yaml", task.getInputSpec().get());
+        assertEquals(new File(project.getProjectDir(), "test-spec.yaml").getAbsolutePath(),
+                GenerateTaskPropertyBridge.absolutePath(task, GenerateTaskPropertyBridge.FileProperty.INPUT_SPEC).get());
         assertEquals("com.example.test", task.getModelPackage().get());
         // OutputDir should be absolute path ending with the expected relative path + spec name
         // (spec name "test" is appended when not explicitly overridden at spec level)
-        String outputDir = task.getOutputDir().get();
+        String outputDir = GenerateTaskPropertyBridge.absolutePath(task, GenerateTaskPropertyBridge.FileProperty.OUTPUT_DIR).get();
         assertTrue(outputDir.endsWith("build" + File.separator + "generated" + File.separator + "sources" + File.separator + "openapi" + File.separator + "test"),
                 "OutputDir should end with spec-specific subdirectory, but was: " + outputDir);
         assertEquals("Dto", task.getModelNameSuffix().get());
@@ -171,7 +173,7 @@ class TaskConfigurationServiceTest {
         
         // Then - outputDir is now resolved to absolute path
         String expectedOutputDir = new File(project.getProjectDir(), "custom/output/dir").getAbsolutePath();
-        assertEquals(expectedOutputDir, task.getOutputDir().get());
+        assertEquals(expectedOutputDir, GenerateTaskPropertyBridge.absolutePath(task, GenerateTaskPropertyBridge.FileProperty.OUTPUT_DIR).get());
         assertEquals("Model", task.getModelNameSuffix().get());
         assertTrue(task.getValidateSpec().get(), "Should use spec-level validation setting");
     }
@@ -221,6 +223,91 @@ class TaskConfigurationServiceTest {
         // Verify no hardcoded additionalModelTypeAnnotations - plugin should not provide fallback configuration
         String additionalAnnotations = task.getConfigOptions().get().get("additionalModelTypeAnnotations");
         assertNull(additionalAnnotations, "Plugin should not provide hardcoded additionalModelTypeAnnotations");
+    }
+
+    @Test
+    void testJacksonAnnotationOptionsDefaultedToFalseOnGenerator725AndLater() {
+        // Given: generator 7.26.0 detected and the user did not set either option
+        taskConfigurationService.setDetectedGeneratorVersion("7.26.0");
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then
+        Map<String, String> options = task.getConfigOptions().get();
+        assertEquals("false", options.get("generateJsonIncludeAnnotations"));
+        assertEquals("false", options.get("generateJsonSetterNullsAnnotations"));
+    }
+
+    @Test
+    void testJacksonAnnotationOptionsNotSetBelowGenerator725() {
+        // Given: generator 7.14.0 detected; the options are unknown to that generator
+        taskConfigurationService.setDetectedGeneratorVersion("7.14.0");
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then
+        Map<String, String> options = task.getConfigOptions().get();
+        assertFalse(options.containsKey("generateJsonIncludeAnnotations"),
+            "Option must not be set below 7.25.0, but was: " + options.get("generateJsonIncludeAnnotations"));
+        assertFalse(options.containsKey("generateJsonSetterNullsAnnotations"),
+            "Option must not be set below 7.25.0, but was: " + options.get("generateJsonSetterNullsAnnotations"));
+    }
+
+    @Test
+    void testJacksonAnnotationOptionsNotSetWhenGeneratorVersionUnknown() {
+        // Given: no detected version
+        taskConfigurationService.setDetectedGeneratorVersion(null);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then
+        Map<String, String> options = task.getConfigOptions().get();
+        assertFalse(options.containsKey("generateJsonIncludeAnnotations"));
+        assertFalse(options.containsKey("generateJsonSetterNullsAnnotations"));
+    }
+
+    @Test
+    void testJacksonAnnotationOptionsUserValuesWinOnGenerator725AndLater() {
+        // Given: generator 7.25.0 detected; user opts in at the defaults level for one option
+        // and at the spec level for the other
+        taskConfigurationService.setDetectedGeneratorVersion("7.25.0");
+        extension.getDefaults().getConfigOptions().put("generateJsonIncludeAnnotations", "true");
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+        specConfig.getConfigOptions().put("generateJsonSetterNullsAnnotations", "true");
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then
+        Map<String, String> options = task.getConfigOptions().get();
+        assertEquals("true", options.get("generateJsonIncludeAnnotations"), "defaults-level user value must be preserved");
+        assertEquals("true", options.get("generateJsonSetterNullsAnnotations"), "spec-level user value must be preserved");
+    }
+
+    private SpecConfig newSpecConfig() {
+        SpecConfig specConfig = new SpecConfig(project);
+        specConfig.getInputSpec().set("test-spec.yaml");
+        specConfig.getModelPackage().set("com.example.test");
+        return specConfig;
+    }
+
+    private void applySpecConfig(GenerateTask task, SpecConfig specConfig) {
+        ProjectLayout projectLayout = project.getLayout();
+        TemplateConfiguration templateConfig = TemplateConfiguration.builder("spring")
+            .templateWorkDir(projectLayout.getBuildDirectory().dir("template-work/spring-test").get().getAsFile().getAbsolutePath())
+            .build();
+        taskConfigurationService.applySpecConfig(task, extension, specConfig, "test",
+                project, projectLayout, project.getObjects(), project.getProviders(), templateConfig, null);
     }
 
     @Test
