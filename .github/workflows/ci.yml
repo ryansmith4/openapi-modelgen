@@ -13,6 +13,10 @@ jobs:
       matrix:
         java-version: [17, 21]
         gradle-version: [8.5]
+        # 7.10.0 = minimum, 7.14.0 = previous ceiling, 7.21.0 = last version before the lazy
+        # task API rewrite, 7.26.0 = current maximum. The 7.21.0/7.26.0 pair proves the
+        # GenerateTaskPropertyBridge on both API generations.
+        openapi-generator-version: ['7.10.0', '7.14.0', '7.21.0', '7.26.0']
 
     steps:
       - name: Checkout code
@@ -39,21 +43,26 @@ jobs:
           # Ensure proper line endings for Linux
           sed -i 's/\r$//' ./test-app/gradlew
 
-      - name: Run tests
-        run: ./gradlew plugin:test --no-daemon --stacktrace
+      - name: Run tests (OpenAPI Generator ${{ matrix.openapi-generator-version }})
+        run: ./gradlew plugin:test -PopenapiGeneratorVersion=${{ matrix.openapi-generator-version }} --no-daemon --stacktrace
 
+      # The remaining steps use the catalog generator version (7.26.0), so run them once per JDK.
       - name: Validate plugin
+        if: matrix.openapi-generator-version == '7.26.0'
         run: ./gradlew plugin:validatePlugin --no-daemon
 
       - name: Publish plugin to local repository
+        if: matrix.openapi-generator-version == '7.26.0'
         run: ./gradlew plugin:publishToMavenLocal --no-daemon
 
       - name: Test integration with test-app
+        if: matrix.openapi-generator-version == '7.26.0'
         run: |
           # Test integration using composite build
           ./gradlew -p test-app generateAllModels --no-daemon
           
       - name: Verify generated code
+        if: matrix.openapi-generator-version == '7.26.0'
         run: |
           # Check that models were generated correctly (v2.2.0+ uses spec-specific subdirectories)
           ls -la test-app/build/generated/sources/openapi/pets/src/main/java/com/guidedbyte/testapp/model/
@@ -61,6 +70,7 @@ jobs:
           grep -r "@lombok.Data" test-app/build/generated/sources/openapi/ || echo "Lombok annotations not found"
           
       - name: Test configuration cache compatibility
+        if: matrix.openapi-generator-version == '7.26.0'
         run: |
           # Test configuration cache with clean build using root gradle
           ./gradlew -p test-app clean generatePets --configuration-cache --no-daemon
@@ -71,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: test-results-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}
+          name: test-results-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}-oag${{ matrix.openapi-generator-version }}
           path: |
             plugin/build/reports/tests/
             plugin/build/test-results/
@@ -79,6 +89,7 @@ jobs:
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
+        if: matrix.openapi-generator-version == '7.26.0'
         with:
           name: build-artifacts-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}
           path: plugin/build/libs/

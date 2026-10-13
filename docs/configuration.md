@@ -276,6 +276,25 @@ defaults {
 }
 ```
 
+**Jackson annotation options on OpenAPI Generator 7.25.0+**: upstream 7.24.0 started emitting
+field-level `@JsonInclude` and `@JsonSetter` by default, and 7.25.0 made that opt-in again through
+`generateJsonIncludeAnnotations` and `generateJsonSetterNullsAnnotations`, logging a long warning per
+task whenever either option is unset. When the detected generator is 7.25.0 or newer, the plugin sets
+both options to `false` (the upstream default) unless you set them in `defaults` or in a spec, so the
+warnings disappear and generated code is unchanged. To opt in, set the option yourself; your value
+always wins:
+
+```gradle
+defaults {
+    configOptions([
+        generateJsonIncludeAnnotations: "true",
+        generateJsonSetterNullsAnnotations: "true"
+    ])
+}
+```
+
+Below 7.25.0 the options are unknown to the generator and the plugin does not set them.
+
 ### Additional Properties
 
 Equivalent to `--additional-properties` CLI option:
@@ -305,6 +324,32 @@ defaults {
     ])
 }
 ```
+
+### Custom generator classes on OpenAPI Generator 7.23+
+
+This is upstream OpenAPI Generator behaviour, not plugin behaviour, but it affects anyone who
+references a class by name in generator options.
+
+Since OpenAPI Generator 7.22.0 generation runs inside a Gradle Worker with classloader isolation.
+From 7.23.0 the worker only sees the generator's own classpath, so a class named in your configuration
+(a custom `NORMALIZER_CLASS` in `openapiNormalizer`, a custom generator class passed as `generator`,
+a custom template engine adapter) is no longer visible just because it is on the buildscript classpath.
+7.23.0 and 7.24.0 have no supported way to add such classes to the worker. 7.25.0 added the
+`generatorClasspath` task property and the `openApiGeneratorExtra` configuration for exactly this
+purpose, so if you depend on custom generator classes move straight to 7.25.0 or later.
+
+The upstream plugin creates `openApiGeneratorExtra` when it is applied (this plugin applies it for
+you) and wires it into every generation task, so declare the dependency and nothing else:
+
+```gradle
+dependencies {
+    openApiGeneratorExtra 'com.acme:my-normalizer:1.0.0'
+    openApiGeneratorExtra project(':custom-generator')   // project and catalog dependencies work too
+}
+```
+
+The plugin deliberately does not wrap this configuration in its own DSL: a plain Gradle configuration
+keeps version-catalog and project-dependency support, and there is nothing to add.
 
 ## Template Variables
 
@@ -745,7 +790,7 @@ openapiModelgen {
 
 ```gradle
 plugins {
-    id 'org.openapi.generator' version '7.14.0'
+    id 'org.openapi.generator' version '7.26.0'
     id 'com.guidedbyte.openapi-modelgen' version '@version@'
 }
 
