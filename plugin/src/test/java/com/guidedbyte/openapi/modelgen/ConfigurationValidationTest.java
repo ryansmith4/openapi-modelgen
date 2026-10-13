@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.testutil.GeneratorVersion;
 import org.gradle.testkit.runner.BuildResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -79,7 +80,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -114,7 +115,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -149,7 +150,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -181,7 +182,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -217,7 +218,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -256,7 +257,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
@@ -300,7 +301,7 @@ public class ConfigurationValidationTest extends BaseTestKitTest {
         String buildFileContent = """
             plugins {
                 id 'java'
-                id 'org.openapi.generator' version '7.14.0'
+            """ + GeneratorVersion.pluginLine() + """
                 id 'com.guidedbyte.openapi-modelgen'
             }
             
