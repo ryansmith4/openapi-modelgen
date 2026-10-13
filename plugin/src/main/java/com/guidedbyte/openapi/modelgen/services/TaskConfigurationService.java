@@ -335,6 +335,14 @@ public class TaskConfigurationService implements Serializable {
         
         // Configure validation from resolved config
         task.getValidateSpec().set(resolvedConfig.isValidateSpec());
+
+        // Generation control. These DSL flags were accepted but never applied before 2.2.3, so the
+        // generator's own defaults leaked through: the plain "java" generator wrote model unit tests
+        // and docs into the spec output directory, and the tests were then compiled as main code.
+        task.getGenerateModelTests().set(resolvedConfig.isGenerateModelTests());
+        task.getGenerateApiTests().set(resolvedConfig.isGenerateApiTests());
+        task.getGenerateModelDocumentation().set(resolvedConfig.isGenerateModelDocumentation());
+        task.getGenerateApiDocumentation().set(resolvedConfig.isGenerateApiDocumentation());
         
         // Apply config options from resolved config
         for (Map.Entry<String, String> entry : resolvedConfig.getConfigOptions().entrySet()) {

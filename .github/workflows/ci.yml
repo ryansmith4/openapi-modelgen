@@ -60,6 +60,8 @@ jobs:
         run: |
           # Test integration using composite build
           ./gradlew -p test-app generateAllModels --no-daemon
+          # compileJava guards the source-set registration: generated tests/docs must not be compiled as main code
+          ./gradlew -p test-app compileJava --no-daemon
           
       - name: Verify generated code
         if: matrix.openapi-generator-version == '7.26.0'

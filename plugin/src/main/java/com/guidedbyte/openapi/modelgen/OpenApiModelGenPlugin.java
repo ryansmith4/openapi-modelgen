@@ -13,7 +13,7 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin;
@@ -144,7 +144,7 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         // Register generated sources EARLY (before afterEvaluate) when Java plugin is applied
         // This ensures IntelliJ sync captures the source sets correctly in multi-module projects
         project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
-            configureJavaSourceSetsEarly(project);
+            configureJavaSourceSetsEarly(project, extension);
         });
 
         // Configure tasks after project evaluation
@@ -180,40 +180,69 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     }
 
     /**
-     * Registers generated source directories EARLY in the build lifecycle.
+     * Registers the generated source directories EARLY in the build lifecycle.
      *
-     * <p>This method is called during plugin application (via {@code plugins.withType(JavaPlugin.class)})
-     * to ensure IntelliJ sync captures the source sets correctly in multi-module projects.</p>
+     * <p>Called during plugin application (via {@code plugins.withType(JavaPlugin.class)}) so that
+     * IntelliJ sync captures the directories in multi-module projects. The registration itself is a
+     * lazy {@link Provider}: it is resolved only when something queries the main source set
+     * (compileJava inputs, IDE sync), by which time the extension has been configured.</p>
      *
-     * <p>Uses a convention-based path that doesn't require extension evaluation.
-     * All specs generate to: {@code build/generated/sources/openapi/{specName}/src/main/java}</p>
+     * <p>Each spec contributes exactly {@code {outputDir}/src/main/java}. The base directory must not
+     * be registered as a whole: the generator also writes {@code src/test/java} and {@code docs}
+     * under the spec output directory, and registering the base compiled generated unit tests as
+     * main code (2.2.2 regression).</p>
      *
-     * <p><strong>Configuration cache compatible:</strong> uses ProjectLayout instead of Project for
-     * file resolution.</p>
+     * <p><strong>Configuration cache compatible:</strong> the provider captures the project directory
+     * as a {@link File}; no {@link Project} is reachable from it.</p>
      *
      * @param project the Gradle project
+     * @param extension the plugin extension, read lazily when the provider is resolved
      */
-    private void configureJavaSourceSetsEarly(Project project) {
+    private void configureJavaSourceSetsEarly(Project project, OpenApiModelGenExtension extension) {
         try {
             JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
             SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+            File projectDir = project.getProjectDir();
 
-            // Use ProjectLayout for configuration cache compatibility
-            DirectoryProperty buildDir = project.getLayout().getBuildDirectory();
+            Provider<List<File>> generatedSourceDirs =
+                project.provider(() -> resolveGeneratedSourceDirs(projectDir, extension));
+            mainSourceSet.getJava().srcDir(generatedSourceDirs);
 
-            // Register the convention-based base directory early
-            // All specs generate to: build/generated/sources/openapi/{specName}/src/main/java
-            // By registering the base, Gradle/IntelliJ can discover all spec subdirectories
-            mainSourceSet.getJava().srcDir(
-                buildDir.dir("generated/sources/openapi")
-            );
-
-            logger.debug("Registered generated sources base directory for IntelliJ compatibility");
+            logger.debug("Registered lazy per-spec generated source directories on the main source set");
 
         } catch (Exception e) {
             logger.warn("Failed to register generated sources directory early: {}. " +
                        "IntelliJ may not recognize generated sources until manual sync.", e.getMessage());
         }
+    }
+
+    /**
+     * Resolves {@code {outputDir}/src/main/java} for every configured spec, honouring
+     * {@code outputDir} overrides at the defaults and spec level.
+     *
+     * <p>A spec that cannot be resolved yet (missing {@code inputSpec} or {@code modelPackage}) is
+     * skipped here; {@link ConfigurationValidator} reports it with a proper message in afterEvaluate.</p>
+     *
+     * @param projectDir the project directory relative {@code outputDir} values resolve against
+     * @param extension the configured extension
+     * @return the generated main source directories, one per resolvable spec
+     */
+    static List<File> resolveGeneratedSourceDirs(File projectDir, OpenApiModelGenExtension extension) {
+        List<File> dirs = new ArrayList<>();
+        extension.getSpecs().forEach((specName, specConfig) -> {
+            try {
+                ResolvedSpecConfig resolved = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
+                File outputDir = new File(resolved.getOutputDir());
+                if (!outputDir.isAbsolute()) {
+                    outputDir = new File(projectDir, resolved.getOutputDir());
+                }
+                dirs.add(new File(outputDir, "src/main/java"));
+            } catch (IllegalArgumentException e) {
+                logger.debug("Spec '{}' is not fully configured yet; skipping its generated source directory: {}",
+                    specName, e.getMessage());
+            }
+        });
+        return dirs;
     }
 
     /**
