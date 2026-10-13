@@ -5,6 +5,57 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.2.3] - 2026-10-13
+
+### 🐛 Bug Fixes
+
+- **OpenAPI Generator 7.22.0+ compatibility**: Fixed `NoSuchMethodError: GenerateTask.getInputSpec()`
+  when using OpenAPI Generator 7.22.0 or later. Upstream PR #23042 changed `inputSpec`, `outputDir`
+  and `templateDir` from `Property<String>` to `RegularFileProperty` / `DirectoryProperty`. The plugin
+  now adapts to either API at runtime through a small reflective bridge (`GenerateTaskPropertyBridge`).
+  Tested range is 7.10.0 through 7.26.0.
+- Removed execution-time `Task.getProject()` access from the debug and failure logging hooks
+  (configuration cache hygiene). The `inputSpec` path is now resolved against the project directory at
+  configuration time, so relative paths behave identically on every generator version.
+
+### 🔄 Changed
+
+- Version check now warns, rather than logs at info, when the generator is newer than the tested maximum
+  (7.26.0), and names the tested range.
+- test-app and default test classpath moved to OpenAPI Generator 7.26.0. CI matrix now covers
+  7.10.0, 7.14.0, 7.21.0 and 7.26.0 on Java 17 and 21 (`-PopenapiGeneratorVersion`).
+- On OpenAPI Generator 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and
+  `generateJsonSetterNullsAnnotations=false` unless you set them, which silences two warnings per spec
+  without changing generated code.
+
+### 📝 Notes for consumers upgrading the generator past 7.14.0
+
+- 7.17.0 defaults `REFACTOR_ALLOF_WITH_PROPERTIES_ONLY` to true.
+- 7.21.0 defaults `useSpringBoot3` to true for the spring generator.
+- 7.22.0+ runs generation in a Gradle Worker with classloader isolation; expect one extra log line per task.
+- 7.23.0+: classes referenced by name in generator options (a custom `NORMALIZER_CLASS`, a custom
+  generator class) are no longer visible from the buildscript classpath because generation runs in an
+  isolated worker. On 7.25.0+ declare them on the `openApiGeneratorExtra` configuration, which the
+  upstream plugin creates when this plugin applies it:
+
+  ```groovy
+  dependencies {
+      openApiGeneratorExtra 'com.acme:my-normalizer:1.0.0'
+  }
+  ```
+
+  See docs/configuration.md, "Custom generator classes on OpenAPI Generator 7.23+".
+- 7.24.0 emitted field-level `@JsonInclude`/`@JsonSetter` by default; 7.25.0 made that opt-in again.
+  Prefer 7.25.0+.
+- Generated DTOs differ from 7.14.0 output. Observed in the test-app on 7.26.0: spring models that use
+  Lombok via `additionalModelTypeAnnotations` now carry `@NotNull`, `@Size`, `@Valid`, `@Schema` and
+  `@JsonProperty` on their fields (7.14.0 emitted bare fields, so bean validation did not apply);
+  the plain `java` generator emits `@JsonProperty(value = ..., required = true|false)` on accessors
+  instead of `@JsonProperty(NAME)`; `toIndentedString` is a one-liner; the `@Generated` comment names
+  the new version. No runtime behaviour of this plugin changed.
+
+---
+
 ## [v2.2.2] - 2025-12-18
 
 ### 🐛 Bug Fixes
