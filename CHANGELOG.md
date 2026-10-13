@@ -14,9 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `templateDir` from `Property<String>` to `RegularFileProperty` / `DirectoryProperty`. The plugin
   now adapts to either API at runtime through a small reflective bridge (`GenerateTaskPropertyBridge`).
   Tested range is 7.10.0 through 7.26.0.
-- Removed execution-time `Task.getProject()` access from the debug and failure logging hooks
-  (configuration cache hygiene). The `inputSpec` path is now resolved against the project directory at
-  configuration time, so relative paths behave identically on every generator version.
+- Removed the debug and failure logging hooks from the task configuration service. They were never
+  attached to any task but still held execution-time `Task.getProject()` access (configuration cache
+  hygiene). The `inputSpec` path is now resolved against the project directory at configuration time,
+  so relative paths behave identically on every generator version.
 - **Generated tests compiled as main code (2.2.2 regression)**: the automatic Java integration registered
   the whole `build/generated/sources/openapi` tree as a main source directory, so anything the generator
   wrote under `{spec}/src/test/java` was compiled by `compileJava` and failed with
