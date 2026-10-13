@@ -21,7 +21,7 @@ cd test-app
 echo
 echo "[4/5] Running plugin tests with configuration cache..."
 cd ..
-/c/gradle/gradle-8.5/bin/gradle plugin:test --configuration-cache --no-daemon
+/c/gradle/gradle-8.5/bin/gradle plugin:cleanTest plugin:test --configuration-cache --no-build-cache --no-daemon
 
 echo
 echo "[5/5] Testing code generation with configuration cache..."
