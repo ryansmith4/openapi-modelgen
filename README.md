@@ -51,7 +51,8 @@ openapiModelgen {
 ### 4. Build Integration (Automatic)
 
 **No manual configuration required!** The plugin automatically:
-- Registers generated source directories with the main sourceSet
+- Registers each spec's generated `src/main/java` with the main sourceSet (generated tests and docs,
+  when enabled, stay out of it)
 - Wires `compileJava` to depend on `generateAllModels`
 
 Each spec generates to its own subdirectory for build cache isolation:

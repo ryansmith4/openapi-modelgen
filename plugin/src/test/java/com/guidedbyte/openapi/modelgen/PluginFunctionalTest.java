@@ -1,12 +1,15 @@
 package com.guidedbyte.openapi.modelgen;
 
 import org.gradle.api.Project;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -176,5 +179,78 @@ public class PluginFunctionalTest {
         assertEquals(2, extension.getSpecs().size());
         assertTrue(extension.getSpecs().containsKey("pets"));
         assertTrue(extension.getSpecs().containsKey("orders"));
+    }
+
+    /**
+     * Regression guard for the 2.2.2 source-set registration: only {@code {outputDir}/src/main/java}
+     * of each spec may be a main source directory. Registering the base directory pulled the
+     * generator's {@code src/test/java} output into the main source set and broke compileJava.
+     */
+    @Test
+    void testOnlyPerSpecMainJavaDirsAreRegisteredOnTheMainSourceSet() {
+        // Given: java plugin first (the common case), then the plugin, then two specs, one with its
+        // own outputDir
+        project.getPlugins().apply("java");
+        project.getPlugins().apply("com.guidedbyte.openapi-modelgen");
+        OpenApiModelGenExtension extension = project.getExtensions().findByType(OpenApiModelGenExtension.class);
+        assertNotNull(extension);
+
+        SpecConfig petsSpec = new SpecConfig(project);
+        petsSpec.inputSpec("pets.yaml");
+        petsSpec.modelPackage("com.example.pets");
+        SpecConfig ordersSpec = new SpecConfig(project);
+        ordersSpec.inputSpec("orders.yaml");
+        ordersSpec.modelPackage("com.example.orders");
+        ordersSpec.outputDir("build/custom/orders");
+        extension.getSpecs().put("pets", petsSpec);
+        extension.getSpecs().put("orders", ordersSpec);
+
+        // When: the source set is queried (as compileJava and IDE sync do, after configuration)
+        Set<File> srcDirs = mainJavaSrcDirs();
+
+        // Then
+        assertTrue(srcDirs.contains(new File(project.getProjectDir(), "build/generated/sources/openapi/pets/src/main/java")),
+                "pets main sources should be registered, was: " + srcDirs);
+        assertTrue(srcDirs.contains(new File(project.getProjectDir(), "build/custom/orders/src/main/java")),
+                "spec-level outputDir override should be honoured, was: " + srcDirs);
+        assertFalse(srcDirs.contains(new File(project.getProjectDir(), "build/generated/sources/openapi")),
+                "the generated-sources base directory must not be a source directory, was: " + srcDirs);
+        for (File dir : srcDirs) {
+            assertFalse(dir.getPath().replace('\\', '/').contains("/src/test/"),
+                    "no generated test directory may be a main source directory: " + dir);
+        }
+    }
+
+    @Test
+    void testGeneratedSourceDirsAreRegisteredWhenJavaPluginIsAppliedAfterThePlugin() {
+        // Given: plugin first, java plugin second (plugins.withType must still fire)
+        project.getPlugins().apply("com.guidedbyte.openapi-modelgen");
+        project.getPlugins().apply("java");
+        OpenApiModelGenExtension extension = project.getExtensions().findByType(OpenApiModelGenExtension.class);
+        assertNotNull(extension);
+        SpecConfig petsSpec = new SpecConfig(project);
+        petsSpec.inputSpec("pets.yaml");
+        petsSpec.modelPackage("com.example.pets");
+        extension.getSpecs().put("pets", petsSpec);
+
+        // Then
+        assertTrue(mainJavaSrcDirs().contains(new File(project.getProjectDir(), "build/generated/sources/openapi/pets/src/main/java")),
+                "pets main sources should be registered, was: " + mainJavaSrcDirs());
+    }
+
+    @Test
+    void testNoGeneratedSourceDirsWithoutSpecs() {
+        // Given
+        project.getPlugins().apply("java");
+        project.getPlugins().apply("com.guidedbyte.openapi-modelgen");
+
+        // Then: only the conventional src/main/java remains
+        assertEquals(Set.of(new File(project.getProjectDir(), "src/main/java")), mainJavaSrcDirs());
+    }
+
+    private Set<File> mainJavaSrcDirs() {
+        JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+        SourceSet main = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+        return main.getJava().getSrcDirs();
     }
 }

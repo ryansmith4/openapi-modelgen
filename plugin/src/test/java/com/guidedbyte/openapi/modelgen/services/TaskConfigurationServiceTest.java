@@ -294,6 +294,44 @@ class TaskConfigurationServiceTest {
         assertEquals("true", options.get("generateJsonSetterNullsAnnotations"), "spec-level user value must be preserved");
     }
 
+    @Test
+    void testGenerationControlFlagsDefaultToFalseOnTheTask() {
+        // Given: neither defaults nor spec set any generation control flag
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then: the documented plugin defaults (false) reach the task, overriding the generator's
+        // own defaults; before 2.2.3 the flags were never applied and the "java" generator wrote
+        // model tests and docs into the output directory
+        assertFalse(task.getGenerateModelTests().get(), "generateModelTests must default to false");
+        assertFalse(task.getGenerateApiTests().get(), "generateApiTests must default to false");
+        assertFalse(task.getGenerateModelDocumentation().get(), "generateModelDocumentation must default to false");
+        assertFalse(task.getGenerateApiDocumentation().get(), "generateApiDocumentation must default to false");
+    }
+
+    @Test
+    void testGenerationControlFlagsHonourDefaultsAndSpecOverrides() {
+        // Given: defaults enable two flags, the spec overrides one of them back off and enables another
+        extension.getDefaults().generateModelTests(true);
+        extension.getDefaults().generateApiDocumentation(true);
+        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
+        SpecConfig specConfig = newSpecConfig();
+        specConfig.generateModelTests(false);
+        specConfig.generateApiTests(true);
+
+        // When
+        applySpecConfig(task, specConfig);
+
+        // Then
+        assertFalse(task.getGenerateModelTests().get(), "spec-level false must override defaults-level true");
+        assertTrue(task.getGenerateApiTests().get(), "spec-level true must be applied");
+        assertTrue(task.getGenerateApiDocumentation().get(), "defaults-level true must be applied");
+        assertFalse(task.getGenerateModelDocumentation().get(), "unset flag must stay false");
+    }
+
     private SpecConfig newSpecConfig() {
         SpecConfig specConfig = new SpecConfig(project);
         specConfig.getInputSpec().set("test-spec.yaml");

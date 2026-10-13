@@ -17,11 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed execution-time `Task.getProject()` access from the debug and failure logging hooks
   (configuration cache hygiene). The `inputSpec` path is now resolved against the project directory at
   configuration time, so relative paths behave identically on every generator version.
+- **Generated tests compiled as main code (2.2.2 regression)**: the automatic Java integration registered
+  the whole `build/generated/sources/openapi` tree as a main source directory, so anything the generator
+  wrote under `{spec}/src/test/java` was compiled by `compileJava` and failed with
+  `package org.junit.jupiter.api does not exist`. Only each spec's `{outputDir}/src/main/java` is
+  registered now. The registration is still made when the Java plugin is applied (so IntelliJ sync in
+  multi-module projects keeps working) but is resolved lazily, so spec-level `outputDir` overrides are
+  honoured.
+- **`generateModelTests`, `generateApiTests`, `generateModelDocumentation` and `generateApiDocumentation`
+  were never applied** to the generate task, so the generator's own defaults won: the plain `java`
+  generator wrote model unit tests and a `docs/` tree into the spec output directory. The documented
+  default (`false`) now reaches the task on every spec; set a flag to `true` to opt in. Generated tests
+  are never added to the main source set.
 
 ### 🔄 Changed
 
 - Version check now warns, rather than logs at info, when the generator is newer than the tested maximum
   (7.26.0), and names the tested range.
+- CI now compiles the test-app (`compileJava`) after generating it.
 - test-app and default test classpath moved to OpenAPI Generator 7.26.0. CI matrix now covers
   7.10.0, 7.14.0, 7.21.0 and 7.26.0 on Java 17 and 21 (`-PopenapiGeneratorVersion`).
 - On OpenAPI Generator 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and
