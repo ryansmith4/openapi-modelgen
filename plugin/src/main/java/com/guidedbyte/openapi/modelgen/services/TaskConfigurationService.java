@@ -8,7 +8,9 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import com.guidedbyte.openapi.modelgen.actions.ParallelExecutionLoggingAction;
 import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
+import com.guidedbyte.openapi.modelgen.services.GenerateTaskPropertyBridge.FileProperty;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -49,13 +51,47 @@ public class TaskConfigurationService implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger logger = PluginLoggerFactory.getLogger(TaskConfigurationService.class);
-    
+
+    /**
+     * Config options that OpenAPI Generator 7.25.0+ warns about when unset. Defaulted to {@code false},
+     * the upstream default, so the warnings disappear without changing generated code.
+     */
+    private static final String[] JACKSON_ANNOTATION_OPTIONS = {
+        "generateJsonIncludeAnnotations",
+        "generateJsonSetterNullsAnnotations"
+    };
+
+    /**
+     * OpenAPI Generator version detected by the plugin at apply time, or {@code null} when unknown.
+     * Used to apply version-gated defaults (see {@link #applyJacksonAnnotationDefaults}).
+     */
+    private String detectedGeneratorVersion;
+
     /**
      * Creates a new TaskConfigurationService.
      */
     public TaskConfigurationService() {
     }
-    
+
+    /**
+     * Records the OpenAPI Generator version detected by the plugin so that version-gated task
+     * defaults can be applied without re-detecting.
+     *
+     * @param detectedGeneratorVersion the detected version (for example {@code "7.26.0"}), or {@code null} if unknown
+     */
+    public void setDetectedGeneratorVersion(String detectedGeneratorVersion) {
+        this.detectedGeneratorVersion = detectedGeneratorVersion;
+    }
+
+    /**
+     * Returns the OpenAPI Generator version recorded via {@link #setDetectedGeneratorVersion(String)}.
+     *
+     * @return the detected version, or {@code null} if unknown
+     */
+    public String getDetectedGeneratorVersion() {
+        return detectedGeneratorVersion;
+    }
+
     /**
      * Creates all tasks for the configured OpenAPI specifications.
      *
@@ -237,16 +273,20 @@ public class TaskConfigurationService implements Serializable {
         // Create resolved config to get proper generator name and other settings
         ResolvedSpecConfig resolvedConfig = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
         
-        // Set required properties (keep inputSpec as original relative path)
-        task.getInputSpec().set(resolvedConfig.getInputSpec());
+        // Set required properties. The input spec is resolved against the project directory at
+        // configuration time so both generator API generations (Property<String> before 7.22,
+        // RegularFileProperty after) see the same absolute path and execution-time hooks need no
+        // relative-path fallback. Absolute paths pass through unchanged.
+        File inputSpecFile = projectLayout.getProjectDirectory().file(resolvedConfig.getInputSpec()).getAsFile();
+        GenerateTaskPropertyBridge.setFile(task, FileProperty.INPUT_SPEC, inputSpecFile);
         task.getModelPackage().set(resolvedConfig.getModelPackage());
-        
+
         // Set generator name from configuration
         task.getGeneratorName().set(resolvedConfig.getGeneratorName());
-        
+
         // Configure output directory from resolved config (resolve relative to project directory)
         File outputDirFile = new File(project.getProjectDir(), resolvedConfig.getOutputDir());
-        task.getOutputDir().set(outputDirFile.getAbsolutePath());
+        GenerateTaskPropertyBridge.setFile(task, FileProperty.OUTPUT_DIR, outputDirFile);
         
         // Configure model name prefix and suffix from resolved config
         if (resolvedConfig.getModelNamePrefix() != null) {
@@ -280,10 +320,11 @@ public class TaskConfigurationService implements Serializable {
         // Template directory handling - Proper Gradle Solution:
         // Use a dedicated cacheable task that produces the template directory
         if (prepareTask != null && templateConfiguration.hasAnyCustomizations()) {
-            // Wire the prepare task output to OpenAPI Generator's templateDir via Provider
-            task.getTemplateDir().set(prepareTask.flatMap(prepTask -> 
-                prepTask.getOutputDirectory().map(dir -> dir.getAsFile().getAbsolutePath())));
-            
+            // Wire the prepare task output to OpenAPI Generator's templateDir via Provider.
+            // The bridge keeps the producer dependency on both generator API generations.
+            GenerateTaskPropertyBridge.setLocation(task, FileProperty.TEMPLATE_DIR,
+                prepareTask.flatMap(com.guidedbyte.openapi.modelgen.tasks.PrepareTemplateDirectoryTask::getOutputDirectory));
+
             logger.debug("Set templateDir via dedicated PrepareTemplateDirectoryTask output");
         } else {
             logger.debug("No template customizations - templateDir not set (OpenAPI Generator uses defaults)");
@@ -299,7 +340,10 @@ public class TaskConfigurationService implements Serializable {
         for (Map.Entry<String, String> entry : resolvedConfig.getConfigOptions().entrySet()) {
             task.getConfigOptions().put(entry.getKey(), entry.getValue());
         }
-        
+
+        // Silence the per-task Jackson annotation warnings on OpenAPI Generator 7.25.0+
+        applyJacksonAnnotationDefaults(task, resolvedConfig.getConfigOptions(), specName);
+
         // Apply global properties from resolved config
         for (Map.Entry<String, String> entry : resolvedConfig.getGlobalProperties().entrySet()) {
             task.getGlobalProperties().put(entry.getKey(), entry.getValue());
@@ -390,9 +434,8 @@ public class TaskConfigurationService implements Serializable {
     public void configureIncrementalBuild(GenerateTask task, ProjectLayout projectLayout,
                                         OpenApiModelGenExtension extension, SpecConfig specConfig) {
 
-        // Input files - resolve inputSpec path relative to project directory
-        String inputSpecPath = task.getInputSpec().get();
-        File inputSpecFile = projectLayout.getProjectDirectory().file(inputSpecPath).getAsFile();
+        // Input files - the input spec was already resolved to an absolute path in applySpecConfig
+        File inputSpecFile = new File(GenerateTaskPropertyBridge.absolutePath(task, FileProperty.INPUT_SPEC).get());
         task.getInputs().file(inputSpecFile)
                 .withPropertyName("openApiSpecFile")
                 .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE);
@@ -425,7 +468,7 @@ public class TaskConfigurationService implements Serializable {
         // This ensures tasks re-run after 'clean' even if inputs haven't changed
         task.getOutputs().upToDateWhen(t -> {
             // Check 1: Output directory must be configured
-            if (!task.getOutputDir().isPresent()) {
+            if (!GenerateTaskPropertyBridge.isPresent(task, FileProperty.OUTPUT_DIR)) {
                 logger.debug("No output directory configured, task will run");
                 return false;
             }
@@ -436,7 +479,7 @@ public class TaskConfigurationService implements Serializable {
                 return false;
             }
 
-            String outputDirPath = task.getOutputDir().get();
+            String outputDirPath = GenerateTaskPropertyBridge.absolutePath(task, FileProperty.OUTPUT_DIR).get();
             String modelPackage = task.getModelPackage().get();
 
             // Convert model package to directory path (com.example.api -> com/example/api)
@@ -922,9 +965,38 @@ public class TaskConfigurationService implements Serializable {
         // Lombok compatibility
         task.getConfigOptions().put("skipDefaults", "true");
         task.getConfigOptions().put("generateConstructorPropertiesAnnotation", "false");
-        
-        
+
+
         // Global properties - let OpenAPI Generator use its defaults
+    }
+
+    /**
+     * Defaults {@code generateJsonIncludeAnnotations} and {@code generateJsonSetterNullsAnnotations}
+     * to {@code false} on OpenAPI Generator 7.25.0 and later, unless the user set them.
+     *
+     * <p>OpenAPI Generator 7.24.0 started emitting field-level {@code @JsonInclude} and
+     * {@code @JsonSetter} by default; 7.25.0 reverted that to opt-in and now logs a long warning per
+     * task whenever either option is unset. {@code false} is the upstream default, so generated code
+     * is unchanged; only the warnings disappear. Below 7.25.0 the options are unknown to the generator
+     * and are not set at all. When the generator version could not be detected nothing is set.</p>
+     *
+     * @param task the GenerateTask to configure
+     * @param userConfigOptions the merged user config options (defaults plus spec); user values always win
+     * @param specName the spec name, for logging
+     */
+    private void applyJacksonAnnotationDefaults(GenerateTask task, Map<String, String> userConfigOptions, String specName) {
+        if (detectedGeneratorVersion == null
+                || !VersionUtils.isVersionCompatible(detectedGeneratorVersion,
+                    PluginConstants.JACKSON_ANNOTATION_OPTIONS_MIN_VERSION)) {
+            return;
+        }
+        for (String option : JACKSON_ANNOTATION_OPTIONS) {
+            if (!userConfigOptions.containsKey(option)) {
+                task.getConfigOptions().put(option, "false");
+                logger.debug("Defaulted configOption {}=false for spec '{}' (OpenAPI Generator {})",
+                    option, specName, detectedGeneratorVersion);
+            }
+        }
     }
 
     /**
@@ -997,31 +1069,28 @@ public class TaskConfigurationService implements Serializable {
                 logger.debug("=== OpenAPI Generator Execution Debug ===");
                 logger.debug("Spec: {}", specName);
                 logger.debug("Generator: {}", task.getGeneratorName().getOrElse("unknown"));
-                logger.debug("Input spec: {}", task.getInputSpec().getOrElse("not set"));
-                logger.debug("Output directory: {}", task.getOutputDir().getOrElse("not set"));
+                logger.debug("Input spec: {}",
+                    GenerateTaskPropertyBridge.absolutePath(task, FileProperty.INPUT_SPEC).getOrElse("not set"));
+                logger.debug("Output directory: {}",
+                    GenerateTaskPropertyBridge.absolutePath(task, FileProperty.OUTPUT_DIR).getOrElse("not set"));
                 logger.debug("Package name: {}", task.getModelPackage().getOrElse("not set"));
 
-                if (task.getTemplateDir().isPresent()) {
-                    logger.debug("Template directory: {}", task.getTemplateDir().get());
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.TEMPLATE_DIR)) {
+                    logger.debug("Template directory: {}",
+                        GenerateTaskPropertyBridge.absolutePath(task, FileProperty.TEMPLATE_DIR).get());
                 } else {
                     logger.debug("Template directory: using OpenAPI Generator defaults");
                 }
 
-                // Log file existence checks for common issues
-                if (task.getInputSpec().isPresent()) {
-                    String inputSpecPath = task.getInputSpec().get();
-                    File inputFile = new File(inputSpecPath);
-                    if (inputFile.isAbsolute()) {
-                        logger.debug("Input spec file check: exists={}, readable={}", inputFile.exists(), inputFile.canRead());
-                    } else {
-                        File resolvedFile = new File(t.getProject().getProjectDir(), inputSpecPath);
-                        logger.debug("Input spec resolved path: {}", resolvedFile.getAbsolutePath());
-                        logger.debug("Input spec file check: exists={}, readable={}", resolvedFile.exists(), resolvedFile.canRead());
-                    }
+                // Log file existence checks for common issues. The input spec is always absolute
+                // (resolved against the project directory at configuration time), so no Project access is needed.
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.INPUT_SPEC)) {
+                    File inputFile = new File(GenerateTaskPropertyBridge.absolutePath(task, FileProperty.INPUT_SPEC).get());
+                    logger.debug("Input spec file check: exists={}, readable={}", inputFile.exists(), inputFile.canRead());
                 }
 
-                if (task.getOutputDir().isPresent()) {
-                    String outputDirPath = task.getOutputDir().get();
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.OUTPUT_DIR)) {
+                    String outputDirPath = GenerateTaskPropertyBridge.absolutePath(task, FileProperty.OUTPUT_DIR).get();
                     File outputDir = new File(outputDirPath);
                     logger.debug("Output directory check: exists={}, writable={}", outputDir.exists(), outputDir.canWrite());
                     if (!outputDir.exists()) {
@@ -1040,8 +1109,8 @@ public class TaskConfigurationService implements Serializable {
                 logger.info("✅ OpenAPI generation completed for spec: {}", specName);
 
                 // Log post-generation information
-                if (task.getOutputDir().isPresent()) {
-                    String outputDirPath = task.getOutputDir().get();
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.OUTPUT_DIR)) {
+                    String outputDirPath = GenerateTaskPropertyBridge.absolutePath(task, FileProperty.OUTPUT_DIR).get();
                     File outputDir = new File(outputDirPath);
                     if (outputDir.exists()) {
                         File[] generatedFiles = outputDir.listFiles();
@@ -1109,28 +1178,26 @@ public class TaskConfigurationService implements Serializable {
                 if (task.getGeneratorName().isPresent()) {
                     logger.debug("Generator: {}", task.getGeneratorName().get());
                 }
-                if (task.getInputSpec().isPresent()) {
-                    String inputSpec = task.getInputSpec().get();
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.INPUT_SPEC)) {
+                    String inputSpec = GenerateTaskPropertyBridge.absolutePath(task, FileProperty.INPUT_SPEC).get();
                     logger.debug("Input spec: {}", inputSpec);
 
-                    // Check if input spec file still exists
+                    // Check if input spec file still exists (path is absolute; no Project access needed)
                     File inputFile = new File(inputSpec);
-                    if (!inputFile.isAbsolute()) {
-                        inputFile = new File(task.getProject().getProjectDir(), inputSpec);
-                    }
                     logger.debug("Input spec file exists: {}", inputFile.exists());
                 }
 
-                if (task.getOutputDir().isPresent()) {
-                    String outputDirPath = task.getOutputDir().get();
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.OUTPUT_DIR)) {
+                    String outputDirPath = GenerateTaskPropertyBridge.absolutePath(task, FileProperty.OUTPUT_DIR).get();
                     File outputDir = new File(outputDirPath);
                     logger.debug("Output directory: {}", outputDir.getAbsolutePath());
                     logger.debug("Output directory exists: {}", outputDir.exists());
                     logger.debug("Output directory writable: {}", outputDir.canWrite());
                 }
 
-                if (task.getTemplateDir().isPresent()) {
-                    logger.debug("Template directory: {}", task.getTemplateDir().get());
+                if (GenerateTaskPropertyBridge.isPresent(task, FileProperty.TEMPLATE_DIR)) {
+                    logger.debug("Template directory: {}",
+                        GenerateTaskPropertyBridge.absolutePath(task, FileProperty.TEMPLATE_DIR).get());
                 }
 
                 // Analyze the error and provide specific guidance

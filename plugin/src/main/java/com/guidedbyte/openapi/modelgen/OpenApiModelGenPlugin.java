@@ -121,8 +121,9 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      */
     @Override
     public void apply(@NotNull Project project) {
-        // Detect and ensure OpenAPI Generator plugin is available
-        ensureOpenApiGeneratorAvailable(project);
+        // Detect and ensure OpenAPI Generator plugin is available; share the detected version with the
+        // task service so version-gated task defaults do not need to re-detect it
+        taskConfigurationService.setDetectedGeneratorVersion(ensureOpenApiGeneratorAvailable(project));
         
         // Apply the OpenAPI Generator plugin as a dependency
         project.getPlugins().apply(OpenApiGeneratorPlugin.class);
@@ -400,21 +401,26 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     /**
      * Detects and logs the OpenAPI Generator version being used.
      * The plugin includes a default version but respects overrides from configuration plugins.
+     *
+     * @param project the Gradle project
+     * @return the detected version, or {@code null} when it could not be determined
      */
-    private void ensureOpenApiGeneratorAvailable(Project project) {
+    private String ensureOpenApiGeneratorAvailable(Project project) {
         try {
             String detectedVersion = detectOpenApiGeneratorVersion(project);
-            
+
             if (detectedVersion != null && !Objects.equals(detectedVersion, PluginConstants.UNKNOWN_VERSION)) {
                 project.getLogger().info("Using OpenAPI Generator version: {}", detectedVersion);
                 validateVersionCompatibility(detectedVersion, project);
+                return detectedVersion;
             } else {
                 project.getLogger().info("Using OpenAPI Generator (version detection unavailable)");
             }
-            
+
         } catch (Exception e) {
             project.getLogger().debug("Could not detect OpenAPI Generator version: {}", e.getMessage());
         }
+        return null;
     }
     
     /**
