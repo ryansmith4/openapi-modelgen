@@ -7,7 +7,7 @@ echo "========================================"
 
 echo
 echo "[1/5] Cleaning all projects..."
-/c/gradle/gradle-8.5/bin/gradle clean plugin:clean --no-daemon
+/c/gradle/gradle-8.5/bin/gradle plugin:clean --no-daemon
 
 echo
 echo "[2/5] Building plugin with configuration cache..."
