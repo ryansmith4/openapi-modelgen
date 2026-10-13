@@ -1,5 +1,6 @@
 package com.guidedbyte.openapi.modelgen;
 
+import com.guidedbyte.openapi.modelgen.testutil.GeneratorVersion;
 import org.gradle.testkit.runner.BuildResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -697,7 +698,8 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
 
     private void createLibraryJarWithVersionRequirements(File jarFile) throws IOException {
         try (JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarFile.toPath()))) {
-            // Add metadata with specific version requirements
+            // Add metadata with specific version requirements. The window is pinned to the version under
+            // test so the library is compatible on every matrix cell while still logging its requirements.
             JarEntry metadataEntry = new JarEntry("META-INF/openapi-library.yaml");
             jos.putNextEntry(metadataEntry);
             
@@ -707,12 +709,12 @@ public class LibraryTemplateIntegrationTest extends BaseTestKitTest {
                 description: "Library with specific version requirements"
                 supportedGenerators:
                   - "spring"
-                minOpenApiGeneratorVersion: "7.11.0"
-                maxOpenApiGeneratorVersion: "7.14.0"
+                minOpenApiGeneratorVersion: "7.10.0"
+                maxOpenApiGeneratorVersion: "%s"
                 minPluginVersion: "1.0.0-DEVELOPMENT"
                 requiredFeatures:
                   - "advanced-validation"
-                """;
+                """.formatted(GeneratorVersion.current());
             
             jos.write(libraryMetadata.getBytes());
             jos.closeEntry();
