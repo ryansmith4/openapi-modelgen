@@ -52,9 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   composite build (so they re-ran although nothing had changed) and defeated the build cache across machines.
 - test-app and default test classpath moved to OpenAPI Generator 7.26.0. CI matrix now covers
   7.10.0, 7.14.0, 7.21.0 and 7.26.0 on Java 17 and 21 (`-PopenapiGeneratorVersion`).
-- On OpenAPI Generator 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and
-  `generateJsonSetterNullsAnnotations=false` unless you set them, which silences two warnings per spec
-  without changing generated code.
+- The plugin now sets `generateJsonIncludeAnnotations=false` and `generateJsonSetterNullsAnnotations=false`
+  as plugin defaults on every spec unless you set them. On OpenAPI Generator 7.25.0+ this silences two
+  warnings per spec; older generators ignore the options. Generated code is unchanged either way (no
+  field-level `@JsonInclude` / `@JsonSetter`, the pre-7.24.0 output).
 
 ### 📝 Notes for consumers upgrading the generator past 7.14.0
 
@@ -73,8 +74,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
   See docs/configuration.md, "Custom generator classes on OpenAPI Generator 7.23+".
-- 7.24.0 emitted field-level `@JsonInclude`/`@JsonSetter` by default; 7.25.0 made that opt-in again.
-  Prefer 7.25.0+.
+- 7.24.0 emits `@JsonInclude(JsonInclude.Include.NON_NULL)` on every `spring` model property with no way
+  to turn it off (the opt-out options only arrived in 7.25.0), so null properties vanish from serialized
+  JSON regardless of your `ObjectMapper`. Skip straight to 7.25.0 or newer.
 - Generated DTOs differ from 7.14.0 output. Observed in the test-app on 7.26.0: spring models that use
   Lombok via `additionalModelTypeAnnotations` now carry `@NotNull`, `@Size`, `@Valid`, `@Schema` and
   `@JsonProperty` on their fields (7.14.0 emitted bare fields, so bean validation did not apply);

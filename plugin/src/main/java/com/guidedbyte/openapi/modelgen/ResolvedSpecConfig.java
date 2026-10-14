@@ -406,6 +406,9 @@ public class ResolvedSpecConfig {
             configOptions.put("disallowAdditionalPropertiesIfNotPresent", OpenApiConfigDefaults.DISALLOW_ADDITIONAL_PROPERTIES_IF_NOT_PRESENT);
             configOptions.put("useEnumCaseInsensitive", OpenApiConfigDefaults.USE_ENUM_CASE_INSENSITIVE);
             configOptions.put("openApiNullable", OpenApiConfigDefaults.OPENAPI_NULLABLE);
+            // Jackson annotation options (silences two warnings per task on 7.25.0+; ignored below)
+            configOptions.put("generateJsonIncludeAnnotations", OpenApiConfigDefaults.GENERATE_JSON_INCLUDE_ANNOTATIONS);
+            configOptions.put("generateJsonSetterNullsAnnotations", OpenApiConfigDefaults.GENERATE_JSON_SETTER_NULLS_ANNOTATIONS);
             // Lombok compatibility options
             configOptions.put("skipDefaults", OpenApiConfigDefaults.SKIP_DEFAULTS); // Skip default constructor generation when using Lombok
             configOptions.put("generateConstructorPropertiesAnnotation", OpenApiConfigDefaults.GENERATE_CONSTRUCTOR_PROPERTIES_ANNOTATION); // Don't generate @ConstructorProperties

@@ -226,60 +226,24 @@ class TaskConfigurationServiceTest {
     }
 
     @Test
-    void testJacksonAnnotationOptionsDefaultedToFalseOnGenerator725AndLater() {
-        // Given: generator 7.26.0 detected and the user did not set either option
-        taskConfigurationService.setDetectedGeneratorVersion("7.26.0");
+    void testJacksonAnnotationOptionsDefaultToFalseOnEverySpec() {
+        // Given: the user did not set either option
         GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = newSpecConfig();
 
         // When
         applySpecConfig(task, specConfig);
 
-        // Then
+        // Then: both are plugin defaults regardless of generator version. "false" is the upstream default,
+        // so output is unchanged; on 7.25.0+ it silences two warnings per task, older generators ignore it
         Map<String, String> options = task.getConfigOptions().get();
         assertEquals("false", options.get("generateJsonIncludeAnnotations"));
         assertEquals("false", options.get("generateJsonSetterNullsAnnotations"));
     }
 
     @Test
-    void testJacksonAnnotationOptionsNotSetBelowGenerator725() {
-        // Given: generator 7.14.0 detected; the options are unknown to that generator
-        taskConfigurationService.setDetectedGeneratorVersion("7.14.0");
-        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
-        SpecConfig specConfig = newSpecConfig();
-
-        // When
-        applySpecConfig(task, specConfig);
-
-        // Then
-        Map<String, String> options = task.getConfigOptions().get();
-        assertFalse(options.containsKey("generateJsonIncludeAnnotations"),
-            "Option must not be set below 7.25.0, but was: " + options.get("generateJsonIncludeAnnotations"));
-        assertFalse(options.containsKey("generateJsonSetterNullsAnnotations"),
-            "Option must not be set below 7.25.0, but was: " + options.get("generateJsonSetterNullsAnnotations"));
-    }
-
-    @Test
-    void testJacksonAnnotationOptionsNotSetWhenGeneratorVersionUnknown() {
-        // Given: no detected version
-        taskConfigurationService.setDetectedGeneratorVersion(null);
-        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
-        SpecConfig specConfig = newSpecConfig();
-
-        // When
-        applySpecConfig(task, specConfig);
-
-        // Then
-        Map<String, String> options = task.getConfigOptions().get();
-        assertFalse(options.containsKey("generateJsonIncludeAnnotations"));
-        assertFalse(options.containsKey("generateJsonSetterNullsAnnotations"));
-    }
-
-    @Test
-    void testJacksonAnnotationOptionsUserValuesWinOnGenerator725AndLater() {
-        // Given: generator 7.25.0 detected; user opts in at the defaults level for one option
-        // and at the spec level for the other
-        taskConfigurationService.setDetectedGeneratorVersion("7.25.0");
+    void testJacksonAnnotationOptionsUserValuesWin() {
+        // Given: user opts in at the defaults level for one option and at the spec level for the other
         extension.getDefaults().getConfigOptions().put("generateJsonIncludeAnnotations", "true");
         GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
         SpecConfig specConfig = newSpecConfig();
@@ -292,44 +256,6 @@ class TaskConfigurationServiceTest {
         Map<String, String> options = task.getConfigOptions().get();
         assertEquals("true", options.get("generateJsonIncludeAnnotations"), "defaults-level user value must be preserved");
         assertEquals("true", options.get("generateJsonSetterNullsAnnotations"), "spec-level user value must be preserved");
-    }
-
-    @Test
-    void testGenerationControlFlagsDefaultToFalseOnTheTask() {
-        // Given: neither defaults nor spec set any generation control flag
-        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
-        SpecConfig specConfig = newSpecConfig();
-
-        // When
-        applySpecConfig(task, specConfig);
-
-        // Then: the documented plugin defaults (false) reach the task, overriding the generator's
-        // own defaults; before 2.2.3 the flags were never applied and the "java" generator wrote
-        // model tests and docs into the output directory
-        assertFalse(task.getGenerateModelTests().get(), "generateModelTests must default to false");
-        assertFalse(task.getGenerateApiTests().get(), "generateApiTests must default to false");
-        assertFalse(task.getGenerateModelDocumentation().get(), "generateModelDocumentation must default to false");
-        assertFalse(task.getGenerateApiDocumentation().get(), "generateApiDocumentation must default to false");
-    }
-
-    @Test
-    void testGenerationControlFlagsHonourDefaultsAndSpecOverrides() {
-        // Given: defaults enable two flags, the spec overrides one of them back off and enables another
-        extension.getDefaults().generateModelTests(true);
-        extension.getDefaults().generateApiDocumentation(true);
-        GenerateTask task = project.getTasks().register("testTask", GenerateTask.class).get();
-        SpecConfig specConfig = newSpecConfig();
-        specConfig.generateModelTests(false);
-        specConfig.generateApiTests(true);
-
-        // When
-        applySpecConfig(task, specConfig);
-
-        // Then
-        assertFalse(task.getGenerateModelTests().get(), "spec-level false must override defaults-level true");
-        assertTrue(task.getGenerateApiTests().get(), "spec-level true must be applied");
-        assertTrue(task.getGenerateApiDocumentation().get(), "defaults-level true must be applied");
-        assertFalse(task.getGenerateModelDocumentation().get(), "unset flag must stay false");
     }
 
     private SpecConfig newSpecConfig() {

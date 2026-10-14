@@ -336,9 +336,12 @@ change is needed when you upgrade. What to expect on 7.22.0 and later:
   [Custom generator classes on OpenAPI Generator 7.23+](docs/configuration.md#custom-generator-classes-on-openapi-generator-723).
 - Generated DTOs differ cosmetically from 7.14.0 output (Jackson and Lombok annotation placement,
   collection defaults).
-- On 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and
-  `generateJsonSetterNullsAnnotations=false` unless you set them, which silences two warnings per spec
-  without changing generated code.
+- The plugin sets `generateJsonIncludeAnnotations=false` and `generateJsonSetterNullsAnnotations=false`
+  as plugin defaults unless you set them, which silences two warnings per spec on 7.25.0+ without
+  changing generated code.
+- Avoid 7.24.0 for the `spring` generator: that release emits `@JsonInclude(NON_NULL)` on every model
+  property with no way to turn it off, so null properties vanish from serialized JSON regardless of your
+  `ObjectMapper`. 7.25.0 restored the previous output.
 
 ## 🤝 Contributing
 

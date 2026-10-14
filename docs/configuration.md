@@ -276,13 +276,13 @@ defaults {
 }
 ```
 
-**Jackson annotation options on OpenAPI Generator 7.25.0+**: upstream 7.24.0 started emitting
-field-level `@JsonInclude` and `@JsonSetter` by default, and 7.25.0 made that opt-in again through
+**Jackson annotation options**: upstream 7.24.0 started emitting field-level `@JsonInclude` and
+`@JsonSetter` on `spring` model properties, and 7.25.0 made that opt-in again through
 `generateJsonIncludeAnnotations` and `generateJsonSetterNullsAnnotations`, logging a long warning per
-task whenever either option is unset. When the detected generator is 7.25.0 or newer, the plugin sets
-both options to `false` (the upstream default) unless you set them in `defaults` or in a spec, so the
-warnings disappear and generated code is unchanged. To opt in, set the option yourself; your value
-always wins:
+task whenever either option is unset. The plugin sets both options to `false` as plugin defaults
+(the upstream default, and the pre-7.24.0 output), so on 7.25.0+ the warnings disappear and generated
+code is unchanged; older generators ignore the options. To opt in, set the option yourself in
+`defaults` or in a spec; your value always wins:
 
 ```gradle
 defaults {
@@ -293,7 +293,7 @@ defaults {
 }
 ```
 
-Below 7.25.0 the options are unknown to the generator and the plugin does not set them.
+On exactly 7.24.0 the options do not exist and the annotations are always emitted; use 7.25.0 or newer.
 
 ### Additional Properties
 
