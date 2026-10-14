@@ -31,7 +31,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Generate and submit dependency graph
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@v6
         with:
           build-root-directory: plugin
           # The wrapper lives at the repository root, not in plugin/, so the action needs the
