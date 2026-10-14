@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attached to any task but still held execution-time `Task.getProject()` access (configuration cache
   hygiene). The `inputSpec` path is now resolved against the project directory at configuration time,
   so relative paths behave identically on every generator version.
+- **Configuration cache entry invalidated after every `clean`**: the rich debug log directory `build/logs`
+  was probed and created while the plugin's loggers initialised, which can happen at configuration time.
+  Gradle recorded that as a configuration cache input, so the run after the first run following a
+  `clean` reported "file system entry 'build/logs' has been created" and re-ran configuration. The
+  directory and log file are now created on the first write, at execution time.
 - **Generated tests compiled as main code (2.2.2 regression)**: the automatic Java integration registered
   the whole `build/generated/sources/openapi` tree as a main source directory, so anything the generator
   wrote under `{spec}/src/test/java` was compiled by `compileJava` and failed with

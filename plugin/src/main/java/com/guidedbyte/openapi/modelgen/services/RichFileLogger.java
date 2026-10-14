@@ -90,31 +90,57 @@ public class RichFileLogger {
     private final File logFile;
     // NOTE: No persistent FileWriter field - we use try-with-resources for each write operation
     // This eliminates Windows file handle locking issues that caused test failures
-    private boolean enabled;
+    private boolean enabled = true;
+    private volatile boolean initialized = false;
     private volatile boolean closed = false;
     private volatile boolean useAppendMode = false;
     
     private RichFileLogger(File logFile) {
         this.logFile = logFile;
-        this.enabled = initializeLogFile();
     }
     
     /**
      * Gets or creates a RichFileLogger for the specified build directory.
-     * 
-     * @param buildDir the build directory where the log file should be created
+     *
+     * <p><strong>No file system access happens here.</strong> This method is reached from static
+     * logger initialisers that may run at configuration time, and Gradle records any
+     * {@code File.exists()} probe or directory creation made at configuration time as a
+     * configuration cache input. Probing {@code build/logs} before it existed and then creating it
+     * invalidated the configuration cache entry on the next run after every {@code clean}. The
+     * {@code logs} directory and the log file are created on the first write instead, which only
+     * happens at execution time.</p>
+     *
+     * @param buildDir the build directory where the log file will be created on first write
      * @return the RichFileLogger instance
      */
     public static RichFileLogger forBuildDir(File buildDir) {
         String key = buildDir.getAbsolutePath();
-        return instances.computeIfAbsent(key, k -> {
-            File logsDir = new File(buildDir, "logs");
-            if (!logsDir.exists() && !logsDir.mkdirs()) {
-                throw new RuntimeException("Failed to create logs directory: " + logsDir.getAbsolutePath());
+        return instances.computeIfAbsent(key,
+            k -> new RichFileLogger(new File(new File(buildDir, "logs"), "openapi-modelgen-debug.log")));
+    }
+
+    /**
+     * Creates the logs directory and the log file on the first write.
+     *
+     * @return {@code true} if the log file is ready for writing, {@code false} if file logging is unavailable
+     */
+    private boolean ensureInitialized() {
+        if (initialized) {
+            return enabled;
+        }
+        synchronized (this) {
+            if (!initialized) {
+                File logsDir = logFile.getParentFile();
+                if (!logsDir.isDirectory() && !logsDir.mkdirs()) {
+                    logger.warn("Failed to create logs directory: {}", logsDir.getAbsolutePath());
+                    enabled = false;
+                } else {
+                    enabled = initializeLogFile();
+                }
+                initialized = true;
             }
-            File logFile = new File(logsDir, "openapi-modelgen-debug.log");
-            return new RichFileLogger(logFile);
-        });
+        }
+        return enabled;
     }
     
     /**
@@ -171,7 +197,7 @@ public class RichFileLogger {
      * @param section the section name
      */
     public void section(String section) {
-        if (enabled && !closed) {
+        if (!closed && ensureInitialized()) {
             try {
                 String header = System.lineSeparator() + "=== " + section + " ===" + System.lineSeparator();
 
@@ -304,7 +330,7 @@ public class RichFileLogger {
      * @param message the formatted message to log
      */
     private synchronized void writeLogEntry(String level, String message) {
-        if (closed || !enabled) return;
+        if (closed || !ensureInitialized()) return;
 
         try {
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
