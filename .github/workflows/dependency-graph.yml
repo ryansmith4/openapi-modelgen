@@ -34,4 +34,7 @@ jobs:
         uses: gradle/actions/dependency-submission@v4
         with:
           build-root-directory: plugin
+          # The wrapper lives at the repository root, not in plugin/, so the action needs the
+          # version spelled out. Keep in sync with gradle/wrapper/gradle-wrapper.properties.
+          gradle-version: '8.5'
           dependency-graph-include-configurations: 'runtimeClasspath'
