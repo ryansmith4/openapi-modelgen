@@ -284,8 +284,11 @@ public class TaskConfigurationService implements Serializable {
         // Set generator name from configuration
         task.getGeneratorName().set(resolvedConfig.getGeneratorName());
 
-        // Configure output directory from resolved config (resolve relative to project directory)
-        File outputDirFile = new File(project.getProjectDir(), resolvedConfig.getOutputDir());
+        // Configure output directory from resolved config. Directory.dir() resolves relative paths
+        // against the project directory and passes absolute paths through unchanged, which keeps this
+        // in step with the source-set registration (OpenApiModelGenPlugin.resolveGeneratedSourceDirs)
+        // and the clean task; new File(projectDir, absolutePath) would nest the absolute path instead.
+        File outputDirFile = projectLayout.getProjectDirectory().dir(resolvedConfig.getOutputDir()).getAsFile();
         GenerateTaskPropertyBridge.setFile(task, FileProperty.OUTPUT_DIR, outputDirFile);
         
         // Configure model name prefix and suffix from resolved config

@@ -10,6 +10,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
@@ -192,8 +193,12 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * under the spec output directory, and registering the base compiled generated unit tests as
      * main code (2.2.2 regression).</p>
      *
-     * <p><strong>Configuration cache compatible:</strong> the provider captures the project directory
-     * as a {@link File}; no {@link Project} is reachable from it.</p>
+     * <p><strong>Configuration cache note:</strong> the provider captures the extension, which holds the
+     * {@link Project}, so it must never be wired into a task input or action directly. It is safe here
+     * because a {@code SourceDirectorySet} resolves its entries to directory trees whenever it is
+     * queried, including while Gradle stores the configuration cache entry, so the provider itself is
+     * never serialised. CI runs {@code compileJava --configuration-cache} against the test-app to keep
+     * that true.</p>
      *
      * @param project the Gradle project
      * @param extension the plugin extension, read lazily when the provider is resolved
@@ -202,10 +207,10 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
         try {
             JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
             SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-            File projectDir = project.getProjectDir();
+            Directory projectDirectory = project.getLayout().getProjectDirectory();
 
             Provider<List<File>> generatedSourceDirs =
-                project.provider(() -> resolveGeneratedSourceDirs(projectDir, extension));
+                project.provider(() -> resolveGeneratedSourceDirs(projectDirectory, extension));
             mainSourceSet.getJava().srcDir(generatedSourceDirs);
 
             logger.debug("Registered lazy per-spec generated source directories on the main source set");
@@ -223,19 +228,18 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
      * <p>A spec that cannot be resolved yet (missing {@code inputSpec} or {@code modelPackage}) is
      * skipped here; {@link ConfigurationValidator} reports it with a proper message in afterEvaluate.</p>
      *
-     * @param projectDir the project directory relative {@code outputDir} values resolve against
+     * @param projectDirectory the project directory relative {@code outputDir} values resolve against
      * @param extension the configured extension
      * @return the generated main source directories, one per resolvable spec
      */
-    static List<File> resolveGeneratedSourceDirs(File projectDir, OpenApiModelGenExtension extension) {
+    static List<File> resolveGeneratedSourceDirs(Directory projectDirectory, OpenApiModelGenExtension extension) {
         List<File> dirs = new ArrayList<>();
         extension.getSpecs().forEach((specName, specConfig) -> {
             try {
                 ResolvedSpecConfig resolved = ResolvedSpecConfig.builder(specName, extension, specConfig).build();
-                File outputDir = new File(resolved.getOutputDir());
-                if (!outputDir.isAbsolute()) {
-                    outputDir = new File(projectDir, resolved.getOutputDir());
-                }
+                // Same resolution as TaskConfigurationService.applySpecConfig: relative against the
+                // project directory, absolute passed through
+                File outputDir = projectDirectory.dir(resolved.getOutputDir()).getAsFile();
                 dirs.add(new File(outputDir, "src/main/java"));
             } catch (IllegalArgumentException e) {
                 logger.debug("Spec '{}' is not fully configured yet; skipping its generated source directory: {}",
@@ -493,26 +497,15 @@ public class OpenApiModelGenPlugin implements Plugin<Project> {
     }
     
     /**
-     * Attempts to detect version from JAR manifest in classpath
+     * Detects the generator version from the classpath (JAR file name, then package manifest).
+     * Shares one implementation with {@code GenerateTaskPropertyBridge} so that both the apply-time
+     * compatibility warning and the bridge's error messages report the same version string.
+     *
+     * @return the detected version, or {@link PluginConstants#UNKNOWN_VERSION} when the generator is
+     *         present but carries no recognisable version
      */
     private static String detectVersionFromClasspath() {
-        try {
-            Class<?> generatorClass = Class.forName("org.openapitools.generator.gradle.plugin.OpenApiGeneratorPlugin");
-            String classPath = generatorClass.getProtectionDomain().getCodeSource().getLocation().getPath();
-            
-            // Extract version from JAR filename if possible
-            if (classPath.contains("openapi-generator-gradle-plugin")) {
-                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("openapi-generator-gradle-plugin-([0-9]+\\.[0-9]+\\.[0-9]+)");
-                java.util.regex.Matcher matcher = pattern.matcher(classPath);
-                if (matcher.find()) {
-                    return matcher.group(1);
-                }
-            }
-            
-            return PluginConstants.UNKNOWN_VERSION; // Present but version unknown
-        } catch (Exception e) {
-            logger.warn("Failed to detect OpenAPI Generator version from classpath: {}", e.getMessage());
-            return null;
-        }
+        String version = VersionUtils.detectOpenApiGeneratorVersionFromClasspath();
+        return version != null ? version : PluginConstants.UNKNOWN_VERSION;
     }
 }

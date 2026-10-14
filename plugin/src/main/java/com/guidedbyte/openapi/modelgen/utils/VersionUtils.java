@@ -6,6 +6,10 @@ import org.semver4j.Semver;
 import org.slf4j.Logger;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 
+import java.security.CodeSource;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Centralized utility class for all version comparison operations.
  * Consolidates duplicate version logic from multiple classes and provides
@@ -24,6 +28,13 @@ import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 public final class VersionUtils {
     private static final Logger logger = PluginLoggerFactory.getLogger(VersionUtils.class);
 
+    /** The upstream Gradle plugin task class; its code source names the generator plugin jar. */
+    private static final String GENERATE_TASK_CLASS = "org.openapitools.generator.gradle.plugin.tasks.GenerateTask";
+
+    /** Matches {@code openapi-generator-gradle-plugin-7.26.0.jar}, qualifier suffixes included. */
+    private static final Pattern GENERATOR_JAR_VERSION_PATTERN =
+        Pattern.compile("openapi-generator-gradle-plugin-([0-9]+\\.[0-9]+\\.[0-9]+[^/\\\\]*)\\.jar");
+
     // Private constructor to prevent instantiation
     private VersionUtils() {
         throw new UnsupportedOperationException("Utility class");
@@ -36,6 +47,35 @@ public final class VersionUtils {
      */
     public static String getCurrentPluginVersion() {
         return ResolvedSpecConfig.getPluginVersion();
+    }
+
+    /**
+     * Detects the OpenAPI Generator Gradle plugin version from the classpath: first from the name of
+     * the jar the {@code GenerateTask} class was loaded from, then from that package's
+     * implementation version. Never consults a {@code Project}, so it is safe at execution time and
+     * under the configuration cache.
+     *
+     * @return the version (for example {@code "7.26.0"}), or {@code null} when the generator classes
+     *         are absent or carry no recognisable version
+     */
+    public static String detectOpenApiGeneratorVersionFromClasspath() {
+        try {
+            Class<?> generateTask = Class.forName(GENERATE_TASK_CLASS);
+            CodeSource source = generateTask.getProtectionDomain().getCodeSource();
+            if (source != null && source.getLocation() != null) {
+                Matcher m = GENERATOR_JAR_VERSION_PATTERN.matcher(source.getLocation().toString());
+                if (m.find()) {
+                    return m.group(1);
+                }
+            }
+            Package pkg = generateTask.getPackage();
+            if (pkg != null && pkg.getImplementationVersion() != null) {
+                return pkg.getImplementationVersion();
+            }
+        } catch (ClassNotFoundException | RuntimeException e) {
+            logger.debug("Could not determine OpenAPI Generator version from classpath: {}", e.getMessage());
+        }
+        return null;
     }
 
     /**

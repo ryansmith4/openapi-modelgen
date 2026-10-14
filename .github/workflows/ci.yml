@@ -76,6 +76,9 @@ jobs:
         run: |
           # Test configuration cache with clean build using root gradle
           ./gradlew -p test-app clean generatePets --configuration-cache --no-daemon
+          # compileJava under the configuration cache: the lazily registered generated source
+          # directories must survive storing and reusing the entry
+          ./gradlew -p test-app compileJava --configuration-cache --no-daemon
           # Test cache reuse (should be faster)
           ./gradlew -p test-app generatePets --configuration-cache --no-daemon
 
