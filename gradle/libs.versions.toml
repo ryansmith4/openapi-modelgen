@@ -45,7 +45,7 @@ mockito = "5.1.1"
 # ===============================================================================================
 swagger-annotations = "2.2.19"
 jsr305 = "3.0.2"
-lombok = "1.18.38"
+lombok = "1.18.48"
 jakarta-validation-api = "3.0.2"
 hibernate-validator = "8.0.1.Final"
 spring-core = "6.0.10"
