@@ -108,7 +108,7 @@ The project uses Gradle version catalogs for centralized dependency management:
 [versions]
 # Security fixes - DO NOT downgrade
 snakeyaml = "2.3"                    # Fixes CVE-2022-1471 (CRITICAL)
-commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
+commons-lang3 = "3.21.0"             # 3.18.0+ fixes CVE-2025-48924 (MEDIUM)
 
 openapi-generator = "7.26.0"
 gradle-plugin-publish = "1.3.0"
@@ -131,7 +131,7 @@ plugin-test = ["junit-jupiter", "assertj-core", "mockito-core"]
 [versions]
 # Security fixes - DO NOT downgrade
 snakeyaml = "2.3"                    # Fixes CVE-2022-1471 (CRITICAL)
-commons-lang3 = "3.18.0"             # Fixes CVE-2025-48924 (MEDIUM)
+commons-lang3 = "3.21.0"             # 3.18.0+ fixes CVE-2025-48924 (MEDIUM)
 ```
 
 ## Testing
