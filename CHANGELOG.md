@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Gradle recorded that as a configuration cache input, so the run after the first run following a
   `clean` reported "file system entry 'build/logs' has been created" and re-ran configuration. The
   directory and log file are now created on the first write, at execution time.
+- **Absolute `outputDir` values** were nested under the project directory by the generate task while the
+  source-set registration and `generateClean` used the path as given, so the three disagreed. All three now
+  resolve the value the same way: relative against the project directory, absolute passed through.
 - **Generated tests compiled as main code (2.2.2 regression)**: the automatic Java integration registered
   the whole `build/generated/sources/openapi` tree as a main source directory, so anything the generator
   wrote under `{spec}/src/test/java` was compiled by `compileJava` and failed with

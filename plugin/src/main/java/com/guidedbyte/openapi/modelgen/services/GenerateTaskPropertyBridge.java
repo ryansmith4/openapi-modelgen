@@ -1,6 +1,8 @@
 package com.guidedbyte.openapi.modelgen.services;
 
+import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
+import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.FileSystemLocationProperty;
@@ -14,8 +16,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Version-neutral access to the file-shaped properties of OpenAPI Generator's {@link GenerateTask}.
@@ -51,9 +51,6 @@ final class GenerateTaskPropertyBridge {
 
     /** Getter names for which the "property not supported on this generator" warning was already logged. */
     private static final Set<String> WARNED_MISSING = ConcurrentHashMap.newKeySet();
-
-    private static final Pattern JAR_VERSION_PATTERN =
-        Pattern.compile("openapi-generator-gradle-plugin-([0-9]+\\.[0-9]+\\.[0-9]+[^/\\\\]*)\\.jar");
 
     private GenerateTaskPropertyBridge() {
     }
@@ -264,24 +261,11 @@ final class GenerateTaskPropertyBridge {
 
     /**
      * Best-effort description of the generator plugin version on the classpath, for error messages.
-     * Uses the JAR file name and the package implementation version; never consults a Project.
+     * Delegates to {@link VersionUtils#detectOpenApiGeneratorVersionFromClasspath()} so the plugin's
+     * apply-time version check and these messages can never disagree.
      */
     static String describeGeneratorVersion() {
-        try {
-            java.security.CodeSource source = GenerateTask.class.getProtectionDomain().getCodeSource();
-            if (source != null && source.getLocation() != null) {
-                Matcher m = JAR_VERSION_PATTERN.matcher(source.getLocation().toString());
-                if (m.find()) {
-                    return m.group(1);
-                }
-            }
-            Package pkg = GenerateTask.class.getPackage();
-            if (pkg != null && pkg.getImplementationVersion() != null) {
-                return pkg.getImplementationVersion();
-            }
-        } catch (RuntimeException e) {
-            logger.debug("Could not determine OpenAPI Generator version from classpath: {}", e.getMessage());
-        }
-        return "unknown";
+        String version = VersionUtils.detectOpenApiGeneratorVersionFromClasspath();
+        return version != null ? version : PluginConstants.UNKNOWN_VERSION;
     }
 }
