@@ -10,7 +10,6 @@ import com.guidedbyte.openapi.modelgen.actions.TemplateDirectorySetupAction;
 import com.guidedbyte.openapi.modelgen.constants.PluginConstants;
 import com.guidedbyte.openapi.modelgen.services.GenerateTaskPropertyBridge.FileProperty;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
-import com.guidedbyte.openapi.modelgen.utils.VersionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -53,43 +52,9 @@ public class TaskConfigurationService implements Serializable {
     private static final Logger logger = PluginLoggerFactory.getLogger(TaskConfigurationService.class);
 
     /**
-     * Config options that OpenAPI Generator 7.25.0+ warns about when unset. Defaulted to {@code false},
-     * the upstream default, so the warnings disappear without changing generated code.
-     */
-    private static final String[] JACKSON_ANNOTATION_OPTIONS = {
-        "generateJsonIncludeAnnotations",
-        "generateJsonSetterNullsAnnotations"
-    };
-
-    /**
-     * OpenAPI Generator version detected by the plugin at apply time, or {@code null} when unknown.
-     * Used to apply version-gated defaults (see {@link #applyJacksonAnnotationDefaults}).
-     */
-    private String detectedGeneratorVersion;
-
-    /**
      * Creates a new TaskConfigurationService.
      */
     public TaskConfigurationService() {
-    }
-
-    /**
-     * Records the OpenAPI Generator version detected by the plugin so that version-gated task
-     * defaults can be applied without re-detecting.
-     *
-     * @param detectedGeneratorVersion the detected version (for example {@code "7.26.0"}), or {@code null} if unknown
-     */
-    public void setDetectedGeneratorVersion(String detectedGeneratorVersion) {
-        this.detectedGeneratorVersion = detectedGeneratorVersion;
-    }
-
-    /**
-     * Returns the OpenAPI Generator version recorded via {@link #setDetectedGeneratorVersion(String)}.
-     *
-     * @return the detected version, or {@code null} if unknown
-     */
-    public String getDetectedGeneratorVersion() {
-        return detectedGeneratorVersion;
     }
 
     /**
@@ -351,9 +316,6 @@ public class TaskConfigurationService implements Serializable {
         for (Map.Entry<String, String> entry : resolvedConfig.getConfigOptions().entrySet()) {
             task.getConfigOptions().put(entry.getKey(), entry.getValue());
         }
-
-        // Silence the per-task Jackson annotation warnings on OpenAPI Generator 7.25.0+
-        applyJacksonAnnotationDefaults(task, resolvedConfig.getConfigOptions(), specName);
 
         // Apply global properties from resolved config
         for (Map.Entry<String, String> entry : resolvedConfig.getGlobalProperties().entrySet()) {
@@ -972,6 +934,9 @@ public class TaskConfigurationService implements Serializable {
         task.getConfigOptions().put("disallowAdditionalPropertiesIfNotPresent", "false");
         task.getConfigOptions().put("useEnumCaseInsensitive", "true");
         task.getConfigOptions().put("openApiNullable", "false");
+        // Jackson annotation options (silences two warnings per task on 7.25.0+; ignored below)
+        task.getConfigOptions().put("generateJsonIncludeAnnotations", "false");
+        task.getConfigOptions().put("generateJsonSetterNullsAnnotations", "false");
         
         // Lombok compatibility
         task.getConfigOptions().put("skipDefaults", "true");
@@ -979,35 +944,6 @@ public class TaskConfigurationService implements Serializable {
 
 
         // Global properties - let OpenAPI Generator use its defaults
-    }
-
-    /**
-     * Defaults {@code generateJsonIncludeAnnotations} and {@code generateJsonSetterNullsAnnotations}
-     * to {@code false} on OpenAPI Generator 7.25.0 and later, unless the user set them.
-     *
-     * <p>OpenAPI Generator 7.24.0 started emitting field-level {@code @JsonInclude} and
-     * {@code @JsonSetter} by default; 7.25.0 reverted that to opt-in and now logs a long warning per
-     * task whenever either option is unset. {@code false} is the upstream default, so generated code
-     * is unchanged; only the warnings disappear. Below 7.25.0 the options are unknown to the generator
-     * and are not set at all. When the generator version could not be detected nothing is set.</p>
-     *
-     * @param task the GenerateTask to configure
-     * @param userConfigOptions the merged user config options (defaults plus spec); user values always win
-     * @param specName the spec name, for logging
-     */
-    private void applyJacksonAnnotationDefaults(GenerateTask task, Map<String, String> userConfigOptions, String specName) {
-        if (detectedGeneratorVersion == null
-                || !VersionUtils.isVersionCompatible(detectedGeneratorVersion,
-                    PluginConstants.JACKSON_ANNOTATION_OPTIONS_MIN_VERSION)) {
-            return;
-        }
-        for (String option : JACKSON_ANNOTATION_OPTIONS) {
-            if (!userConfigOptions.containsKey(option)) {
-                task.getConfigOptions().put(option, "false");
-                logger.debug("Defaulted configOption {}=false for spec '{}' (OpenAPI Generator {})",
-                    option, specName, detectedGeneratorVersion);
-            }
-        }
     }
 
     /**

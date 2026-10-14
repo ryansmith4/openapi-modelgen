@@ -47,6 +47,15 @@ public final class OpenApiConfigDefaults {
     public static final String USE_ENUM_CASE_INSENSITIVE = "true";
     /** Disable OpenAPI nullable library (conflicts with Lombok). */
     public static final String OPENAPI_NULLABLE = "false";
+
+    // Jackson annotation options. OpenAPI Generator 7.25.0+ warns on every task when these are unset;
+    // older generators do not know them and ignore them. "false" is the upstream default and matches the
+    // pre-7.24.0 output: no field-level @JsonInclude / @JsonSetter, inclusion and null handling stay
+    // with the application's ObjectMapper.
+    /** Do not emit field-level {@code @JsonInclude} on model properties. */
+    public static final String GENERATE_JSON_INCLUDE_ANNOTATIONS = "false";
+    /** Do not emit field-level {@code @JsonSetter(nulls = ...)} on model properties. */
+    public static final String GENERATE_JSON_SETTER_NULLS_ANNOTATIONS = "false";
     
     // Lombok compatibility options
     /** Skip default constructor generation (Lombok provides them). */
