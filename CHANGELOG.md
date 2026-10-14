@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Version check now warns, rather than logs at info, when the generator is newer than the tested maximum
   (7.26.0), and names the tested range.
 - CI now compiles the test-app (`compileJava`) after generating it.
+- The plugin jar manifest no longer carries `Built-Date`, `Built-By`, `Built-JDK` or `Built-Gradle`. The
+  timestamp changed the jar on every build, which changed the task classpath of every generate task in a
+  composite build (so they re-ran although nothing had changed) and defeated the build cache across machines.
 - test-app and default test classpath moved to OpenAPI Generator 7.26.0. CI matrix now covers
   7.10.0, 7.14.0, 7.21.0 and 7.26.0 on Java 17 and 21 (`-PopenapiGeneratorVersion`).
 - On OpenAPI Generator 7.25.0+ the plugin sets `generateJsonIncludeAnnotations=false` and

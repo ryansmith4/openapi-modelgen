@@ -564,17 +564,16 @@ java {
     withJavadocJar()
 }
 
-// Configure JAR manifest with version information
+// Configure JAR manifest with version information.
+// Keep the manifest stable: a build timestamp or the builder's user name / JDK changes the jar on
+// every build, which invalidates the task classpath of every consumer in a composite build and
+// defeats the build cache across machines. Nothing in the plugin reads those attributes.
 jar {
     manifest {
         attributes(
             'Implementation-Title': 'OpenAPI Model Generator Plugin',
             'Implementation-Version': project.version,
-            'Implementation-Vendor': 'GuidedByte Technologies Inc.',
-            'Built-By': System.getProperty('user.name'),
-            'Built-Date': new Date().format('yyyy-MM-dd HH:mm:ss'),
-            'Built-JDK': System.getProperty('java.version'),
-            'Built-Gradle': gradle.gradleVersion
+            'Implementation-Vendor': 'GuidedByte Technologies Inc.'
         )
     }
 }
