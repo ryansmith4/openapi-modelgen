@@ -53,14 +53,14 @@ dependencies {
 // Force dependency resolution for security vulnerabilities
 configurations.all {
     resolutionStrategy {
-        // CVE-2025-48924: Force commons-lang3 to secure version 3.18.0+
-        force 'org.apache.commons:commons-lang3:3.18.0'
+        // CVE-2025-48924: Force commons-lang3 to secure version 3.18.0+ (keep in sync with the catalog)
+        force 'org.apache.commons:commons-lang3:3.21.0'
 
         // Explicit resolution for all commons-lang3 transitive dependencies
         eachDependency { DependencyResolveDetails details ->
             if (details.requested.group == 'org.apache.commons' &&
                 details.requested.name == 'commons-lang3') {
-                details.useVersion '3.18.0'
+                details.useVersion '3.21.0'
                 details.because 'Security fix for CVE-2025-48924 - Uncontrolled Recursion vulnerability'
             }
         }
@@ -380,7 +380,7 @@ Add to your build.gradle:
 
 ```groovy
 plugins {
-    id 'com.guidedbyte.openapi-modelgen' version '1.0.0'
+    id 'com.guidedbyte.openapi-modelgen' version '${project.version}'
 }
 ```
 """
