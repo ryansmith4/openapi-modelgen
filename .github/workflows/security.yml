@@ -4,8 +4,6 @@ on:
   schedule:
     # Run weekly security scans
     - cron: '0 0 * * 1'  # Every Monday at midnight UTC
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
@@ -15,23 +13,13 @@ permissions:
 # workflow. The previous CodeQL step called codeql-action/analyze without codeql-action/init and
 # failed on every run. The previous update-actions job rewrote its own grep/sed patterns on every run
 # and then failed to push; Dependabot's github-actions ecosystem (.github/dependabot.yml) covers that.
+# The previous dependency-review job needs the Dependency graph enabled and, for Gradle, a
+# dependency-submission job to populate it; neither exists yet, so it is not part of this workflow.
 
 jobs:
-  # Fails a PR that introduces a dependency with a known vulnerability or a disallowed licence.
-  dependency-review:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
-
   # OWASP Dependency-Check over the plugin's resolved dependencies, weekly and on demand.
   security-scan:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
