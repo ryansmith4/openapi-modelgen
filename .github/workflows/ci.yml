@@ -83,7 +83,7 @@ jobs:
           ./gradlew -p test-app generatePets --configuration-cache --no-daemon
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-results-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}-oag${{ matrix.openapi-generator-version }}
@@ -93,7 +93,7 @@ jobs:
             test-app/build/generated/sources/openapi/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: matrix.openapi-generator-version == '7.26.0'
         with:
           name: build-artifacts-java${{ matrix.java-version }}-gradle${{ matrix.gradle-version }}
