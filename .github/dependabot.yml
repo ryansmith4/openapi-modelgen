@@ -5,13 +5,24 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    
+    ignore:
+      # Minimum supported OpenAPI Generator version. The plugin compiles against it on purpose so
+      # that nothing newer than 7.10.0 can be used accidentally; the maximum tested version is the
+      # separate "openapi-generator-plugin" ref. Dependabot reports a shared version ref by its name.
+      - dependency-name: "openapi-generator-plugin-compat"
+      # JUnit 6 needs a newer Gradle test runner than the 8.5 this build pins (PR #24 failed CI).
+      - dependency-name: "org.junit.jupiter:junit-jupiter"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: "gradle"
     directory: "/plugin"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    
+    ignore:
+      # A documentation snippet in plugin/build.gradle mentions the plugin's own id; it is not a dependency.
+      - dependency-name: "com.guidedbyte.openapi-modelgen"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

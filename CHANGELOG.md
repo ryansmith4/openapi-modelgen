@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (7.26.0), and names the tested range.
 - CI now compiles the test-app (`compileJava`) after generating it.
 - commons-lang3 3.18.0 to 3.21.0 (3.18.0 remains the floor for CVE-2025-48924).
+- Dependabot now ignores the minimum-supported `openapi-generator-plugin-compat` ref, JUnit major bumps,
+  and the plugin's own id that it misread from a documentation snippet.
 - The plugin jar manifest no longer carries `Built-Date`, `Built-By`, `Built-JDK` or `Built-Gradle`. The
   timestamp changed the jar on every build, which changed the task classpath of every generate task in a
   composite build (so they re-ran although nothing had changed) and defeated the build cache across machines.
