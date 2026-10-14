@@ -1,0 +1,37 @@
+name: Dependency graph
+
+# Submits the plugin's resolved runtime dependencies to GitHub's dependency graph, which feeds
+# Dependabot alerts, dependency insights and SBOM export. GitHub cannot read Gradle builds itself,
+# so without this submission the graph only contains the GitHub Actions used by the workflows.
+#
+# Only plugin:runtimeClasspath is submitted: that is what lands on every consumer's buildscript
+# classpath. compileClasspath is left out on purpose, because it holds the minimum supported
+# OpenAPI Generator (compileOnly) that consumers never actually run; test and build-tooling
+# classpaths are left out because they never ship and are the usual source of noisy alerts.
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
+        with:
+          build-root-directory: plugin
+          dependency-graph-include-configurations: 'runtimeClasspath'
