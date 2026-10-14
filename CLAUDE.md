@@ -109,7 +109,7 @@ Templates processed in spec-specific working directories
 
 - **Composite build**: Plugin separate from test-app
 - **Version catalogs**: Centralized dependency management in `gradle/libs.versions.toml`
-- **Security-critical versions**: SnakeYAML 2.3, Commons Lang3 3.21.0 (CVE fixes; 3.18.0 is the floor)
+- **Security-critical versions**: SnakeYAML 2.7, Commons Lang3 3.21.0 (CVE fixes; floors are 2.3 and 3.18.0)
 - **Caching**: SHA-256 hashing, global persistence in `~/.gradle/caches/openapi-modelgen/`
 - **Parallel processing**: Thread-safe multi-spec generation
 - **Incremental builds**: Only regenerates on actual changes
@@ -129,7 +129,7 @@ Templates processed in spec-specific working directories
 ```toml
 [versions]
 # Security fixes - DO NOT downgrade
-snakeyaml = "2.3"                    # Fixes CVE-2022-1471 (CRITICAL)
+snakeyaml = "2.7"                    # 2.3+ fixes CVE-2022-1471 (CRITICAL)
 commons-lang3 = "3.21.0"             # 3.18.0+ fixes CVE-2025-48924 (MEDIUM)
 ```
 
