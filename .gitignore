@@ -83,3 +83,6 @@ yarn-error.log*
 # Plugin Portal credentials (should be in ~/.gradle/gradle.properties)
 gradle.publish.key
 gradle.publish.secret
+# Local MCP tool state (code index, logs, lock files)
+.codeatlas/
+.sheriff/
