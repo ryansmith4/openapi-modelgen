@@ -349,7 +349,19 @@ See [Development Guide](docs/development.md) for detailed development guidelines
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+`SPDX-License-Identifier: Apache-2.0 OR 0BSD`
+
+This project is dual-licensed. Use it under either license, at your option:
+
+- **[Apache License 2.0](LICENSE)** - includes an explicit patent grant; requires keeping the license and
+  notice files when redistributing.
+- **[Zero-Clause BSD (0BSD)](LICENSE-0BSD)** - no attribution, notice, or source-disclosure requirements of
+  any kind.
+
+The 0BSD option applies retroactively to every version of this project from the initial commit (2025-09-02)
+onward, including releases whose published metadata lists only Apache 2.0. See [NOTICE](NOTICE) for details.
+
+Third-party dependencies remain under their own licenses.
 
 ## 🆘 Support
 

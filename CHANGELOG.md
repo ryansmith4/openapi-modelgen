@@ -5,6 +5,15 @@ All notable changes to the OpenAPI Model Generator Gradle Plugin will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 📄 Licensing
+
+- **Dual license: Apache-2.0 OR 0BSD.** The project is now additionally offered under the Zero-Clause BSD
+  license, which has no attribution or notice requirements. The 0BSD option is granted retroactively to every
+  version since the initial commit (2025-09-02). Added `LICENSE-0BSD` and `NOTICE`; the POM now lists both
+  licenses. Nothing changes for users who prefer Apache 2.0.
+
 ## [v2.2.3] - 2026-10-13
 
 ### 🐛 Bug Fixes

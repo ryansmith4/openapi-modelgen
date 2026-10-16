@@ -513,10 +513,15 @@ publishing {
                 description = 'A comprehensive Gradle plugin for generating Java DTOs from OpenAPI specifications'
                 url = 'https://github.com/ryansmith4/openapi-modelgen'
                 
+                // Dual-licensed: SPDX "Apache-2.0 OR 0BSD" (recipient's choice). See NOTICE.
                 licenses {
                     license {
                         name = 'Apache License 2.0'
                         url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                    license {
+                        name = 'Zero-Clause BSD (0BSD)'
+                        url = 'https://opensource.org/license/0bsd'
                     }
                 }
                 

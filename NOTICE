@@ -1,0 +1,18 @@
+OpenAPI Model Generator Gradle Plugin
+Copyright 2025-2026 GuidedByte Technologies Inc.
+
+SPDX-License-Identifier: Apache-2.0 OR 0BSD
+
+This project is dual-licensed. You may use it under the terms of either:
+
+  * the Apache License, Version 2.0 (see LICENSE), or
+  * the Zero-Clause BSD license (see LICENSE-0BSD),
+
+at your option. The 0BSD option carries no attribution or notice requirements.
+
+The copyright holder grants the 0BSD option retroactively to every version of
+this project from the initial commit (2025-09-02) onward, including releases
+whose published metadata lists only the Apache License 2.0.
+
+Third-party dependencies (OpenAPI Generator, SnakeYAML, Apache Commons Lang,
+and others) are not covered by this grant and remain under their own licenses.
