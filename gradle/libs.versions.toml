@@ -7,18 +7,18 @@
 # GRADLE PLUGINS
 # ===============================================================================================
 gradle-plugin-publish = "1.3.1"
-spotbugs = "6.5.12"
-spotbugs-annotations = "4.8.6"
+spotbugs = "6.5.13"
+spotbugs-annotations = "4.10.5"
 owasp-dependencycheck = "12.1.3"
 spring-boot = "3.2.1"
-spring-dependency-management = "1.1.4"
+spring-dependency-management = "1.1.7"
 
 # ===============================================================================================
 # OPENAPI GENERATOR - CORE DEPENDENCIES
 # ===============================================================================================
 # Note: We maintain two versions for compatibility testing
 openapi-generator-plugin = "7.26.0"          # Maximum tested; used by test-app and as the default test classpath
-openapi-generator-plugin-compat = "7.10.0"   # Minimum supported for compileOnly
+openapi-generator-plugin-compat = "7.14.0"   # Minimum supported for compileOnly
 
 # ===============================================================================================
 # SECURITY-CRITICAL DEPENDENCIES
@@ -37,16 +37,16 @@ semver4j = "3.1.0"
 # ===============================================================================================
 # TEST FRAMEWORK
 # ===============================================================================================
-junit-jupiter = "5.9.2"
+junit-jupiter = "5.14.4"
 mockito = "5.24.0"
 
 # ===============================================================================================
 # SPRING BOOT & WEB DEPENDENCIES (test-app)
 # ===============================================================================================
-swagger-annotations = "2.2.19"
+swagger-annotations = "2.2.55"
 jsr305 = "3.0.2"
 lombok = "1.18.48"
-jakarta-validation-api = "3.0.2"
+jakarta-validation-api = "3.1.1"
 hibernate-validator = "8.0.1.Final"
 spring-core = "6.0.10"
 jakarta-annotation-api = "2.1.1"
