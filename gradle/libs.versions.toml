@@ -49,7 +49,7 @@ lombok = "1.18.48"
 jakarta-validation-api = "3.0.2"
 hibernate-validator = "8.0.1.Final"
 spring-core = "6.0.10"
-jakarta-annotation-api = "2.1.1"
+jakarta-annotation-api = "3.0.0"
 
 [libraries]
 # ===============================================================================================
