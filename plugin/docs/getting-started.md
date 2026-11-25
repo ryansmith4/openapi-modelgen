@@ -11,7 +11,7 @@ This guide will help you set up and use the OpenAPI Model Generator plugin in yo
 ## Prerequisites
 
 - **Java 17+** (Java 21 recommended for best performance)
-- **Gradle 8.0+** (Gradle 8.5+ recommended)
+- **Gradle 8.0+** (8.5+ recommended; tested with 8.5 and 8.14.4)
 - An **OpenAPI 3.x specification** file (YAML or JSON)
 
 ## Step 1: Apply the Plugin

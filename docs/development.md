@@ -60,14 +60,15 @@ openapi-modelgen/
 ### Development Environment
 
 - **Java 17+** (for development and runtime)
-- **Gradle 8.0+** (wrapper included)
+- **Gradle 8.14.4** (the wrapper, included; 8.14.4 is the first 8.x release with the fixes for
+  CVE-2026-22816 and CVE-2026-22865)
 - **Git** (for version control)
 
 ### Runtime Dependencies
 
 - **OpenAPI Generator 7.10.0 through 7.26.0** (provided by consumer projects; every version in the
   CI matrix under [Running Tests](#running-tests) is verified on each build)
-- **Gradle 8.0+** (for plugin execution)
+- **Gradle 8.0+** (for plugin execution; tested with 8.5 and 8.14.4)
 
 ## Building
 

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔒 Security
+
+- **Template extraction can no longer write outside its target directory.** When the plugin copied
+  templates out of a JAR it used each entry's name as the destination path without checking it, so an
+  entry whose name contained `..` could have been written elsewhere on disk (a "zip slip"). Every place
+  that takes a file name from a JAR now refuses a path that resolves outside the directory it is writing
+  to. Three of them were reported by CodeQL (`java/zipslip`); they read OpenAPI Generator's JAR and the
+  plugin's own, so exploiting them needed a tampered dependency on the build classpath. The same check
+  was added to the two places that would write files named by a template library JAR.
+- **The plugin is now built with Gradle 8.14.4** instead of 8.5. Older Gradle versions could move on to
+  the next repository when one failed in certain ways, which could let a build take an artifact from a
+  repository it should not have used (CVE-2026-22816, CVE-2026-22865). This concerns how the plugin
+  itself is built; it does not change what consuming projects need.
+- The CI and test-release workflows now run with a read-only GitHub token (`permissions: contents: read`).
+
+### 🔄 Changed
+
+- **Tested on Gradle 8.5 and 8.14.4.** The full test suite passes on both, and the compiled plugin is
+  byte-for-byte the same whichever of the two builds it. One call used to compile against a different
+  Gradle type depending on the Gradle version doing the build; its type is now written out explicitly.
+
 ### 📄 Licensing
 
 - **Dual license: Apache-2.0 OR 0BSD.** The project is now additionally offered under the Zero-Clause BSD

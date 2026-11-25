@@ -48,7 +48,7 @@ The plugin automatically detects your OpenAPI Generator version and adapts accor
 
 **A:** 
 - **Java 17+** (Java 21 recommended for best performance)
-- **Gradle 8.0+** (Gradle 8.5+ recommended)
+- **Gradle 8.0+** (8.5+ recommended; tested with 8.5 and 8.14.4)
 
 ### Q: Is this compatible with Gradle's configuration cache?
 

@@ -22,7 +22,7 @@ Key Features:
 
 Requirements:
 • Java 17+
-• Gradle 8.0+  
+• Gradle 8.0+ (tested with 8.5 and 8.14.4)
 • OpenAPI Generator 7.10.0 through 7.26.0 (must be applied by consumer project; newer versions log a warning)
 
 Basic Usage:
@@ -66,4 +66,4 @@ and integrates seamlessly with corporate dependency management.
 
 For detailed documentation and examples visit: <https://github.com/guidedbyte/openapi-modelgen>
 
-For comprehensive template system documentation see: <https://github.com/guidedbyte/openapi-modelgen/blob/main/plugin/docs/template-system.md>
+For comprehensive template system documentation see: <https://github.com/guidedbyte/openapi-modelgen/blob/main/docs/template-system.md>
