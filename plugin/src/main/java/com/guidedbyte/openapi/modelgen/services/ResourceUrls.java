@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +26,9 @@ final class ResourceUrls {
 
     /**
      * Returns the JAR file that a {@code jar:file:...!/entry} URL points into.
+     *
+     * <p>The JAR's path ends at the first {@code !/}, as it does for the JDK's own JAR URLs, so a
+     * JAR under a directory whose name ends in {@code !} cannot be found.
      *
      * @param jarUrl a URL with the {@code jar} protocol
      * @return the JAR file on disk
@@ -53,12 +55,15 @@ final class ResourceUrls {
     }
 
     private static Path localPath(String fileUrl) throws IOException {
-        if (!fileUrl.startsWith(FILE_PREFIX)) {
+        if (!fileUrl.regionMatches(true, 0, FILE_PREFIX, 0, FILE_PREFIX.length())) {
             throw new IOException("Not a file on the local file system: " + fileUrl);
         }
         try {
             return Paths.get(new URI(fileUrl));
-        } catch (URISyntaxException | IllegalArgumentException | FileSystemNotFoundException e) {
+        } catch (InvalidPathException e) {
+            // A well-formed URL whose decoded path this file system cannot use.
+            throw new IOException("Cannot turn '" + fileUrl + "' into a file path: " + e.getMessage(), e);
+        } catch (URISyntaxException | IllegalArgumentException e) {
             // Not a well-formed URI, for example because it holds a raw space. Nothing in it is
             // encoded then, so the text after "file:" is the path as written.
             return pathAsWritten(fileUrl);
