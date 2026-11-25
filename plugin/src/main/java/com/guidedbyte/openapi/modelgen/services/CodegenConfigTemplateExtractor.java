@@ -12,7 +12,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -211,7 +210,7 @@ public class CodegenConfigTemplateExtractor {
         if (resourceUrl.getProtocol().equals("jar")) {
             extractFromJar(resourceUrl, resourcePath, outputPath);
         } else {
-            extractFromFileSystem(Paths.get(resourceUrl.toURI()), outputPath);
+            extractFromFileSystem(ResourceUrls.fileOf(resourceUrl), outputPath);
         }
     }
     
@@ -219,9 +218,9 @@ public class CodegenConfigTemplateExtractor {
      * Extract templates from a JAR file. Package-private so the path-escape check can be tested.
      */
     void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
-        String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
+        Path jarPath = ResourceUrls.jarFileOf(jarUrl);
 
-        try (JarFile jarFile = new JarFile(jarPath)) {
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             Enumeration<JarEntry> entries = jarFile.entries();
 
             while (entries.hasMoreElements()) {

@@ -1292,7 +1292,8 @@ public class CustomizationEngine {
      * @param classLoader the classloader to use for resource discovery
      * @return set of discovered customization filenames
      */
-    private java.util.Set<String> discoverPluginCustomizations(String generatorPath, ClassLoader classLoader) {
+    // Package-private so the tests can point it at a JAR or directory of their own.
+    java.util.Set<String> discoverPluginCustomizations(String generatorPath, ClassLoader classLoader) {
         java.util.Set<String> customizations = new java.util.HashSet<>();
         
         try {
@@ -1327,13 +1328,7 @@ public class CustomizationEngine {
     private java.util.Set<String> discoverCustomizationsFromJar(java.net.URL jarUrl, String generatorPath) throws java.io.IOException {
         java.util.Set<String> customizations = new java.util.HashSet<>();
         
-        // Parse the JAR URL to get the JAR file path and entry path
-        String jarPath = jarUrl.getPath();
-        if (jarPath.startsWith("file:") && jarPath.contains("!")) {
-            jarPath = jarPath.substring(5, jarPath.indexOf("!"));
-        }
-        
-        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(new java.io.File(jarPath))) {
+        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(ResourceUrls.jarFileOf(jarUrl).toFile())) {
             java.util.Enumeration<java.util.jar.JarEntry> entries = jarFile.entries();
             
             String searchPrefix = generatorPath + "/";
@@ -1359,10 +1354,10 @@ public class CustomizationEngine {
     /**
      * Discovers customizations from the file system (development mode).
      */
-    private java.util.Set<String> discoverCustomizationsFromFileSystem(java.net.URL dirUrl) {
+    private java.util.Set<String> discoverCustomizationsFromFileSystem(java.net.URL dirUrl) throws java.io.IOException {
         java.util.Set<String> customizations = new java.util.HashSet<>();
-        
-        java.io.File dir = new java.io.File(dirUrl.getPath());
+
+        java.io.File dir = ResourceUrls.fileOf(dirUrl).toFile();
         
         if (dir.exists() && dir.isDirectory()) {
             java.io.File[] files = dir.listFiles((file) -> 
