@@ -27,8 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Built-in customizations were skipped when the Gradle user home had a space in its path**, for example
   under a Windows profile such as `C:\Users\Jane Doe`. The plugin could not open its own JAR there, logged
   a warning and generated code without its built-in template customizations. For the same reason
-  `saveOriginalTemplates` saved no templates. Both now work with spaces and other characters that a URL
-  encodes.
+  `saveOriginalTemplates` did not save the full set of templates. Both now work with spaces and other
+  characters that a URL encodes.
+- **Links to the repository and the documentation site now work.** The Plugin Portal description, the
+  `generateHelp` output, the OpenAPI Generator compatibility warning and several documentation pages
+  pointed at a GitHub address that does not exist. They now point at `ryansmith4/openapi-modelgen`.
 
 ### 🔄 Changed
 
@@ -312,6 +315,6 @@ Previous release - see git history for details.
 
 ## Links
 
-- [Repository](https://github.com/guidedbyte-technologies/openapi-modelgen)
+- [Repository](https://github.com/ryansmith4/openapi-modelgen)
 - [Documentation](docs/)
-- [Issue Tracker](https://github.com/guidedbyte-technologies/openapi-modelgen/issues)
+- [Issue Tracker](https://github.com/ryansmith4/openapi-modelgen/issues)

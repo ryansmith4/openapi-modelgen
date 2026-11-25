@@ -691,7 +691,7 @@ public class TaskConfigurationService implements Serializable {
             System.out.println("    }");
             System.out.println("  }");
             System.out.printf("%nFor complete documentation, visit:%n");
-            System.out.printf("  https://github.com/guidedbyte/openapi-modelgen%n%n");
+            System.out.printf("  https://github.com/ryansmith4/openapi-modelgen%n%n");
         }
     }
 
