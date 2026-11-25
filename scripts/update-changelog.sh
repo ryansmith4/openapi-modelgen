@@ -77,7 +77,9 @@ if [ -n "${GITHUB_REPOSITORY:-}" ]; then
     REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
 elif command -v git >/dev/null 2>&1; then
     ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
-    if [[ "$ORIGIN_URL" =~ github\.com[:/]([^/]+)/([^/]+)(\.git)?$ ]]; then
+    # Drop a trailing ".git" first; the pattern below would otherwise keep it in the name.
+    ORIGIN_URL="${ORIGIN_URL%.git}"
+    if [[ "$ORIGIN_URL" =~ github\.com[:/]([^/]+)/([^/]+)$ ]]; then
         REPO_URL="https://github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
     fi
 fi
@@ -105,15 +107,9 @@ update_changelog() {
         found_unreleased = 1
         in_unreleased = 1
 
-        # Print new unreleased section
+        # Print a new, empty unreleased section. It has no sub-headings on purpose:
+        # bare headings would be carried into the next release as its notes.
         print "## [Unreleased]"
-        print ""
-        print "### Added"
-        print "### Changed"
-        print "### Deprecated"
-        print "### Removed"
-        print "### Fixed"
-        print "### Security"
         print ""
 
         # Print the new version section
@@ -140,6 +136,7 @@ update_changelog() {
     # Update links section
     /^## Links/ {
         print "## Links"
+        print ""
         if (repo_url != "") {
             print "- [Unreleased]: " repo_url "/compare/v" version "...HEAD"
             print "- [v" version "]: " repo_url "/compare/v" prev_version "...v" version
@@ -148,11 +145,16 @@ update_changelog() {
         print "- [Documentation](docs/)"
         print "- [Issue Tracker](" repo_url "/issues)"
 
-        # Skip the rest of the links section
-        while (getline > 0 && !/^---/ && !/^$/ && !/^#/) {
-            # Skip existing links
+        # Drop the old entries: the blank lines right after the heading, then the
+        # list lines up to the next blank line, rule or heading.
+        more = (getline > 0)
+        while (more && /^$/) {
+            more = (getline > 0)
         }
-        if (/^---/ || /^$/ || /^#/) {
+        while (more && !/^---/ && !/^$/ && !/^#/) {
+            more = (getline > 0)
+        }
+        if (more) {
             print $0
         }
         next
