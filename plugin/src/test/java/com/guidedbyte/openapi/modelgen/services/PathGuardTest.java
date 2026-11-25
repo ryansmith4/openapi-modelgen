@@ -1,6 +1,8 @@
 package com.guidedbyte.openapi.modelgen.services;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -43,7 +45,10 @@ class PathGuardTest {
             "../escaped.mustache",
             "sub/../../escaped.mustache",
             "../work-other/escaped.mustache",
-            tempDir.resolve("elsewhere.mustache").toString());
+            tempDir.resolve("elsewhere.mustache").toString(),
+            // absolute on every operating system
+            "/escaped.mustache",
+            "//server/share/escaped.mustache");
 
         for (String name : escaping) {
             PathEscapeException error = assertThrows(PathEscapeException.class,
@@ -51,6 +56,32 @@ class PathGuardTest {
             assertTrue(error.getMessage().contains(name), error.getMessage());
             assertTrue(error.getMessage().contains("the test archive"), error.getMessage());
         }
+    }
+
+    /** A name that resolves to the directory itself is not a file name, so there is nothing to write. */
+    @Test
+    void refusesNamesThatAreTheDirectoryItself() throws IOException {
+        Path root = Files.createDirectories(tempDir.resolve("work"));
+
+        for (String name : List.of("", ".", "a/..")) {
+            IOException error = assertThrows(IOException.class,
+                () -> PathGuard.resolveInside(root, name, "the test archive"), "'" + name + "'");
+            assertTrue(error.getMessage().contains("the test archive"), error.getMessage());
+        }
+    }
+
+    /** On Windows a backslash separates directories and a drive letter makes a name absolute. */
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void refusesWindowsFormsOfLeavingTheDirectory() throws IOException {
+        Path root = Files.createDirectories(tempDir.resolve("work"));
+
+        for (String name : List.of("..\\escaped.mustache", "sub\\..\\..\\escaped.mustache",
+                "\\escaped.mustache", "\\\\server\\share\\escaped.mustache")) {
+            assertThrows(PathEscapeException.class, () -> PathGuard.resolveInside(root, name, "test"), name);
+        }
+        // A character Windows does not allow in a file name is reported, not passed on.
+        assertThrows(IOException.class, () -> PathGuard.resolveInside(root, "escaped?.mustache", "test"));
     }
 
     /**

@@ -21,13 +21,17 @@ final class PathGuard {
      * <p>
      * The comparison is made on whole path segments, so a sibling directory whose name merely
      * starts with the root's name ({@code out-other} next to {@code out}) is not treated as inside.
+     * <p>
+     * Names are compared as text. A symbolic link that already exists inside {@code root} is not
+     * followed, so this does not protect a directory that someone else can put links into.
      *
      * @param root the directory files may be written to
      * @param name the file name to resolve, relative to {@code root}
      * @param source where the name came from, used in the error message
-     * @return the absolute, normalized path inside {@code root}
+     * @return the absolute, normalized path of a file inside {@code root}
      * @throws PathEscapeException if the name resolves outside {@code root}
-     * @throws IOException if the name cannot be used as a path on this file system at all
+     * @throws IOException if the name cannot be used as a path on this file system at all, or names
+     *         {@code root} itself rather than a file in it (an empty name, {@code .} or {@code a/..})
      */
     static Path resolveInside(Path root, String name, String source) throws IOException {
         Path normalizedRoot = root.toAbsolutePath().normalize();
@@ -41,6 +45,10 @@ final class PathGuard {
         if (!resolved.startsWith(normalizedRoot)) {
             throw new PathEscapeException("Refusing to write '" + name + "' from " + source
                 + ": it resolves outside the directory '" + normalizedRoot + "'");
+        }
+        if (resolved.equals(normalizedRoot)) {
+            throw new IOException("'" + name + "' from " + source
+                + " does not name a file: it resolves to the directory '" + normalizedRoot + "' itself");
         }
         return resolved;
     }
