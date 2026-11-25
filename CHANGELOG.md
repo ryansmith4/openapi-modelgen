@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.2.4] - 2026-11-25
+
 ### 🔒 Security
 
 - **Template extraction can no longer write outside its target directory.** When the plugin copied
@@ -315,6 +317,8 @@ Previous release - see git history for details.
 
 ## Links
 
+- [Unreleased]: https://github.com/ryansmith4/openapi-modelgen/compare/v2.2.4...HEAD
+- [v2.2.4]: https://github.com/ryansmith4/openapi-modelgen/compare/v2.2.3...v2.2.4
 - [Repository](https://github.com/ryansmith4/openapi-modelgen)
 - [Documentation](docs/)
 - [Issue Tracker](https://github.com/ryansmith4/openapi-modelgen/issues)
