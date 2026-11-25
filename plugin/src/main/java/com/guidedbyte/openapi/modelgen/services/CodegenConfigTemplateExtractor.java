@@ -217,7 +217,7 @@ public class CodegenConfigTemplateExtractor {
     /**
      * Extract templates from a JAR file. Package-private so the path-escape check can be tested.
      */
-    void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
+    void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws IOException {
         Path jarPath = ResourceUrls.jarFileOf(jarUrl);
 
         try (JarFile jarFile = new JarFile(jarPath.toFile())) {

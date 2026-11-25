@@ -4,6 +4,7 @@ import com.guidedbyte.openapi.modelgen.TemplateConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,15 +30,19 @@ class CustomizationEnginePathGuardTest {
     private static final List<String> SOURCES = List.of("user-templates", "user-customizations",
         "library-templates", "library-customizations", "plugin-customizations", "openapi-generator");
 
+    private final CustomizationEngine engine = new CustomizationEngine();
+
     @TempDir
     Path tempDir;
 
     @Test
     void writesALibraryTemplateThatStaysInsideTheWorkDirectory() throws IOException {
         Path workDir = workDir();
+        TemplateConfiguration config = config(workDir).hasLibraryTemplates(true)
+            .libraryTemplates(Map.of("spring/pojo.mustache", "library pojo"))
+            .build();
 
-        process(workDir, config(workDir).hasLibraryTemplates(true)
-            .libraryTemplates(Map.of("spring/pojo.mustache", "library pojo")));
+        engine.processTemplateCustomizations(config, workDir.toFile());
 
         assertEquals("library pojo", Files.readString(workDir.resolve("pojo.mustache")));
     }
@@ -45,10 +50,14 @@ class CustomizationEnginePathGuardTest {
     @Test
     void failsOnALibraryTemplateThatLeavesTheWorkDirectory() throws IOException {
         Path workDir = workDir();
+        File workDirFile = workDir.toFile();
+        TemplateConfiguration config = config(workDir).hasLibraryTemplates(true)
+            .libraryTemplates(Map.of("spring/../../escaped.mustache", "escaped"))
+            .build();
 
-        RuntimeException error = assertThrows(RuntimeException.class, () -> process(workDir,
-            config(workDir).hasLibraryTemplates(true)
-                .libraryTemplates(Map.of("spring/../../escaped.mustache", "escaped"))));
+        // Only the call under test is inside the lambda, so nothing else can supply the exception.
+        RuntimeException error = assertThrows(RuntimeException.class,
+            () -> engine.processTemplateCustomizations(config, workDirFile));
 
         assertInstanceOf(PathEscapeException.class, rootCause(error));
         assertNothingWrittenOutside(workDir);
@@ -57,10 +66,13 @@ class CustomizationEnginePathGuardTest {
     @Test
     void failsOnALibraryCustomizationThatLeavesTheWorkDirectory() throws IOException {
         Path workDir = workDir();
+        File workDirFile = workDir.toFile();
+        TemplateConfiguration config = config(workDir).hasLibraryCustomizations(true)
+            .libraryCustomizations(Map.of("spring/../../escaped.mustache.yaml", "replacements: []"))
+            .build();
 
-        RuntimeException error = assertThrows(RuntimeException.class, () -> process(workDir,
-            config(workDir).hasLibraryCustomizations(true)
-                .libraryCustomizations(Map.of("spring/../../escaped.mustache.yaml", "replacements: []"))));
+        RuntimeException error = assertThrows(RuntimeException.class,
+            () -> engine.processTemplateCustomizations(config, workDirFile));
 
         assertInstanceOf(PathEscapeException.class, rootCause(error));
         assertNothingWrittenOutside(workDir);
@@ -76,10 +88,6 @@ class CustomizationEnginePathGuardTest {
             .templateWorkDir(workDir.toString())
             .templateSources(SOURCES)
             .templateVariables(Map.of());
-    }
-
-    private static void process(Path workDir, TemplateConfiguration.Builder config) {
-        new CustomizationEngine().processTemplateCustomizations(config.build(), workDir.toFile());
     }
 
     private static Throwable rootCause(Throwable error) {
