@@ -139,7 +139,7 @@ commons-lang3 = "3.21.0"             # 3.18.0+ fixes CVE-2025-48924 (MEDIUM)
 
 ### Test Suite Overview
 
-The plugin includes comprehensive testing with **247+ test methods across 27 test classes**:
+The plugin includes comprehensive testing with **270+ test methods across 30+ test classes**:
 
 - **Unit tests**: Core functionality with ProjectBuilder
 - **Integration tests**: Real Gradle environment with TestKit
@@ -393,8 +393,11 @@ The plugin uses **semantic versioning** with automated git-based version detecti
 
 1. **Development**: Work on `SNAPSHOT` versions
 2. **Testing**: Validate with `./gradlew validatePlugin`
-3. **Release**: Create tag with `./gradlew createRelease`
-4. **Publish**: Push tag and run `./gradlew publishPlugins`
+3. **Changelog**: Run `scripts/update-changelog.sh <version>` to move the `[Unreleased]` notes under the
+   new version, review the result, and commit it. The release workflow reads the release notes from this
+   section and stops before publishing if the tagged commit does not have it.
+4. **Release**: Create tag with `./gradlew createRelease`
+5. **Publish**: Push tag and run `./gradlew publishPlugins`
 
 ### Version Override Options
 
