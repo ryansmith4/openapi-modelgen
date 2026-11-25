@@ -970,6 +970,27 @@ public class CustomizationEngine {
     }
     
     /**
+     * Resolves a file name that came from a template library JAR against the template work
+     * directory, and refuses it if the result would be outside that directory. Library JARs are
+     * third-party content, so an entry name containing ".." must not be able to choose where a
+     * file is written.
+     *
+     * @param templateWorkDir the directory templates are prepared in
+     * @param relativeName the file name taken from the library, relative to the work directory
+     * @return the resolved file, guaranteed to be inside the work directory
+     * @throws IOException if the name resolves outside the work directory
+     */
+    static File resolveInsideWorkDir(File templateWorkDir, String relativeName) throws IOException {
+        java.nio.file.Path workDirPath = templateWorkDir.toPath().toAbsolutePath().normalize();
+        java.nio.file.Path resolved = workDirPath.resolve(relativeName).normalize();
+        if (!resolved.startsWith(workDirPath)) {
+            throw new IOException("Library file name '" + relativeName
+                + "' resolves outside the template work directory '" + workDirPath + "'");
+        }
+        return resolved.toFile();
+    }
+
+    /**
      * Applies library template files directly to the working directory.
      * This method copies library templates that should override OpenAPI Generator defaults,
      * filtering by generator compatibility based on library metadata.
@@ -994,7 +1015,7 @@ public class CustomizationEngine {
                 // Check generator compatibility based on library metadata
                 if (isLibraryContentCompatible(templatePath, templateConfig.getGeneratorName(), libraryMetadata)) {
                     try {
-                        File templateFile = new File(templateWorkDir, fileName);
+                        File templateFile = resolveInsideWorkDir(templateWorkDir, fileName);
                         Files.createDirectories(templateFile.getParentFile().toPath());
                         Files.writeString(templateFile.toPath(), templateContent);
                         
@@ -1035,7 +1056,7 @@ public class CustomizationEngine {
                 // Check generator compatibility based on library metadata
                 if (isLibraryContentCompatible(customizationPath, templateConfig.getGeneratorName(), libraryMetadata)) {
                     try {
-                        File templateFile = new File(templateWorkDir, templateName);
+                        File templateFile = resolveInsideWorkDir(templateWorkDir, templateName);
                         if (templateFile.exists()) {
                             applyYamlCustomizationToFile(templateFile, yamlContent, templateConfig);
                             logger.debug("Applied compatible library customization: {} -> {}", fileName, templateName);
@@ -1386,14 +1407,21 @@ public class CustomizationEngine {
             
             logger.debug("Applying plugin customization: {} -> {}", customizationFileName, templateName);
             
-            // Apply customization to the template file using the comprehensive YAML engine
-            File templateFile = new File(templateWorkDir, templateName);
+            // Apply customization to the template file using the comprehensive YAML engine.
+            // The name comes from a JAR entry, so make sure it cannot point outside the work directory.
+            java.nio.file.Path workDirPath = templateWorkDir.toPath().toAbsolutePath().normalize();
+            java.nio.file.Path templatePath = workDirPath.resolve(templateName).normalize();
+            if (!templatePath.startsWith(workDirPath)) {
+                throw new IOException("Customization file name '" + customizationFileName
+                    + "' resolves outside the template work directory '" + workDirPath + "'");
+            }
+            File templateFile = templatePath.toFile();
             if (templateFile.exists()) {
                 applyYamlCustomizationToFile(templateFile, yamlContent, templateConfig);
             } else {
                 logger.debug("Template file {} does not exist, skipping customization", templateFile.getName());
             }
-            
+
         } catch (Exception e) {
             logger.error("Failed to apply plugin customization file {}: {}", customizationFileName, e.getMessage());
             logger.debug("Plugin customization error details for {}", customizationFileName, e);
