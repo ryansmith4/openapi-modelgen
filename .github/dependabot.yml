@@ -14,7 +14,8 @@ updates:
       # that nothing newer than 7.10.0 can be used accidentally; the maximum tested version is the
       # separate "openapi-generator-plugin" ref. Dependabot reports a shared version ref by its name.
       - dependency-name: "openapi-generator-plugin-compat"
-      # JUnit 6 needs a newer Gradle test runner than the 8.5 this build pins (PR #24 failed CI).
+      # JUnit 6 needed a newer Gradle test runner than the 8.5 this build used when PR #24 failed CI.
+      # Not retried since the build moved to Gradle 8.14.4.
       - dependency-name: "org.junit.jupiter:junit-jupiter"
         update-types: ["version-update:semver-major"]
 

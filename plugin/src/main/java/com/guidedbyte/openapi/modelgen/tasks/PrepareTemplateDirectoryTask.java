@@ -7,6 +7,7 @@ import com.guidedbyte.openapi.modelgen.services.LoggingContext;
 import com.guidedbyte.openapi.modelgen.services.TemplateDiscoveryService;
 import com.guidedbyte.openapi.modelgen.util.PluginLoggerFactory;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileSystemOperations;
 import org.gradle.api.provider.Property;
@@ -184,7 +185,10 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
             logger.debug(
                 "Copying user templates from generator directory: {}", generatorTemplateDir.getAbsolutePath());
 
-            getFileSystemOperations().sync(syncSpec -> {
+            // The parameter type is spelled out on purpose. Left to inference it compiles to CopySpec
+            // on Gradle 8.5 and to SyncSpec on newer versions, so the published class would depend
+            // on which Gradle built it.
+            getFileSystemOperations().sync((CopySpec syncSpec) -> {
                 syncSpec.from(generatorTemplateDir);
                 syncSpec.into(outputDir);
             });
@@ -198,7 +202,7 @@ public abstract class PrepareTemplateDirectoryTask extends DefaultTask {
             logger.debug(
                 "Copying user templates from root directory: {}", rootTemplateDir.getAbsolutePath());
 
-            getFileSystemOperations().sync(syncSpec -> {
+            getFileSystemOperations().sync((CopySpec syncSpec) -> {
                 syncSpec.from(rootTemplateDir);
                 syncSpec.into(outputDir);
                 syncSpec.include("*.mustache");

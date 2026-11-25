@@ -6,13 +6,16 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         java-version: [17, 21]
-        gradle-version: [8.5]
+        gradle-version: [8.14.4]
         # 7.10.0 = minimum, 7.14.0 = previous ceiling, 7.21.0 = last version before the lazy
         # task API rewrite, 7.26.0 = current maximum. The 7.21.0/7.26.0 pair proves the
         # GenerateTaskPropertyBridge on both API generations.
