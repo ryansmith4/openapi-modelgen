@@ -376,48 +376,52 @@ cd test-app
 
 ### Version Management
 
-The plugin uses **semantic versioning** with automated git-based version detection:
+The plugin uses **semantic versioning**. The version is the `version` property in `plugin/gradle.properties`:
 
 ```bash
 # Check current version
-./gradlew showVersion
+./gradlew plugin:showVersion
 
 # Validate version format
-./gradlew validateVersion
-
-# Create release (validates, tests, and tags)
-./gradlew createRelease
+./gradlew plugin:validateVersion
 ```
 
 ### Release Process
 
-1. **Development**: Work on `SNAPSHOT` versions
-2. **Testing**: Validate with `./gradlew validatePlugin`
-3. **Changelog**: Run `scripts/update-changelog.sh <version>` to move the `[Unreleased]` notes under the
-   new version, review the result, and commit it. The release workflow reads the release notes from this
-   section and stops before publishing if the tagged commit does not have it.
-4. **Release**: Create tag with `./gradlew createRelease`
-5. **Publish**: Push tag and run `./gradlew publishPlugins`
+Pushing a `v<version>` tag starts the release workflow (`.github/workflows/release.yml`), which builds,
+tests, publishes to the Gradle Plugin Portal and creates the GitHub release. The steps before that are
+done by hand:
+
+1. **Version**: Set `version` in `plugin/gradle.properties` to the new version. The workflow publishes
+   the version named by the tag either way; this keeps the repository in step with what was published.
+2. **Changelog**: Run `scripts/update-changelog.sh <version>` to move the `[Unreleased]` notes under the
+   new version, and review the result. The release workflow takes the release notes from this section and
+   stops before building if the tagged commit has none. Skip this step for alpha, beta and rc tags: it
+   would move the notes under the pre-release and leave none for the final release.
+3. **Check**: Run `./gradlew plugin:validatePlugin`.
+4. **Commit**: Commit both files and get the commit onto `main`.
+5. **Tag**: Tag that commit and push the tag: `git tag v<version> && git push origin v<version>`.
+
+Do not run `publishPlugins` by hand as well. The workflow publishes, and the Plugin Portal accepts each
+version only once, so whichever publish comes second fails.
+
+After a final release the workflow also starts the "Update Documentation Version" workflow, which commits
+the new version number for the documentation site to `main`. If that did not happen, start it by hand:
+`gh workflow run update-docs-version.yml`.
 
 ### Version Override Options
 
+The version is not read from git tags. To build with a different version for one run, without editing
+`plugin/gradle.properties`, pass it on the command line:
+
 ```bash
-# Command line override
-./gradlew build -Pversion=1.1.0
-
-# gradle.properties override
-# Uncomment version=1.1.0 in gradle.properties
-
-# Git tag-based (automatic)
-git tag v1.1.0 && ./gradlew build
+./gradlew plugin:build -Pversion=1.1.0
 ```
 
 ### Publishing
 
-**Gradle Plugin Portal**:
-```bash
-./gradlew publishPlugins
-```
+**Gradle Plugin Portal**: done by the release workflow when a `v<version>` tag is pushed (see Release
+Process above), not by hand.
 
 **Local testing**:
 ```bash
