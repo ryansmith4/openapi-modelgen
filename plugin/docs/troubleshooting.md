@@ -601,7 +601,7 @@ org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
 
 **Requirements:**
 - **Java 17+** (Java 21 recommended)
-- **Gradle 8.0+** (Gradle 8.5+ recommended)
+- **Gradle 8.0+** (8.5+ recommended; tested with 8.5 and 8.14.4)
 
 **Solution:**
 ```gradle

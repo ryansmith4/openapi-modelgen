@@ -83,7 +83,7 @@ Just run `./gradlew build` and everything works.
 ### Developer Experience
 
 - **Command-line options**: Override any configuration via CLI parameters
-- **Comprehensive testing**: 247+ test methods across 27 test classes (100% pass rate)
+- **Comprehensive testing**: 270+ test methods across 30+ test classes (100% pass rate)
 - **Method-call DSL**: Type-safe configuration with validation and CLI overrides
 
 ## 📖 Documentation
@@ -141,11 +141,10 @@ The plugin comes pre-configured with sensible defaults for **Spring Boot 3 + Jak
 // These are the built-in defaults - you only need to override what you want to change
 openapiModelgen {
     defaults {
-        generatorName "spring"                               // OpenAPI Generator name
+        generator "spring"                                   // OpenAPI Generator name
         outputDir "build/generated/sources/openapi"         // Generated code output
         modelNameSuffix "Dto"                               // Suffix for model classes
         validateSpec false                                   // Validate specs before generation
-        applyPluginCustomizations true                       // Use built-in optimizations
         parallel true                                        // Enable parallel processing
 
         // Template variables available in all templates
@@ -192,8 +191,8 @@ insertions:
        */
 
 replacements:
-  - pattern: "{{#deprecated}}"
-    replacement: "{{#deprecated}}\n  // DEPRECATED - Use newer version"
+  - find: "{{#deprecated}}"
+    replace: "{{#deprecated}}\n  // DEPRECATED - Use newer version"
 ```
 
 ### 2. Complete Template Override
@@ -214,13 +213,6 @@ Share templates across projects via JAR dependencies:
 ```gradle
 dependencies {
     openapiCustomizations 'com.company:api-templates:1.0.0'
-}
-
-openapiModelgen {
-    defaults {
-        useLibraryTemplates true
-        useLibraryCustomizations true
-    }
 }
 ```
 
@@ -316,7 +308,7 @@ plugins {
 ## 📋 Requirements
 
 - **Java 17+**
-- **Gradle 8.0+**
+- **Gradle 8.0+** (tested with 8.5 and 8.14.4)
 - **OpenAPI Generator 7.10.0 through 7.26.0** (must be provided by consumer project; see below)
 
 ### OpenAPI Generator Compatibility
