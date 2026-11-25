@@ -213,22 +213,28 @@ public class CodegenConfigTemplateExtractor {
     }
     
     /**
-     * Extract templates from a JAR file.
+     * Extract templates from a JAR file. Package-private so the path-escape check can be tested.
      */
-    private void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
+    void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
         String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
-        
+        Path outputRoot = outputPath.toAbsolutePath().normalize();
+
         try (JarFile jarFile = new JarFile(jarPath)) {
             Enumeration<JarEntry> entries = jarFile.entries();
-            
+
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 String entryName = entry.getName();
-                
+
                 if (entryName.startsWith(resourcePath + "/") && !entry.isDirectory()) {
                     String relativePath = entryName.substring((resourcePath + "/").length());
-                    Path targetPath = outputPath.resolve(relativePath);
-                    
+                    // An entry name containing ".." could otherwise write outside the output directory.
+                    Path targetPath = outputRoot.resolve(relativePath).normalize();
+                    if (!targetPath.startsWith(outputRoot)) {
+                        throw new IOException("Refusing to extract JAR entry '" + entryName + "' from '" + jarPath
+                            + "': it resolves outside the output directory '" + outputRoot + "'");
+                    }
+
                     Path parentPath = targetPath.getParent();
                     if (parentPath != null) {
                         Files.createDirectories(parentPath);
