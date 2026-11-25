@@ -36,5 +36,5 @@ jobs:
           build-root-directory: plugin
           # The wrapper lives at the repository root, not in plugin/, so the action needs the
           # version spelled out. Keep in sync with gradle/wrapper/gradle-wrapper.properties.
-          gradle-version: '8.5'
+          gradle-version: '8.14.4'
           dependency-graph-include-configurations: 'runtimeClasspath'

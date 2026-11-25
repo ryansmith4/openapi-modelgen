@@ -8,6 +8,9 @@ on:
         required: true
         default: '0.1.0-test'
 
+permissions:
+  contents: read
+
 jobs:
   test-release:
     runs-on: ubuntu-latest
