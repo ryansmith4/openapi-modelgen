@@ -617,7 +617,7 @@ Error parsing YAML customization: Invalid YAML syntax
 
 ### Before Reporting Issues
 
-1. **Search existing issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues)
+1. **Search existing issues**: [GitHub Issues](https://github.com/ryansmith4/openapi-modelgen/issues)
 
 2. **Test with minimal configuration**:
    ```gradle
@@ -656,10 +656,9 @@ When reporting issues, include:
 
 ### Community Resources
 
-- **Documentation**: [GitHub Pages](https://guidedbyte.github.io/openapi-modelgen/)
-- **Template Schema**: [Schema Documentation](https://guidedbyte.github.io/openapi-modelgen/template-schema.html)
-- **Issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/guidedbyte/openapi-modelgen/discussions)
+- **Documentation**: [GitHub Pages](https://ryansmith4.github.io/openapi-modelgen/)
+- **Template Schema**: [Schema Documentation](https://github.com/ryansmith4/openapi-modelgen/blob/main/plugin/docs/template-schema.md)
+- **Issues and questions**: [GitHub Issues](https://github.com/ryansmith4/openapi-modelgen/issues)
 
 ### Commercial Support
 

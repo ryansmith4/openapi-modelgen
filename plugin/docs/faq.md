@@ -383,9 +383,8 @@ conditions:
 
 **A:** Multiple support channels:
 
-1. **Documentation**: [GitHub Pages Documentation](https://guidedbyte.github.io/openapi-modelgen/)
-1. **Issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues) for bugs
-1. **Discussions**: GitHub Discussions for usage questions
+1. **Documentation**: [GitHub Pages Documentation](https://ryansmith4.github.io/openapi-modelgen/)
+1. **Issues**: [GitHub Issues](https://github.com/ryansmith4/openapi-modelgen/issues) for bugs and usage questions
 1. **Plugin help**: `./gradlew generateHelp` for configuration reference
 
 ## Version and Migration Questions
@@ -428,4 +427,4 @@ Always check the release notes and migration guide when upgrading.
 
 ---
 
-**Still have questions?** Check the [complete documentation](https://guidedbyte.github.io/openapi-modelgen/) or ask on [GitHub Discussions](https://github.com/guidedbyte/openapi-modelgen/discussions).
+**Still have questions?** Check the [complete documentation](https://ryansmith4.github.io/openapi-modelgen/) or open a [GitHub issue](https://github.com/ryansmith4/openapi-modelgen/issues).

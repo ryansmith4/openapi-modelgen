@@ -357,9 +357,9 @@ Third-party dependencies remain under their own licenses.
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues)
-- **Documentation**: [GitHub Pages](https://guidedbyte.github.io/openapi-modelgen/)
-- **Template Schema**: [Schema Documentation](https://guidedbyte.github.io/openapi-modelgen/template-schema.html)
+- **Issues**: [GitHub Issues](https://github.com/ryansmith4/openapi-modelgen/issues)
+- **Documentation**: [GitHub Pages](https://ryansmith4.github.io/openapi-modelgen/)
+- **Template Schema**: [Schema Documentation](https://github.com/ryansmith4/openapi-modelgen/blob/main/plugin/docs/template-schema.md)
 
 ---
 

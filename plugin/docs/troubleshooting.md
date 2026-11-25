@@ -735,9 +735,8 @@ When reporting issues, include:
 
 ### Community Support
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/guidedbyte/openapi-modelgen/issues)
-- **Discussions**: Join community discussions for usage questions
-- **Documentation**: Complete guides at [GitHub Pages](https://guidedbyte.github.io/openapi-modelgen/)
+- **GitHub Issues**: [Report bugs, request features and ask usage questions](https://github.com/ryansmith4/openapi-modelgen/issues)
+- **Documentation**: Complete guides at [GitHub Pages](https://ryansmith4.github.io/openapi-modelgen/)
 
 When reporting issues, please include:
 - Plugin version

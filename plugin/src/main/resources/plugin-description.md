@@ -64,6 +64,6 @@ template access. Features dynamic plugin customization discovery, template varia
 functionality. It automatically detects and works with whatever OpenAPI Generator version you provide (7.10.0 through 7.26.0 tested, including the 7.22+ lazy task API)
 and integrates seamlessly with corporate dependency management.
 
-For detailed documentation and examples visit: <https://github.com/guidedbyte/openapi-modelgen>
+For detailed documentation and examples visit: <https://github.com/ryansmith4/openapi-modelgen>
 
-For comprehensive template system documentation see: <https://github.com/guidedbyte/openapi-modelgen/blob/main/docs/template-system.md>
+For comprehensive template system documentation see: <https://github.com/ryansmith4/openapi-modelgen/blob/main/docs/template-system.md>

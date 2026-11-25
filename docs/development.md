@@ -331,7 +331,7 @@ cd test-app
 ### Before Contributing
 
 1. **Read this development guide**
-2. **Check existing issues**: [GitHub Issues](https://github.com/guidedbyte/openapi-modelgen/issues)
+2. **Check existing issues**: [GitHub Issues](https://github.com/ryansmith4/openapi-modelgen/issues)
 3. **Run full test suite**:
    ```bash
    ./gradlew plugin:test
