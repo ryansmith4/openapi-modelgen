@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   itself is built; it does not change what consuming projects need.
 - The CI and test-release workflows now run with a read-only GitHub token (`permissions: contents: read`).
 
+### 🐛 Bug Fixes
+
+- **Built-in customizations were skipped when the Gradle user home had a space in its path**, for example
+  under a Windows profile such as `C:\Users\Jane Doe`. The plugin could not open its own JAR there, logged
+  a warning and generated code without its built-in template customizations. For the same reason
+  `saveOriginalTemplates` saved no templates. Both now work with spaces and other characters that a URL
+  encodes.
+
 ### 🔄 Changed
 
 - **Tested on Gradle 8.5 and 8.14.4.** The full test suite was run on both for this release (CI runs

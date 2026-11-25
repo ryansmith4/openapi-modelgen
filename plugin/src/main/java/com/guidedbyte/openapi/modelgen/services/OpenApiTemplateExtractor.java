@@ -87,7 +87,7 @@ public class OpenApiTemplateExtractor {
             extractFromJar(resourceUrl, templateDir, outputPath, library, fileSystemOperations);
         } else {
             // Extract from file system (development mode)
-            extractFromFileSystem(Paths.get(resourceUrl.toURI()), outputPath, library, fileSystemOperations);
+            extractFromFileSystem(ResourceUrls.fileOf(resourceUrl), outputPath, library, fileSystemOperations);
         }
     }
     
@@ -97,9 +97,9 @@ public class OpenApiTemplateExtractor {
     private static void extractFromJar(URL jarUrl, String resourcePath, Path outputPath, String library, FileSystemOperations fileSystemOperations) 
             throws Exception {
         
-        String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
+        Path jarPath = ResourceUrls.jarFileOf(jarUrl);
 
-        try (JarFile jarFile = new JarFile(jarPath)) {
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
             Enumeration<JarEntry> entries = jarFile.entries();
             
             while (entries.hasMoreElements()) {
