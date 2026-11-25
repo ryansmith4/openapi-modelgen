@@ -129,8 +129,11 @@ update_changelog() {
         next
     }
 
-    # Skip content in unreleased section (it becomes the new version content)
+    # Lines of the unreleased section are printed under the new version header,
+    # so they become the release notes of that version. (No apostrophes in this
+    # awk program: it sits inside a single-quoted shell string.)
     in_unreleased {
+        print $0
         next
     }
 
