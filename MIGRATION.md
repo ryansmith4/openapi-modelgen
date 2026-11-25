@@ -41,38 +41,14 @@ This document provides guidance for migrating between different versions of the 
 
 ## Version Detection
 
-The plugin automatically detects its version from:
+The plugin's own version is the `version` property in `plugin/gradle.properties`. It is not read from
+git tags. To build with a different version for one run, pass it on the command line:
 
-1. **Gradle property**: `./gradlew build -Pversion=1.2.3`
-1. **gradle.properties**: Uncomment `version=1.2.3` 
-1. **Git tags**: Automatic detection from `git describe --tags`
-1. **Fallback**: `1.0.0-SNAPSHOT` for development
-
-## Incremental Versioning Strategies
-
-### Strategy 1: Git Tag-Based (Recommended)
 ```bash
-# Create release
-git tag -a v1.1.0 -m "Release version 1.1.0"
-git push origin v1.1.0
-
-# Build automatically uses tag version
-./gradlew build
-./gradlew publishPlugins
+./gradlew plugin:build -Pversion=1.1.0-RC1
 ```
 
-### Strategy 2: Manual gradle.properties
-```properties
-# gradle.properties
-version=1.1.0
-```
-
-### Strategy 3: Command Line Override
-```bash
-# Build specific version
-./gradlew build -Pversion=1.1.0-RC1
-./gradlew publishPlugins -Pversion=1.1.0
-```
+A release publishes the version named by the pushed tag (see Release Commands below).
 
 ## Release Workflow
 
@@ -83,30 +59,23 @@ version=1.1.0
 1. **Hotfix**: `1.1.1` for critical fixes
 
 ### Release Commands
-```bash
-# Validate before release
-./gradlew validatePlugin
 
-# Create release tag and validate
-./gradlew createRelease
-
-# Push tag and publish
-git push origin v1.1.0
-./gradlew publishPlugins
-```
+See "Release Process" in [docs/development.md](docs/development.md). In short: set the version, run
+`scripts/update-changelog.sh`, commit, then push a `v<version>` tag. The release workflow publishes; do
+not run `publishPlugins` by hand as well.
 
 ## Configuration Migration
 
 ### Checking Compatibility
 ```bash
-# Show current version
-./gradlew showVersion
+# Show the plugin's current version (run in this repository)
+./gradlew plugin:showVersion
 
-# Validate version format
-./gradlew validateVersion
+# Validate version format (run in this repository)
+./gradlew plugin:validateVersion
 
-# Get help for configuration options
-./gradlew openapiModelgenHelp
+# Get help for configuration options (run in a project that applies the plugin)
+./gradlew generateHelp
 ```
 
 ### DSL Compatibility
@@ -130,27 +99,18 @@ openapiModelgen {
 
 **"Invalid version format" Error:**
 - Ensure version follows semantic versioning: `1.2.3` or `1.2.3-SNAPSHOT`
-- Check git tag format: should be `v1.2.3` not `1.2.3`
+- A release tag is the version with a `v` in front: `v1.2.3`, not `1.2.3`
 
 **"Cannot publish development version" Error:**
-- Remove `-SNAPSHOT` or `-dirty` suffixes before publishing
-- Commit any uncommitted changes before release
-
-**Git versioning not working:**
-- Ensure git is available in PATH
-- Create at least one git tag: `git tag v1.0.0`
-- Check git repository is initialized
+- Remove the `-SNAPSHOT` suffix from the version before publishing
 
 ### Debug Commands
 ```bash
-# Check current version resolution
-./gradlew showVersion
+# Check the current version
+./gradlew plugin:showVersion
 
-# Check git tag status
-git describe --tags --always --dirty
-
-# Manual version override
-./gradlew build -Pversion=1.0.0
+# Build with a different version for one run
+./gradlew plugin:build -Pversion=1.0.0
 ```
 
 ## Future Versioning Considerations

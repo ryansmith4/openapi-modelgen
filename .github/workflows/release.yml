@@ -39,19 +39,41 @@ jobs:
       # The changelog section for a release is written and committed before the tag is pushed
       # (scripts/update-changelog.sh <version> moves the [Unreleased] notes under the new version).
       # This job only reads it. Anything this job changed in the file would be lost with the
-      # runner, so it checks here, before anything is published, that the section is there.
-      - name: Check CHANGELOG.md has a section for this version
+      # runner. The notes are read here, before anything is built or published, so that a final
+      # release without notes stops early. A pre-release may go without them.
+      - name: Read release notes from CHANGELOG.md
+        id: changelog
         env:
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
-          if grep -qF "## [v$VERSION]" CHANGELOG.md; then
-            echo "Found the v$VERSION section in CHANGELOG.md"
-          elif [[ "$VERSION" == *alpha* || "$VERSION" == *beta* || "$VERSION" == *rc* ]]; then
-            echo "::warning::CHANGELOG.md has no section for pre-release v$VERSION. The release notes will only link to the changelog."
-          else
-            echo "::error::CHANGELOG.md has no '## [v$VERSION]' section. Run scripts/update-changelog.sh $VERSION, commit the result, and tag that commit."
-            exit 1
+          # The lines between this version's header and the next "## " header
+          RELEASE_NOTES=$(awk -v header="## [v$VERSION]" '
+            /^## / {
+              if (in_section) exit
+              if (index($0, header) == 1) { in_section = 1; next }
+            }
+            in_section && (started || NF) { started = 1; print }
+          ' CHANGELOG.md)
+
+          if ! grep -q '[^[:space:]]' <<< "$RELEASE_NOTES"; then
+            if [[ "$VERSION" == *alpha* || "$VERSION" == *beta* || "$VERSION" == *rc* ]]; then
+              echo "::warning::CHANGELOG.md has no notes for pre-release v$VERSION. The release notes will only link to the changelog."
+              RELEASE_NOTES="Release v$VERSION - see CHANGELOG.md for details"
+            else
+              echo "::error::CHANGELOG.md has no notes under a '## [v$VERSION]' header. Run scripts/update-changelog.sh $VERSION, commit the result, and tag that commit."
+              exit 1
+            fi
           fi
+
+          {
+            echo "changelog<<EOF"
+            echo "## Release v$VERSION"
+            echo ""
+            echo "$RELEASE_NOTES"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update version in gradle.properties
         run: |
@@ -85,43 +107,6 @@ jobs:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
-      - name: Generate release notes from changelog
-        id: changelog
-        run: |
-          # Extract the content between this version's header and the next version/section
-          VERSION="${{ steps.extract_version.outputs.version }}"
-
-          # Get the release notes from the tagged commit's CHANGELOG.md
-          RELEASE_NOTES=$(awk -v version="$VERSION" '
-            BEGIN { in_section = 0; content = "" }
-            /^## \[v/ {
-              if (in_section) exit
-              if ($0 ~ "\\[v" version "\\]") {
-                in_section = 1
-                next
-              }
-            }
-            /^## / && in_section { exit }
-            in_section && !/^## / {
-              if (content != "") content = content "\n"
-              content = content $0
-            }
-            END { print content }
-          ' CHANGELOG.md)
-
-          if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="Release v$VERSION - see CHANGELOG.md for details"
-          fi
-
-          # Save to output
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "## Release v$VERSION" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -129,3 +114,19 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
           body: ${{ steps.changelog.outputs.changelog }}
+
+  # update-docs-version.yml listens for "release: published", but a release created with the
+  # workflow's own token does not start other workflows, so it never ran. It is started here
+  # instead. This is a separate job so that the release job's token stays limited to "contents",
+  # and so that a failure here comes after the publish and cannot stop it.
+  update-docs-version:
+    needs: release
+    if: "!contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc')"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Start the docs version update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-docs-version.yml --repo "${{ github.repository }}" --ref main

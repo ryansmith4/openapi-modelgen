@@ -48,11 +48,43 @@ if [ ! -f "$CHANGELOG_FILE" ]; then
     exit 1
 fi
 
+# Refuse to run when there is nothing to do. Carrying on would leave an empty or a second
+# section for the version, and the release workflow would then find no notes to publish.
+if grep -qF "## [v$VERSION]" "$CHANGELOG_FILE"; then
+    echo "Error: $CHANGELOG_FILE already has a section for v$VERSION"
+    exit 1
+fi
+if ! grep -q '^## \[Unreleased\]' "$CHANGELOG_FILE"; then
+    echo "Error: $CHANGELOG_FILE has no '## [Unreleased]' section"
+    exit 1
+fi
+UNRELEASED_NOTES=$(awk '
+    /^## / { in_unreleased = ($0 ~ /^## \[Unreleased\]/); next }
+    in_unreleased && NF { print }
+' "$CHANGELOG_FILE")
+if [ -z "$UNRELEASED_NOTES" ]; then
+    echo "Error: the [Unreleased] section of $CHANGELOG_FILE is empty, so there is nothing to release"
+    exit 1
+fi
+
 # Auto-detect previous version if not provided
 if [ -z "$PREVIOUS_VERSION" ]; then
     echo "Auto-detecting previous version..."
     if command -v git >/dev/null 2>&1; then
-        PREVIOUS_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n1 | sed 's/^v//')
+        # The highest tag other than this version. versionsort.suffix makes git sort a
+        # pre-release (v2.2.4-rc.1) before its final release (v2.2.4) instead of after it.
+        # A final release is compared with the previous final release, not with a pre-release.
+        while IFS= read -r tag; do
+            candidate="${tag#v}"
+            if [ "$candidate" = "$VERSION" ]; then
+                continue
+            fi
+            if [[ "$VERSION" != *-* && "$candidate" == *-* ]]; then
+                continue
+            fi
+            PREVIOUS_VERSION="$candidate"
+            break
+        done < <(git -c versionsort.suffix=- tag -l "v*" --sort=-version:refname)
         if [ -n "$PREVIOUS_VERSION" ]; then
             echo "Detected previous version: $PREVIOUS_VERSION"
         else
@@ -82,6 +114,12 @@ elif command -v git >/dev/null 2>&1; then
     if [[ "$ORIGIN_URL" =~ github\.com[:/]([^/]+)/([^/]+)$ ]]; then
         REPO_URL="https://github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
     fi
+fi
+if [ -z "$REPO_URL" ]; then
+    echo "Error: could not work out the GitHub repository for the links in $CHANGELOG_FILE."
+    echo "Set GITHUB_REPOSITORY=owner/repo and run the script again."
+    rm -f "${CHANGELOG_FILE}.backup"
+    exit 1
 fi
 
 # Create temporary file with updated changelog
@@ -135,25 +173,30 @@ update_changelog() {
 
     # Update links section
     /^## Links/ {
-        print "## Links"
-        print ""
-        if (repo_url != "") {
-            print "- [Unreleased]: " repo_url "/compare/v" version "...HEAD"
-            print "- [v" version "]: " repo_url "/compare/v" prev_version "...v" version
-        }
-        print "- [Repository](" repo_url ")"
-        print "- [Documentation](docs/)"
-        print "- [Issue Tracker](" repo_url "/issues)"
-
-        # Drop the old entries: the blank lines right after the heading, then the
-        # list lines up to the next blank line, rule or heading.
+        # Read past the old entries: the blank lines right after the heading, then the
+        # list lines up to the next blank line, rule or heading. The comparison links
+        # of earlier versions are kept; everything else is written afresh below.
+        earlier_versions = ""
         more = (getline > 0)
         while (more && /^$/) {
             more = (getline > 0)
         }
         while (more && !/^---/ && !/^$/ && !/^#/) {
+            if (/^- \[v[0-9]/) {
+                earlier_versions = earlier_versions $0 "\n"
+            }
             more = (getline > 0)
         }
+
+        print "## Links"
+        print ""
+        print "- [Unreleased]: " repo_url "/compare/v" version "...HEAD"
+        print "- [v" version "]: " repo_url "/compare/v" prev_version "...v" version
+        printf "%s", earlier_versions
+        print "- [Repository](" repo_url ")"
+        print "- [Documentation](docs/)"
+        print "- [Issue Tracker](" repo_url "/issues)"
+
         if (more) {
             print $0
         }
@@ -223,5 +266,7 @@ if [ "$DRY_RUN" != "true" ]; then
     echo "Next steps:"
     echo "1. Review the updated $CHANGELOG_FILE"
     echo "2. Commit the changes: git add $CHANGELOG_FILE && git commit -m 'docs: update changelog for v$VERSION'"
-    echo "3. Create and push the release tag: git tag v$VERSION && git push origin v$VERSION"
+    echo "3. Push that commit to the main branch"
+    echo "4. Tag it and push the tag: git tag v$VERSION && git push origin v$VERSION"
+    echo "   The release workflow publishes when the tag is pushed; do not run publishPlugins as well."
 fi

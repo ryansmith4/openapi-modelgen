@@ -446,9 +446,8 @@ tasks.register('createRelease') {
         
         if (createTag.exitValue() == 0) {
             println "✅ Created release tag: ${tagName}"
-            println "Next steps:"
-            println "  1. git push origin ${tagName}"
-            println "  2. ./gradlew publishPlugins"
+            println "Next step: git push origin ${tagName}"
+            println "The release workflow publishes when the tag is pushed. Do not run publishPlugins by hand as well."
         } else {
             throw new RuntimeException("Failed to create git tag: ${tagName}")
         }
