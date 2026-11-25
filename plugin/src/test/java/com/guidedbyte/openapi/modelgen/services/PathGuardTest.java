@@ -1,6 +1,7 @@
 package com.guidedbyte.openapi.modelgen.services;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
@@ -82,6 +83,23 @@ class PathGuardTest {
         }
         // A character Windows does not allow in a file name is reported, not passed on.
         assertThrows(IOException.class, () -> PathGuard.resolveInside(root, "escaped?.mustache", "test"));
+    }
+
+    /**
+     * Away from Windows a backslash, a colon and a question mark are ordinary characters, so these
+     * are odd names for files directly inside the directory.
+     */
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void treatsBackslashNamesAsPlainFileNamesOnUnix() throws IOException {
+        Path root = Files.createDirectories(tempDir.resolve("work"));
+
+        for (String name : List.of("..\\escaped.mustache", "sub\\..\\..\\escaped.mustache",
+                "\\escaped.mustache", "Z:escaped.mustache", "escaped?.mustache")) {
+            Path resolved = PathGuard.resolveInside(root, name, "test");
+            assertEquals(root, resolved.getParent(), name);
+            assertEquals(name, resolved.getFileName().toString(), name);
+        }
     }
 
     /**
