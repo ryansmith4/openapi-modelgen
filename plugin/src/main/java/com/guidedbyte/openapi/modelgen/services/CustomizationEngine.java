@@ -970,27 +970,6 @@ public class CustomizationEngine {
     }
     
     /**
-     * Resolves a file name that came from a template library JAR against the template work
-     * directory, and refuses it if the result would be outside that directory. Library JARs are
-     * third-party content, so an entry name containing ".." must not be able to choose where a
-     * file is written.
-     *
-     * @param templateWorkDir the directory templates are prepared in
-     * @param relativeName the file name taken from the library, relative to the work directory
-     * @return the resolved file, guaranteed to be inside the work directory
-     * @throws IOException if the name resolves outside the work directory
-     */
-    static File resolveInsideWorkDir(File templateWorkDir, String relativeName) throws IOException {
-        java.nio.file.Path workDirPath = templateWorkDir.toPath().toAbsolutePath().normalize();
-        java.nio.file.Path resolved = workDirPath.resolve(relativeName).normalize();
-        if (!resolved.startsWith(workDirPath)) {
-            throw new IOException("Library file name '" + relativeName
-                + "' resolves outside the template work directory '" + workDirPath + "'");
-        }
-        return resolved.toFile();
-    }
-
-    /**
      * Applies library template files directly to the working directory.
      * This method copies library templates that should override OpenAPI Generator defaults,
      * filtering by generator compatibility based on library metadata.
@@ -1015,7 +994,9 @@ public class CustomizationEngine {
                 // Check generator compatibility based on library metadata
                 if (isLibraryContentCompatible(templatePath, templateConfig.getGeneratorName(), libraryMetadata)) {
                     try {
-                        File templateFile = resolveInsideWorkDir(templateWorkDir, fileName);
+                        // Library JARs are third-party content: the name must stay inside the work directory.
+                        File templateFile = PathGuard.resolveInside(templateWorkDir.toPath(), fileName,
+                            "template library entry '" + templatePath + "'").toFile();
                         Files.createDirectories(templateFile.getParentFile().toPath());
                         Files.writeString(templateFile.toPath(), templateContent);
                         
@@ -1056,7 +1037,8 @@ public class CustomizationEngine {
                 // Check generator compatibility based on library metadata
                 if (isLibraryContentCompatible(customizationPath, templateConfig.getGeneratorName(), libraryMetadata)) {
                     try {
-                        File templateFile = resolveInsideWorkDir(templateWorkDir, templateName);
+                        File templateFile = PathGuard.resolveInside(templateWorkDir.toPath(), templateName,
+                            "template library entry '" + customizationPath + "'").toFile();
                         if (templateFile.exists()) {
                             applyYamlCustomizationToFile(templateFile, yamlContent, templateConfig);
                             logger.debug("Applied compatible library customization: {} -> {}", fileName, templateName);
@@ -1234,8 +1216,10 @@ public class CustomizationEngine {
                                    TemplateConfiguration templateConfig, File templateWorkDir) throws IOException {
         logger.debug("Extracting base template: {}", templateName);
         
-        // Check if template file already exists (may have been customized by earlier steps)
-        File templateFile = new File(templateWorkDir, templateName);
+        // Check if template file already exists (may have been customized by earlier steps).
+        // The name can come from a customization file in a JAR, so it must stay inside the work directory.
+        File templateFile = PathGuard.resolveInside(templateWorkDir.toPath(), templateName,
+            "customization for template '" + templateName + "'").toFile();
         if (templateFile.exists()) {
             logger.debug("Template file {} already exists, skipping base extraction to preserve customizations", templateName);
             return;
@@ -1247,7 +1231,8 @@ public class CustomizationEngine {
             // Save to orig/ subdirectory if configured
             if (templateConfig.isSaveOriginalTemplates()) {
                 File origDir = new File(templateWorkDir, "orig");
-                File origTemplateFile = new File(origDir, templateName);
+                File origTemplateFile = PathGuard.resolveInside(origDir.toPath(), templateName,
+                    "customization for template '" + templateName + "'").toFile();
                 Files.createDirectories(origTemplateFile.getParentFile().toPath());
                 Files.writeString(origTemplateFile.toPath(), baseTemplateContent);
                 logger.debug("Saved original template to: {}", origTemplateFile.getAbsolutePath());
@@ -1409,13 +1394,8 @@ public class CustomizationEngine {
             
             // Apply customization to the template file using the comprehensive YAML engine.
             // The name comes from a JAR entry, so make sure it cannot point outside the work directory.
-            java.nio.file.Path workDirPath = templateWorkDir.toPath().toAbsolutePath().normalize();
-            java.nio.file.Path templatePath = workDirPath.resolve(templateName).normalize();
-            if (!templatePath.startsWith(workDirPath)) {
-                throw new IOException("Customization file name '" + customizationFileName
-                    + "' resolves outside the template work directory '" + workDirPath + "'");
-            }
-            File templateFile = templatePath.toFile();
+            File templateFile = PathGuard.resolveInside(templateWorkDir.toPath(), templateName,
+                "plugin customization file '" + customizationFileName + "'").toFile();
             if (templateFile.exists()) {
                 applyYamlCustomizationToFile(templateFile, yamlContent, templateConfig);
             } else {
