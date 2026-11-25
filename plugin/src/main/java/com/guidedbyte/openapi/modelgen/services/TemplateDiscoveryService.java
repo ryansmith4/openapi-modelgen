@@ -106,7 +106,10 @@ public class TemplateDiscoveryService {
             
             logger.debug("=== ALL TEMPLATES EXTRACTION COMPLETE ===");
             return extractedCount;
-            
+
+        } catch (PathEscapeException e) {
+            // An archive entry that tries to leave the target directory fails the build.
+            throw e;
         } catch (Exception e) {
             logger.warn("Failed to extract all templates for generator '{}': {}", generatorName, e.getMessage());
             logger.debug("All templates extraction error details for '{}'", generatorName, e);

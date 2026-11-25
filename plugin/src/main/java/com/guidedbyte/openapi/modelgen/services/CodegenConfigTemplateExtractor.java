@@ -163,7 +163,10 @@ public class CodegenConfigTemplateExtractor {
             
             logger.info("Successfully extracted {} templates using OpenApiTemplateExtractor", extracted);
             return extracted;
-            
+
+        } catch (PathEscapeException e) {
+            // An archive entry that tries to leave the target directory fails the build.
+            throw e;
         } catch (Exception e) {
             logger.warn("Failed to extract all templates using OpenApiTemplateExtractor: {}", e.getMessage());
             return 0;
@@ -217,7 +220,6 @@ public class CodegenConfigTemplateExtractor {
      */
     void extractFromJar(URL jarUrl, String resourcePath, Path outputPath) throws Exception {
         String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf("!"));
-        Path outputRoot = outputPath.toAbsolutePath().normalize();
 
         try (JarFile jarFile = new JarFile(jarPath)) {
             Enumeration<JarEntry> entries = jarFile.entries();
@@ -229,11 +231,8 @@ public class CodegenConfigTemplateExtractor {
                 if (entryName.startsWith(resourcePath + "/") && !entry.isDirectory()) {
                     String relativePath = entryName.substring((resourcePath + "/").length());
                     // An entry name containing ".." could otherwise write outside the output directory.
-                    Path targetPath = outputRoot.resolve(relativePath).normalize();
-                    if (!targetPath.startsWith(outputRoot)) {
-                        throw new IOException("Refusing to extract JAR entry '" + entryName + "' from '" + jarPath
-                            + "': it resolves outside the output directory '" + outputRoot + "'");
-                    }
+                    Path targetPath = PathGuard.resolveInside(outputPath, relativePath,
+                        "JAR entry '" + entryName + "' in '" + jarPath + "'");
 
                     Path parentPath = targetPath.getParent();
                     if (parentPath != null) {
