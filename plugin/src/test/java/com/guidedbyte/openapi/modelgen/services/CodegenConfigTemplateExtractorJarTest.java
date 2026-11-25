@@ -47,9 +47,10 @@ class CodegenConfigTemplateExtractorJarTest {
     void refusesEntryThatResolvesOutsideTheOutputDirectory() throws Exception {
         Path jar = writeJar("tpl/../../escaped.mustache");
         Path outputDir = Files.createDirectories(tempDir.resolve("work").resolve("out"));
+        URL hostileUrl = jarUrl(jar, "tpl");
 
         PathEscapeException error = assertThrows(PathEscapeException.class,
-            () -> extractor.extractFromJar(jarUrl(jar, "tpl"), "tpl", outputDir));
+            () -> extractor.extractFromJar(hostileUrl, "tpl", outputDir));
 
         assertTrue(error.getMessage().contains("tpl/../../escaped.mustache"), error.getMessage());
         // "../../escaped.mustache" relative to work/out is tempDir/escaped.mustache
@@ -68,13 +69,13 @@ class CodegenConfigTemplateExtractorJarTest {
         Path jar = writeJar(templateDir + "/../../escaped.mustache");
         URL hostileUrl = jarUrl(jar, templateDir);
         File outputDir = tempDir.resolve("work").resolve("orig").toFile();
+        TemplateDiscoveryService discovery = new TemplateDiscoveryService();
 
         ClassLoader original = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(new SingleResourceClassLoader(original, templateDir, hostileUrl));
         try {
             assertThrows(PathEscapeException.class, () -> extractor.extractAllTemplates("spring", outputDir));
-            assertThrows(PathEscapeException.class,
-                () -> new TemplateDiscoveryService().extractAllTemplates("spring", outputDir));
+            assertThrows(PathEscapeException.class, () -> discovery.extractAllTemplates("spring", outputDir));
         } finally {
             Thread.currentThread().setContextClassLoader(original);
         }
