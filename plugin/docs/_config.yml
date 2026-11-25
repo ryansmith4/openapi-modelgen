@@ -53,7 +53,7 @@ defaults:
 
 # Plugin version configuration
 version:
-  current: "2.1.0"  # Fallback version
+  current: "2.2.4"  # Fallback version
   fetch_from_github: true
 
 # Exclude from processing
